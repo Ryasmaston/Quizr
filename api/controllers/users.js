@@ -24,8 +24,6 @@ async function createUser(req, res) {
   }
 }
 
-
-
 async function showUser(req, res) {
   try {
     const user = await User.findById(req.user_id).select(
@@ -80,4 +78,4 @@ const UsersController = {
   deleteUser: deleteUser
 };
 
-module.exports = { upsertMe };
+module.exports = UsersController;
