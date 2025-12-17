@@ -1,8 +1,6 @@
 const request = require("supertest");
-
 const app = require("../../app");
 const User = require("../../models/user");
-
 require("../mongodb_helper");
 
 describe("/users", () => {
@@ -10,38 +8,50 @@ describe("/users", () => {
     await User.deleteMany({});
   });
 
-  describe("POST, when email and password are provided", () => {
+  describe("POST /users, when username, email and password are provided", () => {
     test("the response code is 201", async () => {
       const response = await request(app)
         .post("/users")
-        .send({ email: "poppy@email.com", password: "1234" });
-
+        .send({
+          username: "testuser",
+          email: "test@email.com",
+          password: "Testpass123"
+        });
       expect(response.statusCode).toBe(201);
     });
 
     test("a user is created", async () => {
       await request(app)
         .post("/users")
-        .send({ email: "scarconstt@email.com", password: "1234" });
-
+        .send({
+          username: "testuser",
+          email: "test@email.com",
+          password: "Testpass123" });
       const users = await User.find();
-      const newUser = users[users.length - 1];
-      expect(newUser.email).toEqual("scarconstt@email.com");
+      expect(users.length).toEqual(1)
+      const newUser = users[0]
+      expect(newUser.username).toEqual("testuser")
+      expect(newUser.email).toEqual("test@email.com");
     });
   });
 
-  describe("POST, when password is missing", () => {
+  describe("POST /users, when password is missing", () => {
     test("response code is 400", async () => {
       const response = await request(app)
         .post("/users")
-        .send({ email: "skye@email.com" });
-
+        .send({
+          username: "testuser",
+          email: "test@email.com"
+        });
       expect(response.statusCode).toBe(400);
     });
 
     test("does not create a user", async () => {
-      await request(app).post("/users").send({ email: "skye@email.com" });
-
+      await request(app)
+        .post("/users")
+        .send({
+          username: "testuser",
+          email: "test@email.com" });
       const users = await User.find();
       expect(users.length).toEqual(0);
     });
@@ -51,16 +61,46 @@ describe("/users", () => {
     test("response code is 400", async () => {
       const response = await request(app)
         .post("/users")
-        .send({ password: "1234" });
-
+        .send({
+          username: "testuser",
+          password: "Testpass123"
+        });
       expect(response.statusCode).toBe(400);
     });
 
     test("does not create a user", async () => {
-      await request(app).post("/users").send({ password: "1234" });
-
+      await request(app)
+        .post("/users")
+        .send({
+          username: "testuser",
+          password: "Testpass123"
+        });
       const users = await User.find();
       expect(users.length).toEqual(0);
     });
   });
+
+  describe("POST, when username is missing", () => {
+    test("response code is 400", async () => {
+      const response = await request(app)
+        .post("/users")
+        .send({
+          email: "test@email.com",
+          password: "Testpass123"
+        });
+      expect(response.statusCode).toBe(400);
+    });
+
+    test("does not create a user", async () => {
+      await request(app)
+        .post("/users")
+        .send({
+          email: "test@email.com",
+          password: "Testpass123"
+        });
+      const users = await User.find();
+      expect(users.length).toEqual(0);
+    });
+  });
+
 });
