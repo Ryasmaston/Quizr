@@ -1,123 +1,80 @@
-## Acebook MERN Template
+## Authentication
+Our backend is locked by default. Firebase Auth proves who the user is (email, uid), and Express verifies that token once globally. If you’re not authenticated, nothing gets through.
+### Frontend
+##### Rules
+- Never call `fetch()` directly for our API
+- Always use: **`apiFetch(path, options)`** from `src/services/api.js`
+- Auth is handles automatically by `apiFetch`
 
-In this project, you are task with working on an existing application. A
-significant part of the challenge will be to familiarise yourself with the
-codebase you've inherited, as you work to **improve and extend** it.
-
-### Structure
-
-This repo contains two applications:
-
-- A frontend React App
-- A backend api server
-
-These two applications will communicate through HTTP requests, and need to be
-run separately.
-
-### Documentation
-
-[More documentation of the codebase and its architecture can be found here.](./DOCUMENTATION.md)
-It's recommended you all read the suggested docs _after making sure the whole
-setup below worked for everyone_. Then work together on a diagram describing how
-the application works.
-
-### Card wall
-
-REPLACE THIS TEXT WITH A LINK TO YOUR CARD WALL
-
-### Quickstart
-
-### Install Node.js
-
-If you haven't already, make sure you have node and NVM installed.
-
-1. Install Node Version Manager (NVM)
-   ```
-   brew install nvm
-   ```
-   Then follow the instructions to update your `~/.zshrc`.
-2. Open a new terminal
-3. Install the latest version of [Node.js](https://nodejs.org/en/), (`20.5.0` at
-   time of writing).
-   ```
-   nvm install 20
-   ```
-
-### Set up your project
-
-1. Have one team member fork this repository
-2. Rename the fork to `acebook-<team name>`
-3. Every team member clone the fork to their local machine
-4. Install dependencies for both the `frontend` and `api` applications:
-   ```
-   cd frontend
-   npm install
-   cd ../api
-   npm install
-   ```
-5. Install an ESLint plugin for your editor, for example
-   [ESLint for VSCode](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
-6. Install MongoDB
-   ```
-   brew tap mongodb/brew
-   brew install mongodb-community@6.0
-   ```
-   _Note:_ If you see a message that says
-   `If you need to have mongodb-community@6.0 first in your PATH, run:`, follow
-   the instruction. Restart your terminal after this.
-7. Start MongoDB
-
-   ```
-   brew services start mongodb-community@6.0
-   ```
-
-### Setting up environment variables.
-
-We need to create two `.env` files, one in the frontend and one in the api.
-
-#### Frontend
-
-Create a file `frontend/.env` with the following contents:
-
+Import Firebase directly only on auth pages (done) and file storage features
+For everything else, use this:
+```jsx
+import { apiFetch } from "../services/api";
 ```
-VITE_BACKEND_URL="http://localhost:3000"
+And then:
+```jsx
+const res = await apiFetch("/quizzes");
 ```
 
-#### Backend
+Example `src/services/quizzes.js` file:
+```jsx
+import { apiFetch } from "./api";
 
-Create a file `api/.env` with the following contents:
+export async function getQuizzes() {
+  const res = await apiFetch("/quizzes");
+  if (!res.ok) throw new Error("Failed to load quizzes");
+  return res.json();
+}
 
+export async function createQuiz(data) {
+  const res = await apiFetch("/quizzes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
 ```
-MONGODB_URL="mongodb://0.0.0.0/acebook"
-NODE_ENV="development"
-JWT_SECRET="secret"
+No auth tokens passed, all of that is already handles by the api helper.
+### Backend
+##### Rules
+- Auth is global by default, because `app.use(requireAuth)` is in `api/app.js`
+- In controllers, the user identity is always **`req.user.uid`**
+- Never accept `userId` from the client
+
+##### In controllers, always use `req.user`
+Example:
+```js
+function createQuiz(req, res) {
+  const ownerUid = req.user.uid;
+}
 ```
-
-For an explanation of these environment variables, see the documentation.
-
-### How to run the server and use the app
-
-1. Start the server application (in the `api` directory) in dev mode:
-
+Never do:
+```js
+req.body.userId
+req.params.userId
 ```
-; cd api
-; npm run dev
+The user identity **always comes from Firebase**, never the client.
+##### Mount the router normally
+In `api/app.js`, for example `/quizzes` route:
+```js
+app.use("/quizzes", quizzesRouter);
 ```
+No auth logic here. It’s already enforced globally.
+### Files that make up the auth layer
+##### Frontend
+- `src/services/firebase.js` - Firebase client init (auth + storage)
+- `src/services/authentication.js` - login/signup (Firebase Auth only)
+- `src/services/api.js` - centralized authenticated fetch
+- `pages/Login/*` - login UI + redirect logic
+- `pages/Signup/*` - signup UI + redirect logic
+- `pages/Home/*` - auth-guarded page (example)
+##### Backend
+- `api/middleware/requireAuth.js` - verifies Firebase ID token
+- `api/lib/firebaseAdmin.js` - Firebase Admin init
+- `api/app.js` - global auth gate
+- `api/routes/*` - normal routers (no auth logic inside)
+- `api/controllers/*` - always use `req.user.uid`
+### Extra explainer
+Internally, `apiFetch` retrieves the Firebase ID token from the current session and sends it as an `Authorization: Bearer <token>` header. The backend verifies this token once per request.
 
-2. Start the front end application (in the `frontend` directory)
-
-In a new terminal session...
-
-```
-; cd frontend
-; npm run dev
-```
-
-You should now be able to open your browser and go to
-`http://localhost:5173/signup` to create a new user.
-
-Then, after signing up, you should be able to log in by going to
-`http://localhost:5173/login`.
-
-After logging in, you won't see much but you can create posts using PostMan and
-they should then show up in the browser if you refresh the page.

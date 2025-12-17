@@ -1,0 +1,27 @@
+// this helper file fetches the user token ID from the Firebase and attaches it to any protected route request
+import { auth } from "./firebase";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+export async function apiFetch(path, options = {}) {
+    const user = auth.currentUser;
+    if (!user) {
+        window.location.href = "/login";
+        throw new Error("Not authenticated");
+    }
+    const token = await user.getIdToken();
+
+    const res = await fetch(`${BACKEND_URL}${path}`, {
+        ...options,
+        headers: {
+            ...(options.headers || {}),
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (res.status === 401) {
+        window.location.href = "/login";
+        throw new Error("Unauthorized");
+    }
+    return res;
+}

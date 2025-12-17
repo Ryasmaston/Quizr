@@ -7,8 +7,8 @@ import { login } from "../../services/authentication";
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
   const [error, setError] = useState(null)
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -22,7 +22,8 @@ export function Login() {
     setError(null)
     try {
       await login(email, password); // Firebase sets auth.currentUser
-      // onAuthStateChanged redirects on its own
+      // onAuthStateChanged redirects on its own, but to be safe:
+      // navigate("/")
     } catch (err) {
       setError("Invalid email or password");
     }
@@ -32,18 +33,16 @@ export function Login() {
     <>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
-        <label htmlFor="email">Email:</label>
+        <label>Email:</label>
         <input id="email" type="text" value={email} onChange={(e) => setEmail(e.target.value)} />
         <label htmlFor="password">Password:</label>
         <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <input role="submit-button" id="submit" type="submit" value="Submit" />
+        <input role="submit-button" id="submit" type="submit" value="Log in" />
       </form>
       {error && <p>{error}</p>}
       <p>
         Don&apos;t have an account?{" "}
-        <Link to="/signup">
-          <button type="button">Sign up</button>
-        </Link>
+        <Link to="/signup">Sign up</Link>
       </p>
     </>
   );

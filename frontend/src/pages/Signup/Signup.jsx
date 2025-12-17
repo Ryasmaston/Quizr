@@ -22,7 +22,8 @@ export function Signup() {
     setError(null)
     try {
       await signup(email, password); // creates user + signs them in
-      // onAuthStateChanged redirects on its own
+      // onAuthStateChanged redirects on its own, but to be safe:
+      // navigate("/")
     } catch (err) {
       setError("Account already exists")
     }
@@ -32,18 +33,16 @@ export function Signup() {
     <>
       <h2>Signup</h2>
       <form onSubmit={handleSubmit}>
-        <label htmlFor="email">Email:</label>
+        <label>Email:</label>
         <input id="email" type="text" value={email} onChange={(e) => setEmail(e.target.value)} />
         <label htmlFor="password">Password:</label>
         <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <input role="submit-button" id="submit" type="submit" value="Submit" />
+        <input role="submit-button" id="submit" type="submit" value="Sign up" />
       </form>
       {error && <p>{error}</p>}
       <p>
         Already have an account?{" "}
-        <Link to="/login">
-          <button type="button">Log in</button>
-        </Link>
+        <Link to="/login">Log in</Link>
       </p>
     </>
   );
