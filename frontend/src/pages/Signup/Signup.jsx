@@ -4,7 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../../services/authentication";
 
-export function SignupPage() {
+export function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();

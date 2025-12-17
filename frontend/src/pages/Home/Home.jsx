@@ -3,7 +3,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { useNavigate } from "react-router-dom";
 
-export function HomePage() {
+export function Home() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
