@@ -3,24 +3,23 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const usersRouter = require("./routes/users");
-const postsRouter = require("./routes/posts");
-const authenticationRouter = require("./routes/authentication");
-const tokenChecker = require("./middleware/tokenChecker");
+// const quizzesRouter = require("./routes/quizzes");
+const meRouter = require("./routes/me");
+const requireAuth = require("./middleware/requireAuth");
 
 const app = express();
 
-// Allow requests from any client
-// docs: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-// docs: https://expressjs.com/en/resources/middleware/cors.html
 app.use(cors());
-
-// Parse JSON request bodies, made available on `req.body`
 app.use(bodyParser.json());
 
-// API Routes
+// Public routes
 app.use("/users", usersRouter);
-app.use("/posts", tokenChecker, postsRouter);
-app.use("/tokens", authenticationRouter);
+
+// Temp auth debug route
+app.use("/me", meRouter);
+
+// Protected feature routes
+// app.use("/quizzes", requireAuth, quizzesRouter);
 
 // 404 Handler
 app.use((_req, res) => {
