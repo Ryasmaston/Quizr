@@ -1,8 +1,14 @@
 const express = require("express");
 const router = express.Router();
 
-const AuthenticationController = require("../controllers/authentication");
+const tokenChecker = require("../middleware/requireAuth")
 
-router.post("/", AuthenticationController.createToken);
+router.get("/me", tokenChecker, (req, res) => {
+    res.status(200).json({
+        uid: req.user.uid,
+        email: req.user.email || null,
+    });
+});
 
 module.exports = router;
+
