@@ -40,12 +40,6 @@ describe("User model", () => {
     expect(user.quizzes).toEqual(0);
   });
 
-//   it("can list all users", async () => {
-//     const users = await User.find();
-//     expect(users).toEqual([]);
-//   });
-
-<<<<<<< HEAD
   it("can save a user", async () => {
     const user = new User({
       username: "testuser",
@@ -59,18 +53,3 @@ describe("User model", () => {
     expect(users[0].password).toEqual("Testpass123");
   });
 });
-=======
-//   it("can save a user", async () => {
-//     const user = new User({
-//       email: "someone@example.com",
-//       password: "password",
-//     });
-
-//     await user.save();
-//     const users = await User.find();
-
-//     expect(users[0].email).toEqual("someone@example.com");
-//     expect(users[0].password).toEqual("password");
-//   });
-// });
->>>>>>> takingQuiz
