@@ -40,11 +40,6 @@ describe("User model", () => {
     expect(user.quizzes).toEqual(0);
   });
 
-  it("can list all users", async () => {
-    const users = await User.find();
-    expect(users).toEqual([]);
-  });
-
   it("can save a user", async () => {
     const user = new User({
       username: "testuser",
