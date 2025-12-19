@@ -1,3 +1,4 @@
+const User = require("../models/user")
 const mongoose = require('mongoose');
 const Quiz = require("../models/quiz");
 const {connectToDatabase} = require("../db/db")
@@ -9,6 +10,7 @@ const seed = async () => {
     console.log("Connected to MongoDB succrssfully")
 
     await Quiz.deleteMany({});
+    await User.deleteMany({});
 
     const quizId1 = new mongoose.Types.ObjectId();
     const quizId2 = new mongoose.Types.ObjectId();
