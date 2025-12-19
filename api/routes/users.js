@@ -4,9 +4,10 @@ const router = express.Router();
 
 const UsersController = require("../controllers/users");
 
-router.post("/", UsersController.createUser);
+router.get("/availability", UsersController.checkUsernameAvailability);
+router.post("/", requireAuth, UsersController.createUser);
 router.get("/me", requireAuth, UsersController.showUser);
-router.get("/:userId", UsersController.getUserById)
-router.delete("/:userId", UsersController.deleteUser)
+router.get("/:userId", requireAuth, UsersController.getUserById);
+router.delete("/:userId", requireAuth, UsersController.deleteUser);
 
 module.exports = router;

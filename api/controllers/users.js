@@ -2,11 +2,11 @@ const User = require("../models/user");
 
 async function createUser(req, res) {
   const username = req.body.username;
-  const email = req.body.email;
-  const password = req.body.password;
+  const authId = req.user.uid;
+  const email = req.user.email;
   try {
-    const user = new User({ username, email, password });
-    await user.save()
+    const user = new User({ username, email, authId });
+    await user.save();
     res.status(201).json({
       message: "User created",
       user: {
@@ -24,9 +24,27 @@ async function createUser(req, res) {
   }
 }
 
+async function checkUsernameAvailability(req, res) {
+  const { username } = req.query;
+  if (!username) {
+    return res.status(400).json({ message: "Username is required" });
+  }
+
+  try {
+    const exists = await User.exists({ username });
+    return res.status(200).json({ available: !exists });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Error checking username",
+      error: error.message
+    });
+  }
+}
+
 async function showUser(req, res) {
   try {
-    const user = await User.findById(req.user_id).select(
+    const user = await User.findOne({ authId: req.user.uid }).select(
       "username profile_pic quizzes"
     );
 
@@ -73,6 +91,7 @@ async function deleteUser(req, res) {
 
 const UsersController = {
   createUser: createUser,
+  checkUsernameAvailability: checkUsernameAvailability,
   showUser: showUser,
   getUserById: getUserById,
   deleteUser: deleteUser

@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-  //Waiting for authentication to be setup
   authId: { 
-    type: String
+    type: String,
+    required: true,
+    unique: true
   },
 
   username: {
@@ -14,12 +15,6 @@ const UserSchema = new mongoose.Schema({
 
   email: { 
     type: String,
-    required: true,
-    trim: true
-  },
-
-  password: { 
-    type: String, 
     required: true,
     trim: true
   },
