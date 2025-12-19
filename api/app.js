@@ -5,7 +5,7 @@ const cors = require("cors");
 const requireAuth = require("./middleware/requireAuth");
 const usersRouter = require("./routes/users");
 const meRouter = require("./routes/me");
-// const quizzesRouter = require("./routes/quizzes");
+const quizzesRouter = require("./routes/quizzes");
 
 const app = express();
 
