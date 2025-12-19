@@ -41,6 +41,7 @@ const seed = async () => {
       {
         _id: quizId1,
         title: "Quiz 1",
+        category: "science",
         questions: [
           {
             text: "1 + 1 = ?",
@@ -59,12 +60,13 @@ const seed = async () => {
               { text: "5", is_correct: false },
               { text: "6", is_correct: false },
             ]
-          }
-        ]
+          },
+        ],
       },
       {
         _id: quizId2,
         title: "Quiz 2",
+        category: "science",
         questions: [
           {
             text: "1 + 1 = ?",
@@ -89,6 +91,7 @@ const seed = async () => {
       {
         _id: quizId3,
         title: "Quiz 3",
+        category: "science",
         questions: [
           {
             text: "1 + 1 = ?",

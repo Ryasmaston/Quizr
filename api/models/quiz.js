@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
 
+const QUIZ_CAT = Object.freeze({
+  ART: 'art',
+  HISTORY: 'history',
+  MUSIC: 'music',
+  SCIENCE: 'science',
+  OTHER: 'other',
+});
+
 const QuizSchema = new mongoose.Schema({
   title: { type: String, required: true },
   questions: [
@@ -14,6 +22,7 @@ const QuizSchema = new mongoose.Schema({
       ]
     }
   ],
+  category: { type: String, enum: Object.values(QUIZ_CAT), required: true },
   created_at: { type: Date, default: Date.now }
 });
 
