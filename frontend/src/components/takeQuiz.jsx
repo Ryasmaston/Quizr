@@ -54,13 +54,14 @@ async function submitQuiz() {
     //Saving the quiz result (percentage, correct answers)
     const data = await res.json();
     setResult(data);
+    console.log(data.correctAnswers);
 }
 
 return (
     <div className="quiz-container">
     {/* Displaying the quiz title at the tip*/}
     <h1 className="quiz-title">{quiz.title}</h1>
-    
+
     {/*Looping through each question in the quiz to then be displayed*/}
         {quiz.questions.map((question, questionIndex) => (
         <div className="question" key={questionIndex}>
@@ -94,7 +95,7 @@ return (
     </div>
     ))}
 
-    <button className="submit-btn" onClick={submitQuiz} disabled={answers.length !== quiz.questions.length}>Submit</button> 
+    <button className="submit-btn" onClick={submitQuiz} disabled={answers.length !== quiz.questions.length}>Submit</button>
     {/* Above we disable the option to resubmit the quiz once the button has been pressed as well as not letting the quiz be submitted if not all questions have been answered*/}
     {result && (
         <p className="result">
