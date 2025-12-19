@@ -6,6 +6,15 @@ export async function getQuizzes() {
   return res.json();
 }
 
+export async function createQuiz(quizData) {
+  const res = await apiFetch("/quizzes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(quizData),
+  });
+  if (!res.ok) throw new Error("Unable to create quiz")
+  return res.json();
+}
 
 // import { auth } from "./firebase"
 // const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -21,5 +30,3 @@ export async function getQuizzes() {
 //   if (!res.ok) throw new Error("Unable to fetch quizzes")
 //   return await res.json()
 // }
-
-
