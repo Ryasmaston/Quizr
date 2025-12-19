@@ -16,8 +16,9 @@ const seed = async () => {
 
     const quizzes = [
       {
-        _id: quizId1,
+        
         title: "Quiz 1",
+    
         questions: [
           {
             text: "1 + 1 = ?",
@@ -40,8 +41,9 @@ const seed = async () => {
         ]
       },
       {
-        _id: quizId2,
+        
         title: "Quiz 2",
+      
         questions: [
           {
             text: "1 + 1 = ?",
@@ -64,8 +66,9 @@ const seed = async () => {
         ]
       },
       {
-        _id: quizId3,
+        
         title: "Quiz 3",
+      
         questions: [
           {
             text: "1 + 1 = ?",
