@@ -27,7 +27,7 @@ app.use(requireAuth);
 
 
 app.use("/me", meRouter);
-// app.use("/quizzes", quizzesRouter);
+app.use("/quizzes", quizzesRouter);
 
 // 404 handler
 app.use((_req, res) => {

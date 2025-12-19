@@ -1,7 +1,7 @@
 import { apiFetch } from "./api";
 
 export async function getQuizzes() {
-  const res = await apiFetch("quizzes");
+  const res = await apiFetch("/quizzes");
   if (!res.ok) throw new Error("Unable to fetch quizzes")
   return res.json();
 }

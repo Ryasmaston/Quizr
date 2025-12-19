@@ -22,7 +22,7 @@ const router = createBrowserRouter([
     element: <Signup />,
   },
   {
-    path: "/take/:id",
+    path: "/quiz/:id",
     element: <TakeQuizPage />,
   }
 ]);
