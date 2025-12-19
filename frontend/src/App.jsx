@@ -4,7 +4,7 @@ import "./App.css";
 import { Home } from "./pages/Home/Home";
 import { Login } from "./pages/Login/Login";
 import { Signup } from "./pages/Signup/Signup";
-import  TakeQuiz  from "./components/takeQuiz";
+import TakeQuizPage from "./pages/TakeQuiz/takeQuizPage";
 
 
 // docs: https://reactrouter.com/en/main/start/overview
@@ -23,7 +23,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/take/:id",
-    element: <TakeQuiz />,
+    element: <TakeQuizPage />,
   }
 ]);
 

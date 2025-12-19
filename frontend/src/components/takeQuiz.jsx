@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../services/firebase";
+import "./takeQuizPage.css";
 
 function TakeQuiz() {
     //Getting the quiz id from the URL e.g. /quiz/:id
@@ -56,32 +57,47 @@ async function submitQuiz() {
 }
 
 return (
-    <div>
-    <h1>{quiz.title}</h1>
-
-    {quiz.questions.map((question, questionIndex) => (
-        <div key={questionIndex}>
+    <div className="quiz-container">
+    {/* Displaying the quiz title at the tip*/}
+    <h1 className="quiz-title">{quiz.title}</h1>
+    
+    {/*Looping through each question in the quiz to then be displayed*/}
+        {quiz.questions.map((question, questionIndex) => (
+        <div className="question" key={questionIndex}>
         <p>{question.text}</p>
 
+    {/* Displaying all possible answers*/}
+
+        <div className="answers">
         {question.answers.map((answer, answerIndex) => (
             <button
             key={answerIndex}
+            //Highlighting the button on any specific answer that is selected
+            className={
+                answers[questionIndex] === answer.text
+                ? "answer selected"
+                : "answer"
+            }
             onClick={() => {
-                const updatedAnswers = [...answers];
-                updatedAnswers[questionIndex] = answer.text;
-                setAnswers(updatedAnswers);
+                //If the quiz has already been submitted, then dont allow changes
+                if (result) return;
+
+                const updatedAnswers = [...answers]; //Here we create a copy of the potential answers so we dont change the original state
+                updatedAnswers[questionIndex] = answer.text; //This sets the answer for the current question questionIndex is given to the text of the button the user clicked
+                setAnswers(updatedAnswers); //This will update the react state and then re-render the component showing the selected the answer as "selected"
             }}
             >
             {answer.text}
             </button>
         ))}
         </div>
+    </div>
     ))}
 
-    <button onClick={submitQuiz}>Submit</button>
-
+    <button className="submit-btn" onClick={submitQuiz} disabled={answers.length !== quiz.questions.length}>Submit</button> 
+    {/* Above we disable the option to resubmit the quiz once the button has been pressed as well as not letting the quiz be submitted if not all questions have been answered*/}
     {result && (
-        <p>
+        <p className="result">
         Correct answers {result.correctAnswers}, ({result.scorePercentage})
         </p>
     )}
