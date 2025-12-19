@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { useNavigate, Link } from "react-router-dom";
+import { getQuizzes } from "../../services/quizzes";
 
 export function Home() {
   const [user, setUser] = useState(null)
@@ -9,22 +10,26 @@ export function Home() {
   const [quizzes, setQuizzes] = useState([])
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      setUser(user)
-      setLoading(false)
-      if (!user) navigate("/login")
-      const token = await user.getIdToken()
-      const res = await fetch("http://localhost:3000/quizzes", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      })
-      const data = await res.json()
-      setQuizzes(data.quizzes)
-    })
-    return unsub
-  }, [navigate])
+useEffect(() => {
+  const unsub = onAuthStateChanged(auth, async (user) => {
+    setUser(user);
+    if (!user) {
+      setLoading(false);
+      navigate("/login");
+      return;
+    }
+    try {
+      const data = await getQuizzes();
+      setQuizzes(Array.isArray(data?.quizzes) ? data.quizzes : []);
+    } catch (error) {
+      console.error("Failed to load quizzes", error);
+      setQuizzes([]);
+    } finally {
+      setLoading(false);
+    }
+  });
+  return unsub;
+}, [navigate]);
 
 
   if (loading) return <div>Loading...</div>
