@@ -2,7 +2,26 @@ const User = require("../models/user")
 const mongoose = require('mongoose');
 const Quiz = require("../models/quiz");
 const {connectToDatabase} = require("../db/db")
+const admin = require("../lib/firebaseAdmin")
 require("dotenv").config();
+
+async function deleteAllFirebaseUsers(nextPageToken) {
+  try {
+    const listUsersResult = await admin.auth().listUsers(1000, nextPageToken);
+    const uids = listUsersResult.users.map(user => user.uid);
+
+    if (uids.length > 0) {
+      await admin.auth().deleteUsers(uids);
+      console.log(`Deleted ${uids.length} users from Firebase Auth`);
+    }
+
+    if (listUsersResult.pageToken) {
+      await deleteAllFirebaseUsers(listUsersResult.pageToken);
+    }
+  } catch (error) {
+    console.error("Error deleting Firebase users:", error);
+  }
+}
 
 const seed = async () => {
   try{
@@ -11,6 +30,8 @@ const seed = async () => {
 
     await Quiz.deleteMany({});
     await User.deleteMany({});
+
+    await deleteAllFirebaseUsers();
 
     const quizId1 = new mongoose.Types.ObjectId();
     const quizId2 = new mongoose.Types.ObjectId();
