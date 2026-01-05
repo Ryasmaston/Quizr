@@ -6,6 +6,7 @@ import { Login } from "./pages/Login/Login";
 import { Signup } from "./pages/Signup/Signup";
 import TakeQuizPage from "./pages/TakeQuiz/takeQuizPage";
 import CreateQuiz from "./pages/CreateQuiz/createQuizPage";
+import Layout from "./components/Layout";
 import ProfilePage from "./pages/Profile Page/ProfilePage";
 
 
@@ -13,19 +14,14 @@ import ProfilePage from "./pages/Profile Page/ProfilePage";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/signup",
-    element: <Signup />,
-  },
-  {
-    path: "/quiz/:id",
-    element: <TakeQuizPage />,
+    element: <Layout />,
+    children: [
+      {index: true, element: <Home /> },
+      {path: "login", element: <Login /> },
+      {path: "signup", element: <Signup /> },
+      {path: "quiz/:id", element: <TakeQuizPage /> },
+      {path: "quizzes/create", element: <CreateQuiz /> },
+    ],
   },
   {
     path: "/quizzes/create",
@@ -37,12 +33,9 @@ const router = createBrowserRouter([
   }
 ]);
 
+
 function App() {
-  return (
-    <>
-      <RouterProvider router={router} />
-    </>
-  );
+  return <RouterProvider router={router} />
 }
 
 export default App;

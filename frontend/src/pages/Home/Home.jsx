@@ -1,39 +1,30 @@
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../../services/firebase";
-import { useNavigate, Link } from "react-router-dom";
+import {Link} from "react-router-dom";
 import { getQuizzes } from "../../services/quizzes";
 
 export function Home() {
-  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [quizzes, setQuizzes] = useState([])
-  const navigate = useNavigate()
+  
 
 useEffect(() => {
-  const unsub = onAuthStateChanged(auth, async (user) => {
-    setUser(user);
-    if (!user) {
-      setLoading(false);
-      navigate("/login");
-      return;
-    }
-    try {
-      const data = await getQuizzes();
-      setQuizzes(Array.isArray(data?.quizzes) ? data.quizzes : []);
-    } catch (error) {
-      console.error("Failed to load quizzes", error);
-      setQuizzes([]);
-    } finally {
-      setLoading(false);
-    }
-  });
-  return unsub;
-}, [navigate]);
+    const fetchQuizzes = async () => {
+      try {
+        const data = await getQuizzes();
+        setQuizzes(Array.isArray(data?.quizzes) ? data.quizzes : []);
+      } catch (error) {
+        console.error("Failed to load quizzes", error);
+        setQuizzes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuizzes();
+  }, []);
 
 
   if (loading) return <div>Loading...</div>
-  if (!user) return null
+  
 
   return (
     <div>
@@ -48,7 +39,7 @@ useEffect(() => {
               </li>
             ))}
           </ul>
-          <button onClick={() => signOut(auth)}>Sign out</button>
+          {/* <button onClick={() => signOut(auth)}>Sign out</button> */}
         </div>
   )
 }
