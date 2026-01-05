@@ -7,8 +7,7 @@ import { Signup } from "./pages/Signup/Signup";
 import TakeQuizPage from "./pages/TakeQuiz/takeQuizPage";
 import CreateQuiz from "./pages/CreateQuiz/createQuizPage";
 import Layout from "./components/Layout";
-
-
+import ProfilePage from "./pages/Profile Page/ProfilePage";
 
 
 // docs: https://reactrouter.com/en/main/start/overview
@@ -24,6 +23,14 @@ const router = createBrowserRouter([
       {path: "quizzes/create", element: <CreateQuiz /> },
     ],
   },
+  {
+    path: "/quizzes/create",
+    element: <CreateQuiz />
+  },
+  {
+    path: "/profile",
+    element: <ProfilePage />
+  }
 ]);
 
 
