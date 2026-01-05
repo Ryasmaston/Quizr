@@ -1,4 +1,5 @@
 const Quiz = require("../models/quiz");
+const User = require("../models/user");
 
 async function getAllQuizzes(req, res) {
   try{
@@ -11,7 +12,11 @@ async function getAllQuizzes(req, res) {
 
 async function createQuiz(req, res) {
   try{
-    const quiz = new Quiz(req.body);
+    const user = await User.findOne({ authId: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const quiz = new Quiz({ ...req.body, created_by: user._id });
     await quiz.save();
     res.status(200).json({ message: "Quiz created", quiz: quiz })
   } catch (error) {
@@ -57,16 +62,26 @@ async function submitQuiz(req, res) {
 
     // Here we compare the user's answers to the correct ones from the seedData
     quiz.questions.forEach((question, index) => {
-      const correctAnswer = question.answers.find(
+      const correctAnswerId = question.answers.find(
         (answer) => answer.is_correct
-      )?.text;
+      )?._id?.toString();
 
-      if (answers[index] === correctAnswer) {
+      if (answers[index] === correctAnswerId) {
         score++;
       }
     });
 
     const scorePercentage = (score / quiz.questions.length) * 100; // Percentage
+
+    const user = await User.findOne({ authId: req.user.uid });
+    if (user) {
+      quiz.attempts.push({
+        user_id: user._id,
+        attempted_at: new Date(),
+        correct: score
+      });
+      await quiz.save();
+    }
 
     res.status(200).json({
       scorePercentage: `${scorePercentage}%`,

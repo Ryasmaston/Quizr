@@ -44,17 +44,17 @@ const seed = async () => {
     await User.deleteMany({});
     await deleteAllFirebaseUsers();
 
-    await createSeedUser({
+    const jane = await createSeedUser({
       username: "JaneDoe",
       email: "jane@email.com",
       password: "Password123"
     });
-    await createSeedUser({
+    const alice = await createSeedUser({
       username: "Alice",
       email: "alice@email.com",
       password: "Password123"
     })
-    await createSeedUser({
+    const barney = await createSeedUser({
       username: "Barney",
       email: "barney@email.com",
       password: "Password123"
@@ -65,76 +65,88 @@ const seed = async () => {
     const quizId2 = new mongoose.Types.ObjectId();
     const quizId3 = new mongoose.Types.ObjectId();
 
+    const addAnswerIds = (items) =>
+      items.map((item) => ({
+        _id: new mongoose.Types.ObjectId(),
+        ...item,
+      }))
+
     const quizzes = [
       {
         _id: quizId1,
         title: "Quiz 1",
+        category: "science",
+        created_by: jane._id,
         questions: [
           {
             text: "1 + 1 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "1", is_correct: false },
               { text: "2", is_correct: true },
               { text: "3", is_correct: false },
               { text: "4", is_correct: false },
-            ]
+            ]),
           },
           {
             text: "2 * 2 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "3", is_correct: false },
               { text: "4", is_correct: true },
               { text: "5", is_correct: false },
               { text: "6", is_correct: false },
-            ]
-          }
-        ]
+            ]),
+          },
+        ],
       },
       {
         _id: quizId2,
         title: "Quiz 2",
+        category: "science",
+        created_by: alice._id,
         questions: [
           {
             text: "1 + 1 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "1", is_correct: false },
               { text: "2", is_correct: true },
               { text: "3", is_correct: false },
               { text: "4", is_correct: false },
-            ]
+            ]),
           },
           {
             text: "2 * 2 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "3", is_correct: false },
               { text: "4", is_correct: true },
               { text: "5", is_correct: false },
               { text: "6", is_correct: false },
-            ]
-          }
-        ]
+            ]),
+          },
+        ],
       },
       {
         _id: quizId3,
         title: "Quiz 3",
+        category: "science",
+        created_by: alice._id,
         questions: [
           {
             text: "1 + 1 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "1", is_correct: false },
               { text: "2", is_correct: true },
               { text: "3", is_correct: false },
               { text: "4", is_correct: false },
-            ]
+            ]),
           },
           {
             text: "2 * 2 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "3", is_correct: false },
               { text: "4", is_correct: true },
               { text: "5", is_correct: false },
               { text: "6", is_correct: false },
-            ]
+            ])
           }
         ]
       }
