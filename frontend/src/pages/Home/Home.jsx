@@ -62,27 +62,15 @@ export function Home() {
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
         <div className="mb-8 sm:mb-12 text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 mb-3 sm:mb-4 animate-fade-in px-4">
-            Quiz Universe
+            Quiz app
           </h1>
           <p className="text-gray-300 text-base sm:text-lg px-4">Challenge yourself and expand your knowledge</p>
         </div>
         {quizzes.length > 0 && (
           <div className="mb-6 sm:mb-8 grid grid-cols-3 gap-3 sm:gap-4 max-w-3xl mx-auto px-4">
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
+            <div className="col-span-3 justify-self-center bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
               <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{quizzes.length}</div>
               <div className="text-gray-300 text-xs sm:text-sm">Total Quizzes</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-                {quizzes.reduce((acc, q) => acc + (q?.questions?.length || 0), 0)}
-              </div>
-              <div className="text-gray-300 text-xs sm:text-sm">Questions</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-                {Math.round(quizzes.reduce((acc, q) => acc + (q?.questions?.length || 0), 0) / (quizzes.length || 1))}
-              </div>
-              <div className="text-gray-300 text-xs sm:text-sm">Avg. Qs</div>
             </div>
           </div>
         )}
