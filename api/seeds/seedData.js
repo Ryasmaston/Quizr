@@ -37,6 +37,12 @@ const seed = async () => {
     const quizId2 = new mongoose.Types.ObjectId();
     const quizId3 = new mongoose.Types.ObjectId();
 
+    const addAnswerIds = (items) =>
+      items.map((item) => ({
+        _id: new mongoose.Types.ObjectId(),
+        ...item,
+      }))
+
     const quizzes = [
       {
         _id: quizId1,
@@ -45,21 +51,21 @@ const seed = async () => {
         questions: [
           {
             text: "1 + 1 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "1", is_correct: false },
               { text: "2", is_correct: true },
               { text: "3", is_correct: false },
               { text: "4", is_correct: false },
-            ]
+            ]),
           },
           {
             text: "2 * 2 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "3", is_correct: false },
               { text: "4", is_correct: true },
               { text: "5", is_correct: false },
               { text: "6", is_correct: false },
-            ]
+            ]),
           },
         ],
       },
@@ -70,23 +76,23 @@ const seed = async () => {
         questions: [
           {
             text: "1 + 1 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "1", is_correct: false },
               { text: "2", is_correct: true },
               { text: "3", is_correct: false },
               { text: "4", is_correct: false },
-            ]
+            ]),
           },
           {
             text: "2 * 2 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "3", is_correct: false },
               { text: "4", is_correct: true },
               { text: "5", is_correct: false },
               { text: "6", is_correct: false },
-            ]
-          }
-        ]
+            ]),
+          },
+        ],
       },
       {
         _id: quizId3,
@@ -95,21 +101,21 @@ const seed = async () => {
         questions: [
           {
             text: "1 + 1 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "1", is_correct: false },
               { text: "2", is_correct: true },
               { text: "3", is_correct: false },
               { text: "4", is_correct: false },
-            ]
+            ]),
           },
           {
             text: "2 * 2 = ?",
-            answers: [
+            answers: addAnswerIds([
               { text: "3", is_correct: false },
               { text: "4", is_correct: true },
               { text: "5", is_correct: false },
               { text: "6", is_correct: false },
-            ]
+            ])
           }
         ]
       }
