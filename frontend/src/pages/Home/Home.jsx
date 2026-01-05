@@ -113,21 +113,12 @@ export function Home() {
                       <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 line-clamp-2 transition-all">
                         {quiz.title}
                       </h3>
-                      <div className="flex items-center gap-4 text-gray-300 text-xs sm:text-sm mb-3 sm:mb-4">
+                      <div className="flex items-center justify-center gap-4 text-gray-300 text-xs sm:text-sm mb-3 sm:mb-4">
                         <div className="flex items-center gap-1">
                           <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <span>{quiz?.questions?.length || 0} questions</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-white/10">
-                        <span className="text-gray-400 text-xs sm:text-sm">Ready to start?</span>
-                        <div className="flex items-center gap-1.5 sm:gap-2 text-white text-sm sm:text-base font-semibold group-hover:gap-2 sm:group-hover:gap-3 transition-all">
-                          <span>Begin</span>
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                          </svg>
                         </div>
                       </div>
                     </div>
