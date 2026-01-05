@@ -4,7 +4,7 @@ Our backend is locked by default. Firebase Auth proves who the user is (email, u
 ##### Rules
 - Never call `fetch()` directly for our API
 - Always use: **`apiFetch(path, options)`** from `src/services/api.js`
-- Auth is handles automatically by `apiFetch`
+- Auth is handled automatically by `apiFetch`
 
 Import Firebase directly only on auth pages (done) and file storage features
 For everything else, use this:
@@ -77,4 +77,5 @@ No auth logic here. It’s already enforced globally.
 - `api/controllers/*` - always use `req.user.uid`
 ### Extra explainer
 Internally, `apiFetch` retrieves the Firebase ID token from the current session and sends it as an `Authorization: Bearer <token>` header. The backend verifies this token once per request.
+
 
