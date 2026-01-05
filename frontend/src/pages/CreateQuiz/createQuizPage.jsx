@@ -122,7 +122,7 @@ export default function CreateQuiz() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 mb-3 sm:mb-4 px-4">
             Create New Quiz
           </h1>
-          <p className="text-gray-300 text-base sm:text-lg px-4">Design an engaging quiz for your audience</p>
+          <p className="text-gray-300 text-base sm:text-lg px-4">Design your own quiz</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 px-4">
