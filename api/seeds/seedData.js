@@ -5,16 +5,28 @@ const {connectToDatabase} = require("../db/db")
 const admin = require("../lib/firebaseAdmin")
 require("dotenv").config();
 
+async function createSeedUser({ username, email, password }) {
+  const firebaseUser = await admin.auth().createUser({
+    email,
+    password
+  });
+  const user = new User({
+    authId: firebaseUser.uid,
+    username,
+    email
+  });
+  await user.save();
+  return user;
+}
+
 async function deleteAllFirebaseUsers(nextPageToken) {
   try {
     const listUsersResult = await admin.auth().listUsers(1000, nextPageToken);
     const uids = listUsersResult.users.map(user => user.uid);
-
     if (uids.length > 0) {
       await admin.auth().deleteUsers(uids);
       console.log(`Deleted ${uids.length} users from Firebase Auth`);
     }
-
     if (listUsersResult.pageToken) {
       await deleteAllFirebaseUsers(listUsersResult.pageToken);
     }
@@ -26,12 +38,28 @@ async function deleteAllFirebaseUsers(nextPageToken) {
 const seed = async () => {
   try{
     await connectToDatabase();
-    console.log("Connected to MongoDB succrssfully")
+    console.log("Connected to MongoDB successfully")
 
     await Quiz.deleteMany({});
     await User.deleteMany({});
-
     await deleteAllFirebaseUsers();
+
+    await createSeedUser({
+      username: "JaneDoe",
+      email: "jane@email.com",
+      password: "Password123"
+    });
+    await createSeedUser({
+      username: "Alice",
+      email: "alice@email.com",
+      password: "Password123"
+    })
+    await createSeedUser({
+      username: "Barney",
+      email: "barney@email.com",
+      password: "Password123"
+    })
+    console.log("Seed users created")
 
     const quizId1 = new mongoose.Types.ObjectId();
     const quizId2 = new mongoose.Types.ObjectId();
