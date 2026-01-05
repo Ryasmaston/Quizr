@@ -12,7 +12,11 @@ async function getAllQuizzes(req, res) {
 
 async function createQuiz(req, res) {
   try{
-    const quiz = new Quiz(req.body);
+    const user = await User.findOne({ authId: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const quiz = new Quiz({ ...req.body, created_by: user._id });
     await quiz.save();
     res.status(200).json({ message: "Quiz created", quiz: quiz })
   } catch (error) {
