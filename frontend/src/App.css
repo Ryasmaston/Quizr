@@ -3,3 +3,13 @@
   text-align: center;
 }
 
+.navbar {
+  border-bottom: 2px solid #ccc;
+  padding: 10px 20px;
+}
+
+.navbar a {
+  margin-right: 20px;
+  text-decoration: none;
+}
+
