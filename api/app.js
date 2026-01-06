@@ -6,6 +6,7 @@ const requireAuth = require("./middleware/requireAuth");
 const usersRouter = require("./routes/users");
 const meRouter = require("./routes/me");
 const quizzesRouter = require("./routes/quizzes");
+const friendsRouter = require("./routes/friends")
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(requireAuth);
 
 app.use("/me", meRouter);
 app.use("/quizzes", quizzesRouter);
+app.use("/friends", friendsRouter)
 
 // 404 handler
 app.use((_req, res) => {
