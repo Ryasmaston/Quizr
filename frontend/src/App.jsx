@@ -7,8 +7,8 @@ import { Signup } from "./pages/Signup/Signup";
 import TakeQuizPage from "./pages/TakeQuiz/takeQuizPage";
 import CreateQuiz from "./pages/CreateQuiz/createQuizPage";
 import Layout from "./components/Layout";
-import ProfilePage from "./pages/Profile Page/ProfilePage";
-import FriendsPage from "./pages/Friends Page/FriendsPage"
+import ProfilePage from "./pages/ProfilePage/ProfilePage";
+import FriendsPage from "./pages/FriendsPage/FriendsPage"
 
 
 // docs: https://reactrouter.com/en/main/start/overview
