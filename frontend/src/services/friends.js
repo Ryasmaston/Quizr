@@ -13,7 +13,7 @@ export async function getPendingRequests() {
 }
 
 export async function sendFriendRequest(userId) {
-  const res = await apiFetch(`friends/${userId}`, {
+  const res = await apiFetch(`/friends/${userId}`, {
     method: "POST"
   })
   if(!res.ok) throw new Error("Unable to send friend request");
@@ -22,7 +22,7 @@ export async function sendFriendRequest(userId) {
 
 // since I use friendId here, to accept a request you need to call acceptFriendRequest(request._id) not user._id
 export async function acceptFriendRequest(friendId) {
-  const res = await apiFetch(`friends/${friendId}/accept`, {
+  const res = await apiFetch(`/friends/${friendId}/accept`, {
     method: "PATCH"
   })
   if(!res.ok) throw new Error("Unable to accept friend request");
