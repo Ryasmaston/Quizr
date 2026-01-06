@@ -44,9 +44,13 @@ async function checkUsernameAvailability(req, res) {
 
 async function showUser(req, res) {
   try {
-    const user = await User.findOne({ authId: req.user.uid }).select(
-      "username profile_pic quizzes"
-    );
+    const user = await User.findOne({ authId: req.user.uid })
+      .select("username profile_pic favourites")
+      .populate({
+        path: "favourites",
+        select: "title category created_by",
+        populate: {path: "created_by", select: "username"}
+      })
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -62,7 +66,7 @@ async function showUser(req, res) {
 async function getUserById(req, res) {
   try {
     const user = await User.findById(req.params.userId).select(
-      "username profile_pic quizzes"
+      "username profile_pic"
     );
 
     if (!user) {
