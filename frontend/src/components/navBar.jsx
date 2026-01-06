@@ -35,6 +35,17 @@ function NavBar() {
               >
                 Create Quiz
               </NavLink>
+              {user && (
+                <NavLink
+                  to="/friends"
+                  className={({ isActive }) =>
+                    `text-sm font-medium transition-colors ${isActive ? "text-purple-400" : "text-gray-300 hover:text-white"
+                    }`
+                  }
+                >
+                  Friends
+                </NavLink>
+              )}
             </div>
             {user && (
               <button

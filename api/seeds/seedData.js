@@ -1,6 +1,7 @@
 const User = require("../models/user")
 const mongoose = require('mongoose');
 const Quiz = require("../models/quiz");
+const Friend = require("../models/friend")
 const {connectToDatabase} = require("../db/db")
 const admin = require("../lib/firebaseAdmin")
 require("dotenv").config();
@@ -60,6 +61,27 @@ const seed = async () => {
       password: "Password123"
     })
     console.log("Seed users created")
+
+    await Friend.deleteMany({});
+
+    await Friend.insertMany([
+      {
+        user1: jane._id,
+        user2: alice._id,
+        accepted: true
+      },
+      {
+        user1: jane._id,
+        user2: barney._id,
+        accepted: false
+      },
+      {
+        user1: alice._id,
+        user2: barney._id,
+        accepted: true
+      }
+    ])
+    console.log("Seed friends created")
 
     const quizId1 = new mongoose.Types.ObjectId();
     const quizId2 = new mongoose.Types.ObjectId();

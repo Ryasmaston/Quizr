@@ -1,34 +1,34 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-  authId: { 
+  authId: {
     type: String,
     required: true,
     unique: true
   },
 
   username: {
-    type: String, 
-    required: true,
-    trim: true
-  },
-
-  email: { 
     type: String,
     required: true,
     trim: true
   },
 
-  profile_pic: { 
+  email: {
+    type: String,
+    required: true,
+    trim: true
+  },
+
+  profile_pic: {
     type: String
   },
 
-  created_at: { 
-    type: Date, 
-    default: Date.now 
+  created_at: {
+    type: Date,
+    default: Date.now
   },
 
-  quizzes: { 
+  quizzes: {
     type: Number,
     default: 0,
     min: 0
