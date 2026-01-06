@@ -3,7 +3,7 @@ const User = require("../models/user");
 
 async function getAllQuizzes(req, res) {
   try{
-    const quizzes = await Quiz.find();
+    const quizzes = await Quiz.find().populate("created_by", "username");
     res.status(200).json({ quizzes: quizzes })
   } catch (error) {
     res.status(500).json({ message: "Error fetching quizzes", error: error.message})
@@ -26,7 +26,7 @@ async function createQuiz(req, res) {
 
 async function getQuizById(req, res) {
   try{
-    const quiz = await Quiz.findById(req.params.id);
+    const quiz = await Quiz.findById(req.params.id).populate("created_by", "username");
     if(!quiz){
       return res.status(404).json({ message: "Quiz not found" });
     }

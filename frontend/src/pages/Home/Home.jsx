@@ -91,7 +91,7 @@ useEffect(() => {
                   className="group relative block"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10"
-                       style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
+                    style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
                   <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/20 hover:border-white/40 transition-all transform group-hover:-translate-y-2 group-hover:shadow-2xl overflow-hidden">
                     <div className={`absolute top-0 left-0 right-0 h-1.5 sm:h-2 bg-gradient-to-r ${gradient}`}></div>
                     <div className="relative z-10 pt-2">
@@ -101,12 +101,15 @@ useEffect(() => {
                       <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 line-clamp-2 transition-all">
                         {quiz.title}
                       </h3>
-                      <div className="flex items-center justify-center gap-4 text-gray-300 text-xs sm:text-sm mb-3 sm:mb-4">
+                      <div className="flex flex-col items-center justify-center gap-1 text-gray-300 text-xs sm:text-sm mb-3 sm:mb-4">
                         <div className="flex items-center gap-1">
                           <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <span>{quiz?.questions?.length || 0} questions</span>
+                        </div>
+                        <div>
+                          <span>Created by {quiz?.created_by?.username}</span>
                         </div>
                       </div>
                     </div>
