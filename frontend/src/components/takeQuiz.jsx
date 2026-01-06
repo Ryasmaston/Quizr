@@ -94,6 +94,7 @@ return (
         <p>Category: {quiz.category}</p>
         <p>Questions: {quiz.questions.length}</p>
         <p>Options per question: {optionsPerQuestion}</p>
+        <p>Created by: {quiz.created_by.username}</p>
         <button className="submit-btn" onClick={startQuiz}>
             Take the quiz
         </button>
