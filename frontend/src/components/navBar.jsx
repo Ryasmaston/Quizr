@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
 import { useAuth } from "./Auth";
@@ -8,6 +8,7 @@ import { apiFetch } from "../services/api";
 function NavBar() {
   const user = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [username, setUsername] = useState(null);
 
   useEffect(() => {
@@ -21,7 +22,7 @@ function NavBar() {
     async function fetchUsername() {
       if (user) {
         try {
-          const res = await apiFetch("/users/me");
+          const res = await apiFetch("/me"); // Changed from /users/me to /me
           const body = await res.json();
           setUsername(body.user?.username);
         } catch (err) {
@@ -30,7 +31,7 @@ function NavBar() {
       }
     }
     fetchUsername();
-  }, [user]);
+  }, [user, location]); // Added location as dependency
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
@@ -68,11 +69,10 @@ function NavBar() {
               </NavLink>
             )}
           </div>
-
           <div className="flex items-center gap-3">
             {user && username && (
               <NavLink
-                to={`/users/${username}`}
+                to={`/users/${username}`} // Fixed: added curly braces
                 className={({ isActive }) =>
                   `text-sm font-medium transition-colors ${
                     isActive

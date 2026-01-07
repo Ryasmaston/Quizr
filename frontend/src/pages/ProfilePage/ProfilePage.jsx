@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { getUserByUsername } from '../../services/users';
@@ -100,8 +100,6 @@ export default function ProfilePage() {
         const quizzesResponse = await apiFetch("/quizzes");
         const quizzesBody = await quizzesResponse.json();
         const userId = userProfile._id;
-
-        // Fetch quizzes created by this specific user
         const createdResponse = await apiFetch("/quizzes?created_by=" + userId);
         const createdBody = await createdResponse.json();
         setCreatedQuizzes(createdBody.quizzes || []);
@@ -257,9 +255,21 @@ export default function ProfilePage() {
                 {loggedInUser && (
                   <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                     {isOwnProfile && (
-                      <button disabled className="px-6 py-2.5 rounded-full bg-white/20 text-white font-semibold border border-white/30 cursor-not-allowed">
-                        Your Profile
-                      </button>
+                      <>
+                        <button disabled className="px-6 py-2.5 rounded-full bg-white/20 text-white font-semibold border border-white/30 cursor-not-allowed">
+                          Your Profile
+                        </button>
+                        <Link
+                          to="/settings"
+                          className="px-6 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold hover:shadow-lg hover:shadow-indigo-500/50 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          Settings
+                        </Link>
+                      </>
                     )}
                     {!isOwnProfile && friendsLoading && (
                       <button disabled className="px-6 py-2.5 rounded-full bg-white/10 text-white font-semibold border border-white/20">
@@ -389,8 +399,6 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
-
-        {/* Quizzes Created Section */}
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">Quizzes Created</h2>
           {createdQuizzes.length === 0 ? (
