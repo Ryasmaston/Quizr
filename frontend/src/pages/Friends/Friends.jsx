@@ -178,7 +178,7 @@ export default function FriendsPage() {
                     return (
                       <div key={r._id} className="group relative">
                         <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10"
-                             style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
+                            style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
                         <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/20 hover:border-white/40 transition-all transform group-hover:-translate-y-1 overflow-hidden">
                           <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${gradient}`}></div>
                           <div className="pt-2">
