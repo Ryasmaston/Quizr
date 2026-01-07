@@ -62,7 +62,7 @@ async function showUser(req, res) {
 async function getUserById(req, res) {
   try {
     const user = await User.findById(req.params.userId).select(
-      "username profile_pic quizzes"
+      "username profile_pic quizzes created_at"
     );
 
     if (!user) {
@@ -73,6 +73,20 @@ async function getUserById(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Unable to load profile", error: err.message });
+  }
+}
+
+async function getUserIdByUsername(req, res) {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username }).select("_id");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ userId: user._id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Unable to fetch userId", error: err.message });
   }
 }
 
@@ -94,6 +108,7 @@ const UsersController = {
   checkUsernameAvailability: checkUsernameAvailability,
   showUser: showUser,
   getUserById: getUserById,
+  getUserIdByUsername: getUserIdByUsername,
   deleteUser: deleteUser
 };
 

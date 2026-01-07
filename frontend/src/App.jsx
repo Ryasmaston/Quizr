@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { AuthProvider } from "./components/Auth";
 
 import "./App.css";
 import { Home } from "./pages/Home/Home";
@@ -8,7 +9,7 @@ import TakeQuizPage from "./pages/TakeQuiz/takeQuizPage";
 import CreateQuiz from "./pages/CreateQuiz/createQuizPage";
 import Layout from "./components/Layout";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
-import FriendsPage from "./pages/Friends Page/FriendsPage"
+import FriendsPage from "./pages/FriendsPage/FriendsPage"
 
 
 // docs: https://reactrouter.com/en/main/start/overview
@@ -22,23 +23,19 @@ const router = createBrowserRouter([
       {path: "signup", element: <Signup /> },
       {path: "quiz/:id", element: <TakeQuizPage /> },
       {path: "quizzes/create", element: <CreateQuiz /> },
-      {path: "profile", element: <ProfilePage /> },
+      {path: "users/:username", element: <ProfilePage /> },
       {path: "friends", element: <FriendsPage /> }
     ],
   },
-  {
-    path: "/quiz/create",
-    element: <CreateQuiz />
-  },
-  {
-    path: "/profile",
-    element: <ProfilePage />
-  }
 ]);
 
 
 function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  )
 }
 
 export default App;

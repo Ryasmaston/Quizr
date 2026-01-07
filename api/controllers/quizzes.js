@@ -4,15 +4,15 @@ const User = require("../models/user");
 
 async function getAllQuizzes(req, res) {
   try{
-    // const quizzes = await Quiz.find().populate("created_by", "username");
-    const { created_by} = req.query; //Reads ?created_by from URL
-
-    const query = created_by ? { created_by: created_by } : {}; //Builds conditional filter
-
-    const quizzes = await Quiz.find(query).populate("created_by", "username");
-
+    const { created_by } = req.query;
+    let filter = {};
+    if (created_by) {
+      filter.created_by = created_by;
+    }
+    const quizzes = await Quiz.find(filter).populate("created_by", "username");
     res.status(200).json({ quizzes: quizzes })
   } catch (error) {
+    console.error("Error in getAllQuizzes:", error);  // Add this to see the error
     res.status(500).json({ message: "Error fetching quizzes", error: error.message})
   }
 }
@@ -65,7 +65,7 @@ async function submitQuiz(req, res) {
       return res.status(404).json({ message: "Quiz not found" }); // Error handle for no quiz found
     }
 
-    let score = 0; 
+    let score = 0;
 
     // Here we compare the user's answers to the correct ones from the seedData
     quiz.questions.forEach((question, index) => {
