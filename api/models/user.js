@@ -19,6 +19,7 @@ const UserSchema = new mongoose.Schema({
     trim: true
   },
 
+  // pending implementation
   profile_pic: {
     type: String
   },
@@ -28,11 +29,10 @@ const UserSchema = new mongoose.Schema({
     default: Date.now
   },
 
-  quizzes: {
-    type: Number,
-    default: 0,
-    min: 0
-  }
+  favourites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Quiz"
+  }]
 });
 
 const User = mongoose.model("User", UserSchema);

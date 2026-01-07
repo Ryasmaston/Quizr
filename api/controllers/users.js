@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const Quiz = require("../models/quiz");
 
 async function createUser(req, res) {
   const username = req.body.username;
@@ -44,9 +45,13 @@ async function checkUsernameAvailability(req, res) {
 
 async function showUser(req, res) {
   try {
-    const user = await User.findOne({ authId: req.user.uid }).select(
-      "username profile_pic quizzes"
-    );
+    const user = await User.findOne({ authId: req.user.uid })
+      .select("username profile_pic favourites")
+      .populate({
+        path: "favourites",
+        select: "title category created_by",
+        populate: {path: "created_by", select: "username"}
+      })
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -62,7 +67,7 @@ async function showUser(req, res) {
 async function getUserById(req, res) {
   try {
     const user = await User.findById(req.params.userId).select(
-      "username profile_pic quizzes created_at"
+      "username profile_pic created_at"
     );
 
     if (!user) {
@@ -103,13 +108,59 @@ async function deleteUser(req, res) {
   }
 }
 
+// Favourites
+
+async function addFavourite(req, res) {
+  try{
+    const quiz = await Quiz.findById(req.params.quizId);
+    if(!quiz) {
+      return res.status(404).json({message: "Quiz not found"})
+    }
+    const user = await User.findOneAndUpdate(
+      {authId: req.user.uid},
+      {$addToSet: {favourites: quiz._id}},
+      {new: true}
+    );
+    if (!user) {
+      return res.status(404).json({message: "User not found"})
+    }
+    res.status(200).json({message: "Quiz added to favourites"})
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({message: "Could not add to favourites", error: error.message})
+  }
+}
+
+async function removeFavourite(req, res) {
+  try {
+    const quiz = await Quiz.findById(req.params.quizId);
+    if(!quiz) {
+      return res.status(404).json({message: "Quiz not found"})
+    }
+    const user = await User.findOneAndUpdate(
+      {authId: req.user.uid},
+      {$pull: {favourites: quiz._id}},
+      {new: true}
+    );
+    if (!user) {
+      return res.status(404).json({message: "User not found"})
+    }
+    res.status(200).json({message: "Quiz removed from favourites"})
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({message: "Could not remove from favourites", error: error.message})
+  }
+}
+
 const UsersController = {
   createUser: createUser,
   checkUsernameAvailability: checkUsernameAvailability,
   showUser: showUser,
   getUserById: getUserById,
   getUserIdByUsername: getUserIdByUsername,
-  deleteUser: deleteUser
+  deleteUser: deleteUser,
+  addFavourite: addFavourite,
+  removeFavourite: removeFavourite
 };
 
 module.exports = UsersController;

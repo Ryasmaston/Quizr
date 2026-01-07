@@ -5,7 +5,7 @@ import { getFriends, getPendingRequests, acceptFriendRequest, removeRequest } fr
 import { apiFetch } from "../../services/api"
 
 export default function FriendsPage() {
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [friends, setFriends] = useState([]);
   const [pending, setPending] = useState([]);
@@ -31,7 +31,7 @@ export default function FriendsPage() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
+      // setUser(currentUser);
       if (currentUser) {
         await loadData()
       }
@@ -65,7 +65,7 @@ export default function FriendsPage() {
 
     if (loading) {
       return (
-        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
+        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
           <div className="relative flex flex-col items-center">
             <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
             <p className="mt-4 text-white font-medium">Loading friends...</p>
@@ -124,7 +124,7 @@ export default function FriendsPage() {
                     return (
                       <div key={f._id} className="group relative">
                         <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10"
-                             style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
+                            style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
                         <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/20 hover:border-white/40 transition-all transform group-hover:-translate-y-1 overflow-hidden">
                           <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${gradient}`}></div>
                           <div className="flex items-center justify-between pt-2">
@@ -178,7 +178,7 @@ export default function FriendsPage() {
                     return (
                       <div key={r._id} className="group relative">
                         <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10"
-                             style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
+                            style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
                         <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/20 hover:border-white/40 transition-all transform group-hover:-translate-y-1 overflow-hidden">
                           <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${gradient}`}></div>
                           <div className="pt-2">

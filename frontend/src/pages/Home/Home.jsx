@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import {Link} from "react-router-dom";
 import { getQuizzes } from "../../services/quizzes";
+import { toggleFavourite } from "../../services/favourites";
+import { apiFetch } from "../../services/api";
+import { authReady } from "../../services/authState";
 
 export function Home() {
   const [loading, setLoading] = useState(true)
   const [quizzes, setQuizzes] = useState([])
+  const [favouriteIds, setFavouriteIds] = useState([]);
 
 
 useEffect(() => {
@@ -22,6 +26,40 @@ useEffect(() => {
     fetchQuizzes();
   }, []);
 
+useEffect(() => {
+  let mounted = true;
+  async function fetchUser() {
+    await authReady;
+    try {
+      const res = await apiFetch("/users/me");
+      const body = await res.json();
+      if (!mounted) return;
+      const favs = Array.isArray(body.user?.favourites) ? body.user.favourites : [];
+      const ids = favs.map((q) => (typeof q === "string" ? q : q._id));
+      setFavouriteIds(ids);
+    } catch (error) {
+      console.error("Failed to load user", error);
+    }
+  }
+  fetchUser();
+  return () => {mounted = false;};
+}, []);
+
+  async function handleToggleFavourite(quizId, isFavourited) {
+    const next = !isFavourited;
+    setFavouriteIds((prev) =>
+      next ? [...prev, quizId] : prev.filter((id) => id !== quizId)
+    );
+    try {
+      await toggleFavourite(quizId, isFavourited);
+    } catch (error) {
+      console.error("Failed to update favourite", error);
+      setFavouriteIds((prev) =>
+        next ? prev.filter((id) => id !== quizId) : [...prev, quizId]
+      );
+    }
+  }
+
   const gradients = [
     "from-rose-500 to-pink-600",
     "from-violet-500 to-purple-600",
@@ -33,7 +71,7 @@ useEffect(() => {
 
   if (loading)
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <div className="relative flex flex-col items-center">
           <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
           <p className="mt-4 text-white font-medium">Loading quizzes...</p>
@@ -84,12 +122,37 @@ useEffect(() => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-4">
             {quizzes.map((quiz, index) => {
               const gradient = gradients[index % gradients.length];
+              const isFavourited = favouriteIds.includes(quiz._id);
               return (
                 <Link
                   key={quiz._id}
                   to={`/quiz/${quiz._id}`}
                   className="group relative block"
                 >
+                  <button
+                    type="button"
+                    aria-label={isFavourited ? "Remove from favourites" : "Add to favourites"}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleToggleFavourite(quiz._id, isFavourited);
+                    }}
+                    className={`absolute top-3 right-3 z-10 inline-flex items-center justify-center rounded-full border border-white/20 bg-black/30 p-2 backdrop-blur transition-transform duration-200 group-hover:-translate-y-2 group-hover:scale-110 ${
+                      isFavourited ? "text-yellow-300" : "text-white/70 hover:text-yellow-200"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-4 w-4"
+                      fill={isFavourited ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
+                    </svg>
+                  </button>
                   <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10"
                     style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
                   <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/20 hover:border-white/40 transition-all transform group-hover:-translate-y-2 group-hover:shadow-2xl overflow-hidden">
