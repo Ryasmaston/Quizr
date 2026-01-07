@@ -1,9 +1,12 @@
 // this helper file fetches the user token ID from the Firebase and attaches it to any protected route request
 import { auth } from "./firebase";
+import { authReady } from "./authState";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export async function apiFetch(path, options = {}) {
+    // Wait for Firebase auth to initialize (authReady resolves on first state change)
+    await authReady;
     const user = auth.currentUser;
     if (!user) {
         window.location.href = "/login";

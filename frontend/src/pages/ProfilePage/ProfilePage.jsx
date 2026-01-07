@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { getUserByUsername } from '../../services/users'
 import { apiFetch } from "../../services/api";
+import { sendFriendRequest } from '../../services/friends'
 
 export default function ProfilePage() {
   const { username: routeUsername } = useParams();
@@ -12,6 +13,8 @@ export default function ProfilePage() {
   const [takenQuizzes, setTakenQuizzes] = useState([]); //Stores quizzes attempted by logged in user
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [sendingRequest, setSendingRequest] = useState(false)
+  const [myUserId, setMyUserId] = useState(null)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -19,6 +22,28 @@ export default function ProfilePage() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    // fetch current user's profile id so we can disable friend button on own profile
+    let mounted = true
+    async function loadMyProfile() {
+      if (!loggedInUser) {
+        setMyUserId(null)
+        return
+      }
+      try {
+        const res = await apiFetch('/users/me')
+        if (!mounted) return
+        const body = await res.json()
+        setMyUserId(body.user?._id || null)
+      } catch (err) {
+        // ignore — keep myUserId null
+        setMyUserId(null)
+      }
+    }
+    loadMyProfile()
+    return () => { mounted = false }
+  }, [loggedInUser])
 
   useEffect(() => {
     async function fetchProfileAndQuizzes() {
@@ -65,6 +90,29 @@ export default function ProfilePage() {
       <p>Image link: {profile.profile_pic}</p>
       {loggedInUser?.metadata && (
         <p>Account created: {loggedInUser.metadata.creationTime}</p>
+      )}
+
+      {/* Add friend button moved lower so it's below profile details */}
+      {loggedInUser && (
+        <div className="mt-4">
+          <button
+            onClick={async () => {
+              try {
+                setSendingRequest(true)
+                await sendFriendRequest(profile._id)
+                alert('Friend request sent')
+              } catch (err) {
+                alert('Could not send request: ' + (err.message || err))
+              } finally {
+                setSendingRequest(false)
+              }
+            }}
+            disabled={sendingRequest || (myUserId && myUserId === profile._id)}
+            className="px-3 py-1 rounded bg-purple-600 text-white"
+          >
+            {myUserId && myUserId === profile._id ? "This is you" : (sendingRequest ? 'Sending...' : 'Add friend')}
+          </button>
+        </div>
       )}
 
       <h2>Quizzes Taken</h2>

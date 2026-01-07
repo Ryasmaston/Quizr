@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { AuthProvider } from "./components/Auth";
 
 import "./App.css";
 import { Home } from "./pages/Home/Home";
@@ -30,7 +31,11 @@ const router = createBrowserRouter([
 
 
 function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  )
 }
 
 export default App;

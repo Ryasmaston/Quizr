@@ -1,22 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
+import { useAuth } from "./Auth";
 
 
 function NavBar() {
-    const [user, setUser] = useState(null);
+    const user = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-        setUser(user);
-        if (!user) {
+      // redirect to login when we know there's no user
+      if (user === null) {
         navigate("/login");
-        }
-    });
-    return unsub;
-    }, [navigate]);
+      }
+    }, [user, navigate]);
 
     return (
       <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">

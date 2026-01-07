@@ -6,5 +6,7 @@ export async function getUserByUsername(username) {
   const { userId } = await userIdRes.json()
   const userRes = await apiFetch(`/users/${userId}`)
   if(!userRes.ok) throw new Error("Unable to fetch user profile")
-  return userRes.json()
+  const body = await userRes.json()
+  // backend returns { user }, unwrap to return the user object directly
+  return body.user
 }
