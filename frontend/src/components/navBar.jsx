@@ -1,50 +1,89 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
 import { useAuth } from "./Auth";
-
+import { apiFetch } from "../services/api";
 
 function NavBar() {
-    const user = useAuth();
-    const navigate = useNavigate();
+  const user = useAuth();
+  const navigate = useNavigate();
+  const [username, setUsername] = useState(null);
 
-    useEffect(() => {
-      // redirect to login when we know there's no user
-      if (user === null) {
-        navigate("/login");
+  useEffect(() => {
+    // redirect to login when we know there's no user
+    if (user === null) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    async function fetchUsername() {
+      if (user) {
+        try {
+          const res = await apiFetch("/users/me");
+          const body = await res.json();
+          setUsername(body.user?.username);
+        } catch (err) {
+          console.error("Could not fetch username", err);
+        }
       }
-    }, [user, navigate]);
+    }
+    fetchUsername();
+  }, [user]);
 
-    return (
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-6">
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center gap-6">
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                `text-sm font-medium transition-colors ${isActive ? "text-purple-400" : "text-gray-300 hover:text-white"}`
+              }
+            >
+              Home
+            </NavLink>
+            <NavLink
+              to="/quizzes/create"
+              className={({ isActive }) =>
+                `text-sm font-medium transition-colors ${isActive ? "text-purple-400" : "text-gray-300 hover:text-white"}`
+              }
+            >
+              Create Quiz
+            </NavLink>
+            {user && (
               <NavLink
-                to="/"
-                className={({isActive}) => `text-sm font-medium transition-colors ${isActive ? 'text-purple-400' : 'text-gray-300 hover:text-white'}`}
+                to="/friends"
+                className={({ isActive }) =>
+                  `text-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-purple-400"
+                      : "text-gray-300 hover:text-white"
+                  }`
+                }
               >
-                Home
+                Friends
               </NavLink>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {user && username && (
               <NavLink
-                to="/quizzes/create"
-                className={({isActive}) => `text-sm font-medium transition-colors ${isActive ? 'text-purple-400' : 'text-gray-300 hover:text-white'}`}
+                to={`/users/${username}`}
+                className={({ isActive }) =>
+                  `text-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-purple-400"
+                      : "text-gray-300 hover:text-white"
+                  }`
+                }
               >
-                Create Quiz
+                Profile
               </NavLink>
-              {user && (
-                <NavLink
-                  to="/friends"
-                  className={({ isActive }) =>
-                    `text-sm font-medium transition-colors ${isActive ? "text-purple-400" : "text-gray-300 hover:text-white"
-                    }`
-                  }
-                >
-                  Friends
-                </NavLink>
-              )}
-            </div>
+            )}
             {user && (
               <button
                 onClick={() => signOut(auth)}
@@ -55,8 +94,9 @@ function NavBar() {
             )}
           </div>
         </div>
-      </nav>
-    );
+      </div>
+    </nav>
+  );
 }
 
 export default NavBar;
