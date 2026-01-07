@@ -88,7 +88,7 @@ const seed = async () => {
           {
             text: "Which of these artists founded the Cubist movement?",
             answers: addAnswerIds([
-              { text: "Vincent van Goch", is_correct: false },
+              { text: "Vincent van Gogh", is_correct: false },
               { text: "Pablo Picasso", is_correct: true },
               { text: "Edward Hopper", is_correct: false },
               { text: "Salvador Dalí", is_correct: false },
@@ -97,9 +97,9 @@ const seed = async () => {
           {
             text: "Which of these artists drew the 'Vitruvian Man'?",
             answers: addAnswerIds([
-              { text: "Leonardo da Vinvi", is_correct: true },
+              { text: "Leonardo da Vinci", is_correct: true },
               { text: "Caspar David Friedrich", is_correct: false },
-              { text: "Vincent van Goch", is_correct: false },
+              { text: "Vincent van Gogh", is_correct: false },
               { text: "Michelangelo", is_correct: false },
             ]),
           },
@@ -118,7 +118,7 @@ const seed = async () => {
               { text: "Caspar David Friedrich", is_correct: false },
               { text: "Edward Hopper", is_correct: true },
               { text: "Edvard Munch", is_correct: false },
-              { text: "Vincent van Goch", is_correct: false },
+              { text: "Vincent van Gogh", is_correct: false },
             ]),
           }
         ],
@@ -148,7 +148,7 @@ const seed = async () => {
             ]),
           },
           {
-            text: "In what part of the body is the phalanges located?",
+            text: "In what part of the body are the tarsals located?",
             answers: addAnswerIds([
               { text: "Hands", is_correct: false },
               { text: "Feet", is_correct: true },
@@ -218,7 +218,7 @@ const seed = async () => {
         created_by: jane._id,
         questions: [
           {
-            text: "Who painted the ceiling of The Sistine Chapel?",
+            text: "Who painted the ceiling of the Sistine Chapel?",
             answers: addAnswerIds([
               { text: "Donato Bramante", is_correct: false },
               { text: "Auguste Rodin", is_correct: false },
@@ -245,7 +245,7 @@ const seed = async () => {
             ]),
           },
           {
-            text: "Renaissance is the latin word for what?",
+            text: "Renaissance is the French word for what?",
             answers: addAnswerIds([
               { text: "Rebirth", is_correct: true },
               { text: "Renewal", is_correct: false },
@@ -372,7 +372,7 @@ const seed = async () => {
             answers: addAnswerIds([
               { text: "Manhattan", is_correct: false },
               { text: "Caipirinha", is_correct: false },
-              { text: "Daquiri", is_correct: true },
+              { text: "Daiquiri", is_correct: true },
               { text: "Mint Julep", is_correct: false },
             ]),
           },
@@ -470,7 +470,7 @@ const seed = async () => {
               { text: "Charlie Byrd", is_correct: true },
               { text: "Stan Getz", is_correct: false },
               { text: "Miles Davis", is_correct: false },
-              { text: "Glen Miller", is_correct: false },
+              { text: "Glenn Miller", is_correct: false },
             ]),
           } 
         ],
@@ -482,16 +482,7 @@ const seed = async () => {
         created_by: barney._id,
         questions: [
           {
-            text: "'Burrito' translates literally to what in English?",
-            answers: addAnswerIds([
-              { text: "", is_correct: false },
-              { text: "Little Donkey", is_correct: true },
-              { text: "", is_correct: false },
-              { text: "", is_correct: false },
-            ]),
-          },
-          {
-            text: "Which of these is not a Mexican dish?",
+            text: "Which one of these dishes is not Mexican?",
             answers: addAnswerIds([
               { text: "Chilorios", is_correct: false },
               { text: "Chanclas Poblanas", is_correct: false },
@@ -500,7 +491,16 @@ const seed = async () => {
             ]),
           },
           {
-            text: "Which of these is not considered breakfast?",
+            text: "'Burrito' translates literally to what in English?",
+            answers: addAnswerIds([
+              { text: "Little Blanket", is_correct: false },
+              { text: "Little Donkey", is_correct: true },
+              { text: "Little Bird", is_correct: false },
+              { text: "Little Boat", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which of these is not considered a breakfast dish?",
             answers: addAnswerIds([
               { text: "Desayuno", is_correct: true },
               { text: "Huevos Rancheros", is_correct: false },
