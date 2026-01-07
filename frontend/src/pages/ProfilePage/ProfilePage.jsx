@@ -78,7 +78,7 @@ export default function ProfilePage() {
       )}
       <h2>Quizzes Created</h2>
       {createdQuizzes.length === 0 ? (
-        <p>You haven't created any quizzes yet.</p>
+        <p>You haven&apos;t created any quizzes yet.</p>
       ) : (
         <ul>
           {createdQuizzes.map((quiz) => (
