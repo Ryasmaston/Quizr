@@ -62,7 +62,7 @@ async function showUser(req, res) {
 async function getUserById(req, res) {
   try {
     const user = await User.findById(req.params.userId).select(
-      "username profile_pic quizzes"
+      "username profile_pic quizzes created_at"
     );
 
     if (!user) {
