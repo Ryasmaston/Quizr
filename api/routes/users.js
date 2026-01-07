@@ -7,7 +7,8 @@ const UsersController = require("../controllers/users");
 router.get("/availability", UsersController.checkUsernameAvailability);
 router.post("/", requireAuth, UsersController.createUser);
 router.get("/me", requireAuth, UsersController.showUser);
-router.get("/username/:username", requireAuth, UsersController.getUserIdByUsername)
+router.get("/username/:username", requireAuth, UsersController.getUserIdByUsername);
+router.patch("/:userId", requireAuth, UsersController.updateUser);
 router.get("/:userId", requireAuth, UsersController.getUserById);
 router.delete("/:userId", requireAuth, UsersController.deleteUser);
 router.post("/me/favourites/:quizId", requireAuth, UsersController.addFavourite);

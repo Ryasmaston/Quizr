@@ -25,6 +25,28 @@ async function createUser(req, res) {
   }
 }
 
+async function updateUser(req, res) {
+  try {
+    const { username, profile_pic } = req.body;
+    const currentUser = await User.findOne({ authId: req.user.uid });
+    if (!currentUser || currentUser._id.toString() !== req.params.userId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      { username, profile_pic },
+      { new: true }
+    ).select("username profile_pic quizzes created_at");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Unable to update profile", error: err.message });
+  }
+}
+
 async function checkUsernameAvailability(req, res) {
   const { username } = req.query;
   if (!username) {
@@ -155,6 +177,7 @@ async function removeFavourite(req, res) {
 const UsersController = {
   createUser: createUser,
   checkUsernameAvailability: checkUsernameAvailability,
+  updateUser: updateUser,
   showUser: showUser,
   getUserById: getUserById,
   getUserIdByUsername: getUserIdByUsername,

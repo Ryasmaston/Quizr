@@ -1,0 +1,273 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { onAuthStateChanged, updatePassword, updateEmail } from "firebase/auth";
+import { auth } from "../../services/firebase";
+import { apiFetch } from "../../services/api";
+
+export default function SettingsPage() {
+  const navigate = useNavigate();
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Form states
+  const [username, setUsername] = useState("");
+  const [profilePic, setProfilePic] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
+      setLoggedInUser(currentUser);
+    });
+    return unsub;
+  }, []);
+
+  const loadProfile = async () => {
+    if (!loggedInUser) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await apiFetch("/me");
+      const body = await res.json();
+      setProfile(body.user);
+      setUsername(body.user.username);
+      setProfilePic(body.user.profile_pic || "");
+      setNewEmail(loggedInUser.email);
+      setLoading(false);
+    } catch (err) {
+      setError("Failed to load profile");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+  }, [loggedInUser]);
+
+  if (!loggedInUser) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
+        <div className="relative flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <p className="mt-4 text-white font-medium">Please log in...</p>
+        </div>
+      </div>
+    );
+  }
+
+  async function handleUpdateProfile(e) {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+    setSaving(true);
+
+    try {
+      const res = await apiFetch(`/users/${profile._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username,
+          profile_pic: profilePic
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update profile");
+      }
+      navigate(`/users/${username}`)
+      await loadProfile();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleUpdateEmail(e) {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+    setSaving(true);
+
+    try {
+      await updateEmail(loggedInUser, newEmail);
+      setMessage("Email updated successfully!");
+    } catch (err) {
+      setError(err.message || "Failed to update email");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleUpdatePassword(e) {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+
+    if (newPassword !== confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      await updatePassword(loggedInUser, newPassword);
+      setMessage("Password updated successfully!");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setError(err.message || "Failed to update password");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
+        <div className="relative flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <p className="mt-4 text-white font-medium">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-y-auto pt-10">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+      <main className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 mb-8">
+          Settings
+        </h1>
+        {message && (
+          <div className="mb-6 bg-green-500/20 border border-green-500/50 rounded-2xl p-4 backdrop-blur">
+            <p className="text-green-300">{message}</p>
+          </div>
+        )}
+        {error && (
+          <div className="mb-6 bg-red-500/20 border border-red-500/50 rounded-2xl p-4 backdrop-blur">
+            <p className="text-red-300">{error}</p>
+          </div>
+        )}
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 mb-6">
+          <h2 className="text-2xl font-bold text-white mb-6">Profile Information</h2>
+          <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <div>
+              <label className="block text-gray-300 mb-2">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-300 mb-2">Profile Picture URL</label>
+              <input
+                type="url"
+                value={profilePic}
+                onChange={(e) => setProfilePic(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+              />
+            </div>
+            {profilePic && (
+              <div className="flex items-center gap-4">
+                <p className="text-gray-300">Preview:</p>
+                <img
+                  src={profilePic}
+                  alt="Profile preview"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
+                  onError={(e) => e.target.style.display = 'none'}
+                />
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? "Saving..." : "Save Profile"}
+            </button>
+          </form>
+        </div>
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 mb-6">
+          <h2 className="text-2xl font-bold text-white mb-6">Email Address</h2>
+          <form onSubmit={handleUpdateEmail} className="space-y-4">
+            <div>
+              <label className="block text-gray-300 mb-2">Email</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={saving || newEmail === loggedInUser?.email}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? "Updating..." : "Update Email"}
+            </button>
+          </form>
+        </div>
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
+          <h2 className="text-2xl font-bold text-white mb-6">Change Password</h2>
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div>
+              <label className="block text-gray-300 mb-2">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                minLength={6}
+              />
+            </div>
+            <div>
+              <label className="block text-gray-300 mb-2">Confirm Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                minLength={6}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={saving || !newPassword || !confirmPassword}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:shadow-lg hover:shadow-emerald-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? "Updating..." : "Change Password"}
+            </button>
+          </form>
+        </div>
+      </main>
+    </div>
+  );
+}
