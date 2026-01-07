@@ -107,7 +107,7 @@ async function addFavourite(req, res) {
       {$addToSet: {favourites: quiz._id}},
       {new: true}
     );
-    if(!user) {
+    if (!user) {
       return res.status(404).json({message: "User not found"})
     }
     res.status(200).json({message: "Quiz added to favourites"})
@@ -118,7 +118,24 @@ async function addFavourite(req, res) {
 }
 
 async function removeFavourite(req, res) {
-
+  try {
+    const quiz = await Quiz.findById(req.params.quizId);
+    if(!quiz) {
+      return res.status(404).json({message: "Quiz not found"})
+    }
+    const user = await User.findOneAndUpdate(
+      {authId: req.user.uid},
+      {$pull: {favourites: quiz._id}},
+      {new: true}
+    );
+    if (!user) {
+      return res.status(404).json({message: "User not found"})
+    }
+    res.status(200).json({message: "Quiz removed from favourites"})
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({message: "Could not remove from favourites", error: error.message})
+  }
 }
 
 const UsersController = {
@@ -127,7 +144,8 @@ const UsersController = {
   showUser: showUser,
   getUserById: getUserById,
   deleteUser: deleteUser,
-  addFavourite: addFavourite
+  addFavourite: addFavourite,
+  removeFavourite: removeFavourite
 };
 
 module.exports = UsersController;
