@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [takenQuizzes, setTakenQuizzes] = useState([]);
+  const [createdQuizzes, setCreatedQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sendingRequest, setSendingRequest] = useState(false);
@@ -95,12 +96,16 @@ export default function ProfilePage() {
       setLoading(true);
       try {
         const userProfile = await getUserByUsername(routeUsername);
-        console.log("Profile data: ", userProfile)
-        console.log("created_at field: ", userProfile.created_at)
         setProfile(userProfile);
         const quizzesResponse = await apiFetch("/quizzes");
         const quizzesBody = await quizzesResponse.json();
         const userId = userProfile._id;
+
+        // Fetch quizzes created by this specific user
+        const createdResponse = await apiFetch("/quizzes?created_by=" + userId);
+        const createdBody = await createdResponse.json();
+        setCreatedQuizzes(createdBody.quizzes || []);
+
         const quizzesWithUserAttempts = quizzesBody.quizzes
           .map((quiz) => {
             const userAttempt = quiz.attempts?.find(
@@ -319,7 +324,9 @@ export default function ProfilePage() {
             <div className="text-gray-300 text-sm">Average Score</div>
           </div>
         </div>
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
+
+        {/* Quizzes Taken Section */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">Quizzes Taken</h2>
           {takenQuizzes.length === 0 ? (
             <div className="text-center py-12">
@@ -379,6 +386,47 @@ export default function ProfilePage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* Quizzes Created Section */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">Quizzes Created</h2>
+          {createdQuizzes.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">No Quizzes Created</h3>
+              <p className="text-gray-300">
+                {isOwnProfile ? "Create your first quiz to see it here" : `${profile.username} hasn't created any quizzes yet`}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {createdQuizzes.map((quiz) => (
+                <div key={quiz._id} className="group bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 hover:border-white/30 transition-all hover:bg-white/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white mb-2">{quiz.title}</h3>
+                      <div className="flex items-center gap-1 text-sm text-gray-300">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{quiz.questions.length} question{quiz.questions.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-white text-sm font-semibold">
+                        Created
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
