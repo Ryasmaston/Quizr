@@ -107,7 +107,7 @@ return (
 {/* Auth card container (keeps the form centered and readable) */} 
 <div className="w-full max-w-md">
 {/* Top pill */}
-<div className="mx-auto mt-4 mb-4 flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">``
+<div className="mx-auto mt-4 mb-4 flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">
   <span className="inline-flex items-center gap-2 text-sm sm:text-base font-medium tracking-wide text-white/70">
     <span className="h-1 w-1 rounded-full bg-violet-200/45" />
     Pick a category
