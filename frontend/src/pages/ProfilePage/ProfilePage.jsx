@@ -5,6 +5,7 @@ import { auth } from "../../services/firebase";
 import { getUserByUsername } from '../../services/users';
 import { apiFetch } from "../../services/api";
 import { getPendingRequests, sendFriendRequest, getFriends, removeRequest, acceptFriendRequest } from '../../services/friends';
+import { QuizStats } from '../../components/quizStats'
 
 export default function ProfilePage() {
   const { username: routeUsername } = useParams();
@@ -20,6 +21,7 @@ export default function ProfilePage() {
   const [pendingSent, setPendingSent] = useState(false);
   const [incomingRequest, setIncomingRequest] = useState(null);
   const [friendsLoading, setFriendsLoading] = useState(false);
+  const [selectedQuizForStats, setSelectedQuizForStats] = useState(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -161,6 +163,16 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleViewStats(quizId) {
+    try {
+      const response = await apiFetch(`/quizzes/${quizId}`);
+      const body = await response.json();
+      setSelectedQuizForStats(body.quiz);
+    } catch (err) {
+      alert("Could not load quiz statistics: " + (err.message || err));
+    }
+  }
+
   const isOwnProfile = myUserId && profile?._id && profile && myUserId === profile._id;
 
   if (loading) {
@@ -205,6 +217,32 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  const categoryColors = {
+    art: "from-pink-500 to-rose-500",
+    history: "from-amber-500 to-orange-500",
+    music: "from-purple-500 to-indigo-500",
+    science: "from-blue-500 to-cyan-500",
+    other: "from-gray-500 to-slate-500"
+  };
+
+  const categoryIcons = {
+    art: (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+    ),
+    history: (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    ),
+    music: (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+    ),
+    science: (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+    ),
+    other: (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    )
+  };
 
   const totalQuestions = takenQuizzes.reduce((sum, quiz) => sum + quiz.totalQuestions, 0);
   const totalCorrect = takenQuizzes.reduce((sum, quiz) => sum + quiz.correct, 0);
@@ -400,7 +438,13 @@ export default function ProfilePage() {
           )}
         </div>
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">Quizzes Created</h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">Quizzes Created</h2>
+            <div className="px-4 py-2 bg-white/10 rounded-full">
+              <span className="text-white font-semibold">{createdQuizzes.length} Quiz{createdQuizzes.length !== 1 ? 'zes' : ''}</span>
+            </div>
+          </div>
+
           {createdQuizzes.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -414,31 +458,132 @@ export default function ProfilePage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {createdQuizzes.map((quiz) => (
-                <div key={quiz._id} className="group bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 hover:border-white/30 transition-all hover:bg-white/10">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-2">{quiz.title}</h3>
-                      <div className="flex items-center gap-1 text-sm text-gray-300">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{quiz.questions.length} question{quiz.questions.length !== 1 ? 's' : ''}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {createdQuizzes.map((quiz) => {
+                const totalAttempts = quiz.attempts?.length || 0;
+                const passes = quiz.attempts?.filter(attempt => {
+                  const percentage = (attempt.correct / quiz.questions.length) * 100;
+                  return percentage >= 60;
+                }).length || 0;
+                const passRate = totalAttempts > 0 ? Math.round((passes / totalAttempts) * 100) : 0;
+                const avgScore = totalAttempts > 0
+                  ? Math.round((quiz.attempts.reduce((sum, a) => sum + a.correct, 0) / totalAttempts / quiz.questions.length) * 100)
+                  : 0;
+
+                return (
+                  <div
+                    key={quiz._id}
+                    onClick={() => handleViewStats(quiz._id)}
+                    className="group relative bg-white/5 backdrop-blur rounded-2xl border border-white/10 hover:border-white/30 transition-all hover:bg-white/10 cursor-pointer overflow-hidden hover:scale-105 transform duration-300"
+                  >
+                    {/* Gradient header bar */}
+                    <div className={`h-2 bg-gradient-to-r ${categoryColors[quiz.category] || categoryColors.other}`}></div>
+
+                    <div className="p-6">
+                      {/* Category badge */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${categoryColors[quiz.category] || categoryColors.other} text-white text-xs font-semibold`}>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            {categoryIcons[quiz.category] || categoryIcons.other}
+                          </svg>
+                          <span className="capitalize">{quiz.category}</span>
+                        </div>
+
+                        {totalAttempts > 0 && (
+                          <div className="flex items-center gap-1 text-gray-400">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                            </svg>
+                            <span className="text-xs font-medium">{totalAttempts}</span>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-white text-sm font-semibold">
-                        Created
+
+                      {/* Quiz title */}
+                      <h3 className="text-lg font-bold text-white mb-3 group-hover:text-purple-300 transition-colors line-clamp-2 min-h-[3.5rem]">
+                        {quiz.title}
+                      </h3>
+
+                      {/* Stats grid */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-white/5 rounded-xl p-3 text-center">
+                          <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                            {quiz.questions.length}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">Questions</div>
+                        </div>
+
+                        <div className="bg-white/5 rounded-xl p-3 text-center">
+                          <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                            {totalAttempts}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">Attempts</div>
+                        </div>
+                      </div>
+
+                      {/* Performance indicators */}
+                      {totalAttempts > 0 ? (
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400">Pass Rate</span>
+                            <span className={`font-semibold ${passRate >= 70 ? 'text-green-400' : passRate >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                              {passRate}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-500 ${passRate >= 70 ? 'bg-gradient-to-r from-green-500 to-emerald-500' : passRate >= 50 ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-red-500 to-pink-500'}`}
+                              style={{ width: `${passRate}%` }}
+                            ></div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs mt-3">
+                            <span className="text-gray-400">Avg Score</span>
+                            <span className="font-semibold text-blue-400">{avgScore}%</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-white/5 rounded-xl p-3 text-center mb-4">
+                          <div className="text-gray-400 text-xs">No attempts yet</div>
+                        </div>
+                      )}
+
+                      {/* View stats button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewStats(quiz._id);
+                        }}
+                        className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white text-sm font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center gap-2 group-hover:scale-105 transform duration-200"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        View Details
+                      </button>
+
+                      {/* Created date - subtle footer */}
+                      <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-1 text-xs text-gray-500">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Created {new Date(quiz.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </main>
+      {selectedQuizForStats && (
+        <QuizStats
+          quiz={selectedQuizForStats}
+          onClose={() => setSelectedQuizForStats(null)}
+        />
+      )}
     </div>
   );
 }
