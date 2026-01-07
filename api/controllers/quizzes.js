@@ -1,9 +1,16 @@
 const Quiz = require("../models/quiz");
 const User = require("../models/user");
 
+
 async function getAllQuizzes(req, res) {
   try{
-    const quizzes = await Quiz.find().populate("created_by", "username");
+    // const quizzes = await Quiz.find().populate("created_by", "username");
+    const { created_by} = req.query; //Reads ?created_by from URL
+
+    const query = created_by ? { created_by: created_by } : {}; //Builds conditional filter
+
+    const quizzes = await Quiz.find(query).populate("created_by", "username");
+
     res.status(200).json({ quizzes: quizzes })
   } catch (error) {
     res.status(500).json({ message: "Error fetching quizzes", error: error.message})

@@ -7,6 +7,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [takenQuizzes, setTakenQuizzes] = useState([]); //Stores quizzes attempted by logged in user
+  const [createdQuizzes, setCreatedQuizzes] = useState([]); //Stores quizzes made by the user
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
@@ -19,7 +20,13 @@ export default function ProfilePage() {
         const quizzesResponse = await apiFetch("/quizzes"); //Fetches all quizzes from backend
         const quizzesBody = await quizzesResponse.json(); // converts quiz response to json
         const userId = body.user._id; // Stores MongoDB user ID for comparison
+
+        const createdResponse = await apiFetch("/quizzes?created_by=" + userId);
+        const createdBody = await createdResponse.json();
+        setCreatedQuizzes(createdBody.quizzes || []); // SAVES QUIZZES CREATED BY THIS USER
+
         const quizzesWithUserAttempts = quizzesBody.quizzes
+
         .map((quiz) => { //maps over all quizzes to find attempts by current user
           const userAttempt = quiz.attempts?.find( //Finds the user's attempt to this quiz if any exist
             (attempt) => attempt.user_id.toString() === userId.toString()
@@ -34,11 +41,12 @@ export default function ProfilePage() {
           totalQuestions: quiz.questions.length,
           
         };
-      
+  
         })
         .filter(Boolean); //Removes any quizzes not attenmpted nulls
       setTakenQuizzes(quizzesWithUserAttempts); //Saving filtered quizzes to state
       }
+      
     });
     return unsub;
   }, []);
@@ -66,6 +74,18 @@ export default function ProfilePage() {
                 {/* Displays title, raw score, percentage, and formatted attempt date */}
             </li>
           ))}
+        </ul>
+      )}
+      <h2>Quizzes Created</h2>
+      {createdQuizzes.length === 0 ? (
+        <p>You haven't created any quizzes yet.</p>
+      ) : (
+        <ul>
+          {createdQuizzes.map((quiz) => (
+          <li key={quiz._id}>
+            {quiz.title} - {quiz.questions.length} question{quiz.questions.length !== 1 ? 's' : ''}
+          </li>
+        ))}
         </ul>
       )}
     </div>

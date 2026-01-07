@@ -18,7 +18,7 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
+  /* display: flex; was removed to make auth layout vertical */
   min-width: 320px;
   min-height: 100vh;
 }
