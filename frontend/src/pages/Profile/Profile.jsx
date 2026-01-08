@@ -211,7 +211,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <div className="relative flex flex-col items-center">
           <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
           <p className="mt-4 text-white font-medium">Loading profile...</p>
