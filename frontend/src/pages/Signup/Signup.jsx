@@ -4,7 +4,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../../services/authentication";
 import { apiFetch } from "../../services/api";
-import brainLogo from "../../assets/brain-logo.png";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL; 
 
@@ -142,14 +141,6 @@ export function Signup() {
 </div>
 {/* Auth card container (keeps the form centered and readable) */}
 <div className="w-full max-w-md">
-  {/* Brain Logo */}
-<div className="flex justify-center mb-1 sm:mb-2 mt-1">
-  <img
-    src={brainLogo}
-    alt="Quiz.app logo"
-    className="w-[clamp(280px,78vw,380px)] h-auto object-contain"
-  />
-</div>
 {/* Top pill */}
 <div className="mx-auto mt-4 mb-3 flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">
 
