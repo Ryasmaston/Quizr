@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
@@ -22,21 +22,23 @@ function TakeQuizPage() {
     const [result, setResult] = useState(null);
     const [favouriteIds, setFavouriteIds] = useState([]);
 
+    const loadQuiz = useCallback(async () => {
+    const res = await apiFetch(`/quizzes/${id}`);
+    const data = await res.json();
+    setQuiz(data.quiz);
+    }, [id]);
+
     useEffect(() => {
     // Listen for login state, then fetch the quiz if user is logged in
     const unsub = onAuthStateChanged(auth, async (user) => {
     //If no user, don't fetch a quiz
     if (!user) return;
-    //Fetching the quiz
-    const res = await apiFetch(`/quizzes/${id}`);
-    //Saving the quiz data to state
-    const data = await res.json();
-    setQuiz(data.quiz);
+    await loadQuiz();
     });
 
     // Stop listening when the page changes
     return () => unsub();
-}, [id]);
+}, [id, loadQuiz]);
 
     useEffect(() => {
     let mounted = true;
@@ -60,6 +62,7 @@ const leaderboard = useMemo(() => {
     const attempts = Array.isArray(quiz?.attempts) ? quiz.attempts : [];
     const questionsCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0;
     if (questionsCount === 0 || attempts.length === 0) return [];
+    const passThreshold = Number.isFinite(quiz?.req_to_pass) ? quiz.req_to_pass : questionsCount;
 
     const byUser = new Map();
 
@@ -110,7 +113,8 @@ const leaderboard = useMemo(() => {
 
     return entries.slice(0, 10).map((entry) => ({
     ...entry,
-    scorePercent: `${Math.round((entry.bestCorrect / questionsCount) * 100)}%`
+    scorePercent: `${Math.round((entry.bestCorrect / questionsCount) * 100)}%`,
+    isPassing: entry.bestCorrect >= passThreshold
     }));
 }, [quiz]);
 
@@ -127,7 +131,11 @@ if (!quiz)
 
 const question = quiz.questions[currentIndex];
 const isLastQuestion = currentIndex === quiz.questions.length - 1;
-const currentAnswer = answers[currentIndex];
+const currentSelections = Array.isArray(answers[currentIndex])
+    ? answers[currentIndex]
+    : answers[currentIndex]
+    ? [answers[currentIndex]]
+    : [];
 const isFavourited = favouriteIds.includes(quiz._id);
 const optionsPerQuestion = Math.max(
     0,
@@ -136,13 +144,26 @@ const optionsPerQuestion = Math.max(
 
 function handleSelect(answerId) {
     if (result) return;
-    const updatedAnswers = [...answers];
-    updatedAnswers[currentIndex] = answerId;
-    setAnswers(updatedAnswers);
+    setAnswers((prev) => {
+    const updated = [...prev];
+    const current = Array.isArray(updated[currentIndex])
+        ? updated[currentIndex]
+        : updated[currentIndex]
+        ? [updated[currentIndex]]
+        : [];
+    if (quiz.allow_multiple_correct) {
+        updated[currentIndex] = current.includes(answerId)
+        ? current.filter((id) => id !== answerId)
+        : [...current, answerId];
+    } else {
+        updated[currentIndex] = [answerId];
+    }
+    return updated;
+    });
 }
 
 function goNext() {
-    if (!currentAnswer) return;
+    if (currentSelections.length === 0) return;
     setCurrentIndex((index) => Math.min(index + 1, quiz.questions.length - 1));
 }
 
@@ -155,6 +176,13 @@ function startQuiz() {
 }
 
 function retakeQuiz() {
+    setAnswers([]);
+    setCurrentIndex(0);
+    setResult(null);
+    setPhase("inProgress");
+}
+
+function returnToQuiz() {
     setAnswers([]);
     setCurrentIndex(0);
     setResult(null);
@@ -191,6 +219,11 @@ async function submitQuiz() {
     //Saving the quiz result (percentage, correct answers)
     const data = await res.json();
     setResult(data);
+    try {
+    await loadQuiz();
+    } catch (error) {
+    console.error("Failed to refresh quiz data", error);
+    }
     setPhase("done");
     console.log(data.correctAnswers);
 }
@@ -257,7 +290,7 @@ return (
                 <thead className="bg-white/10 text-left text-gray-200">
                     <tr>
                     <th className="px-4 py-3">Player</th>
-                    <th className="px-4 py-3">Top score %</th>
+                    <th className="px-4 py-3">Top score</th>
                     <th className="px-4 py-3">Correct</th>
                     <th className="px-4 py-3">Attempts</th>
                     </tr>
@@ -273,7 +306,17 @@ return (
                     leaderboard.map((entry) => (
                         <tr key={entry.userId}>
                         <td className="px-4 py-3 font-medium text-white">{entry.username}</td>
-                        <td className="px-4 py-3">{entry.scorePercent}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold ${
+                              entry.isPassing
+                                ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200"
+                                : "border-rose-400/40 bg-rose-500/20 text-rose-200"
+                            }`}
+                          >
+                            {entry.scorePercent}
+                          </span>
+                        </td>
                         <td className="px-4 py-3">{entry.bestCorrect}</td>
                         <td className="px-4 py-3">{entry.attemptsCount}</td>
                         </tr>
@@ -296,7 +339,7 @@ return (
 
             <div className="grid gap-3 sm:grid-cols-2">
             {question.answers.map((answer) => {
-                const isSelected = currentAnswer === answer._id;
+                const isSelected = currentSelections.includes(answer._id);
                 return (
                 <button
                     key={answer._id}
@@ -327,7 +370,7 @@ return (
                 <button
                 className="px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50"
                 onClick={goNext}
-                disabled={!currentAnswer}
+                disabled={currentSelections.length === 0}
                 type="button"
                 >
                 Next
@@ -337,7 +380,7 @@ return (
                 <button
                 className="px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold hover:shadow-lg hover:shadow-emerald-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50"
                 onClick={submitQuiz}
-                disabled={!currentAnswer}
+                disabled={currentSelections.length === 0}
                 type="button"
                 >
                 Submit
@@ -348,7 +391,29 @@ return (
         )}
 
         {phase === "done" && result && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 text-center">
+        <div className="relative bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 text-center">
+            <button
+            className={`absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border transition-all ${
+                isFavourited
+                ? "border-amber-300/60 bg-amber-400/20 text-amber-200"
+                : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+            }`}
+            type="button"
+            onClick={handleToggleFavourite}
+            aria-label={isFavourited ? "Remove from favourites" : "Add to favourites"}
+            title={isFavourited ? "Remove from favourites" : "Add to favourites"}
+            >
+            <svg
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                fill={isFavourited ? "currentColor" : "none"}
+                strokeWidth={2}
+                aria-hidden="true"
+            >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
+            </svg>
+            </button>
             <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center">
             <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -360,6 +425,13 @@ return (
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <button
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
+                onClick={() => navigate("/")}
+                type="button"
+            >
+                Homepage
+            </button>
+            <button
                 className="w-full sm:w-auto px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95"
                 onClick={retakeQuiz}
                 type="button"
@@ -368,10 +440,10 @@ return (
             </button>
             <button
                 className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
-                onClick={() => navigate("/")}
+                onClick={returnToQuiz}
                 type="button"
             >
-                Go to homepage
+                Return to quiz
             </button>
             </div>
         </div>
