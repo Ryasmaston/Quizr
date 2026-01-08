@@ -118,6 +118,32 @@ const leaderboard = useMemo(() => {
     }));
 }, [quiz]);
 
+const categoryColors = {
+    art: "from-pink-500 to-rose-500",
+    history: "from-amber-500 to-orange-500",
+    music: "from-purple-500 to-indigo-500",
+    science: "from-blue-500 to-cyan-500",
+    other: "from-gray-500 to-slate-500"
+};
+
+const categoryIcons = {
+    art: (
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+    ),
+    history: (
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    ),
+    music: (
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+    ),
+    science: (
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+    ),
+    other: (
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    )
+};
+
 //While quiz is being loaded or the user is logged out we return a message on the screen
 if (!quiz)
     return (
@@ -243,20 +269,89 @@ return (
         </div>
 
         {phase === "intro" && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
-            <div className="grid gap-3 text-gray-300 text-sm sm:text-base">
-            <p>
-                <span className="text-white font-semibold">Category:</span> {quiz.category}
-            </p>
-            <p>
-                <span className="text-white font-semibold">Questions:</span> {quiz.questions.length}
-            </p>
-            <p>
-                <span className="text-white font-semibold">Options per question:</span> {optionsPerQuestion}
-            </p>
-            <p>
-                <span className="text-white font-semibold">Created by:</span> {quiz.created_by.username}
-            </p>
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 overflow-hidden">
+            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 sm:px-8 bg-gradient-to-r ${
+            categoryColors[quiz.category] || categoryColors.other
+            }`}>
+            <div className="inline-flex items-center gap-2 text-white font-semibold text-sm uppercase tracking-wide">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {categoryIcons[quiz.category] || categoryIcons.other}
+                </svg>
+                <span className="capitalize">{quiz.category}</span>
+                </span>
+            </div>
+            <button
+                type="button"
+                onClick={() => navigate(`/users/${quiz.created_by.username}`)}
+                className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
+            >
+                Created by {quiz.created_by.username}
+            </button>
+            </div>
+            <div className="p-6 sm:p-8">
+            <div className="grid gap-4 sm:grid-cols-2 text-gray-200 text-sm sm:text-base">
+                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </span>
+                <div className="text-left pl-1">
+                    <div className="text-xs uppercase tracking-wide text-white/60">Questions</div>
+                    <div className="text-lg font-semibold text-white">{quiz.questions.length}</div>
+                </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h10M7 12h10M7 17h10" />
+                    </svg>
+                </span>
+                <div className="text-left pl-1">
+                    <div className="text-xs uppercase tracking-wide text-white/60">Options per question</div>
+                    <div className="text-lg font-semibold text-white">{optionsPerQuestion}</div>
+                </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                </span>
+                <div className="text-left pl-1">
+                    <div className="text-xs uppercase tracking-wide text-white/60">Pass threshold</div>
+                    <div className="text-lg font-semibold text-white">
+                    {quiz.req_to_pass}/{quiz.questions.length}
+                    </div>
+                </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h7l-1.5-1.5m0 0L10 6m-1.5 2.5H21M21 14h-7l1.5 1.5m0 0L14 18m1.5-2.5H3" />
+                    </svg>
+                </span>
+                <div className="text-left pl-1">
+                    <div className="text-xs uppercase tracking-wide text-white/60">Multiple correct</div>
+                    <div className="text-lg font-semibold text-white">
+                    {quiz.allow_multiple_correct ? "Allowed" : "Single answer"}
+                    </div>
+                </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
+                    </svg>
+                </span>
+                <div className="text-left pl-1">
+                    <div className="text-xs uppercase tracking-wide text-white/60">Select all correct</div>
+                    <div className="text-lg font-semibold text-white">
+                    {quiz.require_all_correct ? "Required" : "Not required"}
+                    </div>
+                </div>
+                </div>
             </div>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
             <button
@@ -326,6 +421,7 @@ return (
                 </table>
             </div>
             </div>
+            </div>
         </div>
         )}
 
@@ -333,7 +429,16 @@ return (
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-gray-300 mb-4">
             <span>Question {currentIndex + 1} of {quiz.questions.length}</span>
-            <span className="text-white/70">{quiz.category}</span>
+            <span
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${
+                categoryColors[quiz.category] || categoryColors.other
+                } text-white text-xs font-semibold`}
+            >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {categoryIcons[quiz.category] || categoryIcons.other}
+                </svg>
+                <span className="capitalize">{quiz.category}</span>
+            </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-5">{question.text}</h2>
 
