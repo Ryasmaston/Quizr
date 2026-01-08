@@ -93,7 +93,7 @@ function NavBar() {
           <div className="flex items-center gap-3">
             {user && username && (
               <NavLink
-                to={`/users/${username}`} // Fixed: added curly braces
+                to={`/users/${username}`}
                 className={({ isActive }) =>
                   `text-sm font-medium transition-colors ${
                     isActive

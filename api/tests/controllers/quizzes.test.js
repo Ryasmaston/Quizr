@@ -3,22 +3,22 @@ const app = require("../../app");
 const Quiz = require("../../models/quiz");
 require("../mongodb_helper");
 
-describe("/quizzes", () => {
+describe("/api/quizzes", () => {
   beforeEach(async () => {
     await Quiz.deleteMany({})
   })
 
-  describe("GET /quizzes", () => {
+  describe("GET /api/quizzes", () => {
     it("returns an empty array when there are no quizzes", async () => {
-      const response = await request(app).get("/quizzes");
+      const response = await request(app).get("/api/quizzes");
       expect(response.status).toEqual(200);
       expect(response.body.quizzes).toEqual([]);
     });
   })
-  describe("POST /quizzes", () => {
+  describe("POST /api/quizzes", () => {
     it("returns status 200 when quiz is created", async () => {
       const response = await request(app)
-        .post("/quizzes")
+        .post("/api/quizzes")
         .send({
           title: "Test title"
         });
@@ -27,7 +27,7 @@ describe("/quizzes", () => {
     })
     it("creates and adds a quiz to the database", async () => {
       await request(app)
-        .post("/quizzes")
+        .post("/api/quizzes")
         .send({
           title: "Test title"
         })
@@ -37,7 +37,7 @@ describe("/quizzes", () => {
     })
     it("creates a quiz with questions and answers", async () => {
       await request(app)
-        .post("/quizzes")
+        .post("/api/quizzes")
         .send({
           title: "Test title",
           questions: [
@@ -66,34 +66,34 @@ describe("/quizzes", () => {
     })
   })
 
-  describe("GET /quizzes/:id", () => {
+  describe("GET /api/quizzes/:id", () => {
     it("returns a quiz when it exists", async () => {
       const quiz = new Quiz({
         title: "Test quiz"
       })
       await quiz.save();
-      const response = await request(app).get(`/quizzes/${quiz._id}`);
+      const response = await request(app).get(`/api/quizzes/${quiz._id}`);
       expect(response.status).toEqual(200);
       expect(response.body.quiz.title).toEqual("Test quiz");
     })
     it("returns 404 when quiz does not exist", async () => {
-      const response = await request(app).get("/quizzes/507f1f77bcf86cd799439011")
+      const response = await request(app).get("/api/quizzes/507f1f77bcf86cd799439011")
       expect(response.status).toEqual(404)
       expect(response.body.message).toEqual("Quiz not found")
     });
   })
-  describe("DELETE /quizzes/:id", () => {
+  describe("DELETE /api/quizzes/:id", () => {
     it("deletes a quiz when it exists", async () => {
       const quiz = new Quiz({
         title: "Test quiz"
       })
       await quiz.save();
-      const response = await request(app).delete(`/quizzes/${quiz._id}`);
+      const response = await request(app).delete(`/api/quizzes/${quiz._id}`);
       expect(response.status).toEqual(200);
       expect(response.body.message).toEqual("Quiz deleted");
     })
     it("returns 404 when quiz does not exist", async () => {
-      const response = await request(app).delete("/quizzes/507f1f77bcf86cd799439011")
+      const response = await request(app).delete("/api/quizzes/507f1f77bcf86cd799439011")
       expect(response.status).toEqual(200)
       expect(response.body.message).toEqual("Quiz not found")
     });

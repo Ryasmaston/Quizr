@@ -3,15 +3,15 @@ const app = require("../../app");
 const User = require("../../models/user");
 require("../mongodb_helper");
 
-describe("/users", () => {
+describe("/api/users", () => {
   beforeEach(async () => {
     await User.deleteMany({});
   });
 
-  describe("POST /users, when username, email and password are provided", () => {
+  describe("POST /api/users, when username, email and password are provided", () => {
     test("the response code is 201", async () => {
       const response = await request(app)
-        .post("/users")
+        .post("/api/users")
         .send({
           username: "testuser",
           email: "test@email.com",
@@ -22,7 +22,7 @@ describe("/users", () => {
 
     test("a user is created", async () => {
       await request(app)
-        .post("/users")
+        .post("/api/users")
         .send({
           username: "testuser",
           email: "test@email.com",
@@ -35,10 +35,10 @@ describe("/users", () => {
     });
   });
 
-  describe("POST /users, when password is missing", () => {
+  describe("POST /api/users, when password is missing", () => {
     test("response code is 400", async () => {
       const response = await request(app)
-        .post("/users")
+        .post("/api/users")
         .send({
           username: "testuser",
           email: "test@email.com"
@@ -48,7 +48,7 @@ describe("/users", () => {
 
     test("does not create a user", async () => {
       await request(app)
-        .post("/users")
+        .post("/api/users")
         .send({
           username: "testuser",
           email: "test@email.com" });
@@ -60,7 +60,7 @@ describe("/users", () => {
   describe("POST, when email is missing", () => {
     test("response code is 400", async () => {
       const response = await request(app)
-        .post("/users")
+        .post("/api/users")
         .send({
           username: "testuser",
           password: "Testpass123"
@@ -70,7 +70,7 @@ describe("/users", () => {
 
     test("does not create a user", async () => {
       await request(app)
-        .post("/users")
+        .post("/api/users")
         .send({
           username: "testuser",
           password: "Testpass123"
@@ -83,7 +83,7 @@ describe("/users", () => {
   describe("POST, when username is missing", () => {
     test("response code is 400", async () => {
       const response = await request(app)
-        .post("/users")
+        .post("/api/users")
         .send({
           email: "test@email.com",
           password: "Testpass123"
@@ -93,7 +93,7 @@ describe("/users", () => {
 
     test("does not create a user", async () => {
       await request(app)
-        .post("/users")
+        .post("/api/users")
         .send({
           email: "test@email.com",
           password: "Testpass123"
