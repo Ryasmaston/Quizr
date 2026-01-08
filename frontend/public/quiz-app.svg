@@ -1,0 +1,66 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a78bfa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c084fc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4c1d95;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2e1065;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Rounded background -->
+  <circle cx="100" cy="100" r="95" fill="url(#bgGrad)"/>
+
+  <g transform="translate(100, 100)">
+    <!-- Question mark design -->
+
+    <!-- Top curved part of ? - softer and more rounded, wider at top -->
+    <path d="M -25,-40 Q -32,-50 -25,-60 Q -15,-68 0,-68 Q 15,-68 25,-60 Q 32,-50 25,-40 Q 18,-28 12,-18 Q 6,-8 0,2 L 0,8"
+          fill="none"
+          stroke="url(#mainGrad)"
+          stroke-width="16"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          filter="url(#glow)"/>
+
+    <!-- Dot of ? -->
+    <circle cx="0" cy="28" r="10"
+            fill="url(#accentGrad)"
+            filter="url(#glow)"/>
+
+    <!-- Simplified multiple choice bubbles - closer together -->
+
+    <!-- Option bubble top-left -->
+    <circle cx="-35" cy="-30" r="8"
+            fill="none"
+            stroke="url(#mainGrad)"
+            stroke-width="2.5"
+            opacity="0.7"/>
+
+    <!-- Option bubble top-right -->
+    <circle cx="35" cy="-30" r="8"
+            fill="none"
+            stroke="url(#mainGrad)"
+            stroke-width="2.5"
+            opacity="0.7"/>
+
+    <!-- Option bubble bottom (selected) -->
+    <circle cx="0" cy="55" r="8"
+            fill="url(#accentGrad)"
+            opacity="0.95"
+            filter="url(#glow)"/>
+  </g>
+</svg>
