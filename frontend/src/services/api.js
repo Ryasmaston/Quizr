@@ -2,7 +2,7 @@
 import { auth } from "./firebase";
 import { authReady } from "./authState";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 export async function apiFetch(path, options = {}) {
     // Wait for Firebase auth to initialize (authReady resolves on first state change)
