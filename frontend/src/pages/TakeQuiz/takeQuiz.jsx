@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
@@ -74,6 +74,63 @@ const optionsPerQuestion = Math.max(
     0,
     ...quiz.questions.map((item) => item.answers.length)
 );
+const leaderboard = useMemo(() => {
+    const attempts = Array.isArray(quiz?.attempts) ? quiz.attempts : [];
+    const questionsCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0;
+    if (questionsCount === 0 || attempts.length === 0) return [];
+
+    const byUser = new Map();
+
+    attempts.forEach((attempt) => {
+    const user = attempt.user_id;
+    const userId = typeof user === "string" ? user : user?._id;
+    if (!userId) return;
+    const username = typeof user === "object" && user?.username ? user.username : "Unknown";
+    const attemptedAt = attempt.attempted_at ? new Date(attempt.attempted_at) : null;
+    const correct = Number.isFinite(attempt.correct) ? attempt.correct : 0;
+
+    const existing = byUser.get(userId);
+    if (!existing) {
+        byUser.set(userId, {
+        userId,
+        username,
+        attemptsCount: 1,
+        bestCorrect: correct,
+        bestAttemptAt: attemptedAt
+        });
+        return;
+    }
+
+    existing.attemptsCount += 1;
+    if (correct > existing.bestCorrect) {
+        existing.bestCorrect = correct;
+        existing.bestAttemptAt = attemptedAt;
+    } else if (correct === existing.bestCorrect) {
+        if (attemptedAt && (!existing.bestAttemptAt || attemptedAt < existing.bestAttemptAt)) {
+        existing.bestAttemptAt = attemptedAt;
+        }
+    }
+
+    if (existing.username === "Unknown" && username !== "Unknown") {
+        existing.username = username;
+    }
+    });
+
+    const entries = Array.from(byUser.values());
+    entries.sort((a, b) => {
+    if (b.bestCorrect !== a.bestCorrect) return b.bestCorrect - a.bestCorrect;
+    if (a.attemptsCount !== b.attemptsCount) return a.attemptsCount - b.attemptsCount;
+    const aTime = a.bestAttemptAt ? a.bestAttemptAt.getTime() : Number.POSITIVE_INFINITY;
+    const bTime = b.bestAttemptAt ? b.bestAttemptAt.getTime() : Number.POSITIVE_INFINITY;
+    if (aTime !== bTime) return aTime - bTime;
+    return a.username.localeCompare(b.username, undefined, { sensitivity: "base" });
+    });
+
+    return entries.slice(0, 10).map((entry) => ({
+    ...entry,
+    scorePercent: `${Math.round((entry.bestCorrect / questionsCount) * 100)}%`
+    }));
+}, [quiz]);
 
 function handleSelect(answerId) {
     if (result) return;
@@ -173,6 +230,39 @@ return (
             >
                 {isFavourited ? "Remove from favourites" : "Add to favourites"}
             </button>
+            </div>
+            <div className="mt-8">
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Leaderboard</h3>
+            <div className="overflow-hidden rounded-2xl border border-white/20 bg-white/5">
+                <table className="w-full text-sm sm:text-base">
+                <thead className="bg-white/10 text-left text-gray-200">
+                    <tr>
+                    <th className="px-4 py-3">Player</th>
+                    <th className="px-4 py-3">Top score %</th>
+                    <th className="px-4 py-3">Correct</th>
+                    <th className="px-4 py-3">Attempts</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10 text-gray-100">
+                    {leaderboard.length === 0 ? (
+                    <tr>
+                        <td className="px-4 py-4 text-center text-gray-300" colSpan={4}>
+                        No attempts yet.
+                        </td>
+                    </tr>
+                    ) : (
+                    leaderboard.map((entry) => (
+                        <tr key={entry.userId}>
+                        <td className="px-4 py-3 font-medium text-white">{entry.username}</td>
+                        <td className="px-4 py-3">{entry.scorePercent}</td>
+                        <td className="px-4 py-3">{entry.bestCorrect}</td>
+                        <td className="px-4 py-3">{entry.attemptsCount}</td>
+                        </tr>
+                    ))
+                    )}
+                </tbody>
+                </table>
+            </div>
             </div>
         </div>
         )}

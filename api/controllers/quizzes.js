@@ -33,7 +33,9 @@ async function createQuiz(req, res) {
 
 async function getQuizById(req, res) {
   try{
-    const quiz = await Quiz.findById(req.params.id).populate("created_by", "username");
+    const quiz = await Quiz.findById(req.params.id)
+      .populate("created_by", "username")
+      .populate("attempts.user_id", "username");
     if(!quiz){
       return res.status(404).json({ message: "Quiz not found" });
     }
