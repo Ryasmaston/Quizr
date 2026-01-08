@@ -9,7 +9,7 @@ export function Home() {
   const [loading, setLoading] = useState(true)
   const [quizzes, setQuizzes] = useState([])
   const [favouriteIds, setFavouriteIds] = useState([]);
-  const [selectedCatergory, setSelectedCatergory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
 
 useEffect(() => {
@@ -70,13 +70,13 @@ useEffect(() => {
     "from-fuchsia-500 to-pink-600"
   ];
 
-  const catergories = [
+  const categories = [
     "all",
-    ...new Set (quizzes.map((quiz) => quiz.category))
+    ...new Set(quizzes.map((quiz) => quiz.category))
   ];
 
-  const filteredQuizzes = selectedCatergory === "all" ? quizzes : quizzes.filter(
-    (quiz) => quiz.category === selectedCatergory
+  const filteredQuizzes = selectedCategory === "all" ? quizzes : quizzes.filter(
+    (quiz) => quiz.category === selectedCategory
   );
   if (loading)
     return (
@@ -101,42 +101,45 @@ useEffect(() => {
           </h1>
           <p className="text-gray-300 text-base sm:text-lg px-4">Challenge yourself and expand your knowledge</p>
         </div>
-        <div className="flex justify-center mb-6">
-          <select
-            value={selectedCatergory}
-            onChange={(e) => setSelectedCatergory(e.target.value)}
-            className="
-              w-full max-w-md
-              bg-white/10 text-white
-              px-6 py-3
-              rounded-2xl
-              border border-white/20
-              backdrop-blur
-              text-center
-              focus:outline-none focus:ring-2 focus:ring-purple-400
-            "
-          >
-              {catergories.map((category) => (
-                <option
-                key={category}
-                value={category}
-                className="text-black"
-                >
-                  {category === "all"
-                  ? "All Quizzes"
-                  : category.charAt(0).toUpperCase() + category.slice(1)}
-                </option>
-              ))}
-            </select>
-        </div>
         {quizzes.length > 0 && (
-          <div className="mb-6 sm:mb-8 grid grid-cols-3 gap-3 sm:gap-4 max-w-3xl mx-auto px-4">
-            <div className="col-span-3 justify-self-center bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{quizzes.length}</div>
-              <div className="text-gray-300 text-xs sm:text-sm">Total Quizzes</div>
-            </div>
-          </div>
-        )}
+  <div className="mb-6 sm:mb-8 max-w-3xl mx-auto px-4 flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">
+    {/* Total Quizzes Card */}
+    <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl px-4 py-3 border border-white/20 flex flex-col justify-center min-w-[150px] w-full sm:w-auto">
+      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{filteredQuizzes.length}</div>
+      <div className="text-gray-300 text-xs sm:text-sm">Total Quizzes</div>
+    </div>
+
+    {/* Category filter drop down */}
+    <select
+      value={selectedCategory}
+      onChange={(e) => setSelectedCategory(e.target.value)}
+      className="
+        h-16
+        w-full max-w-md
+        bg-white/10 text-white
+        px-6
+        rounded-2xl
+        border border-white/20
+        backdrop-blur
+        text-center
+        focus:outline-none focus:ring-2 focus:ring-purple-400
+      "
+    >
+      {categories.map((category) => (
+        <option
+          key={category}
+          value={category}
+          className="text-black"
+        >
+          {category === "all"
+            ? "All Quizzes"
+            : category.charAt(0).toUpperCase() + category.slice(1)}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
         {quizzes.length === 0 && (
           <div className="text-center py-12 sm:py-20 max-w-md mx-auto px-4">
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-8 sm:p-12 border border-white/20">
