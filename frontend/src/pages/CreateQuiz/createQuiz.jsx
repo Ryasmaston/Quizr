@@ -10,6 +10,7 @@ export default function CreateQuiz() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("other");
   const [answersPerQuestion, setAnswersPerQuestion] = useState(
     DEFAULT_ANSWERS_PER_QUESTION
   );
@@ -167,6 +168,7 @@ export default function CreateQuiz() {
     try {
       await createQuiz({
         title,
+        category,
         questions,
         allow_multiple_correct: allowMultipleCorrect,
         require_all_correct: allowMultipleCorrect ? requireAllCorrect : false,
@@ -186,6 +188,13 @@ export default function CreateQuiz() {
     "from-emerald-500 to-teal-600",
     "from-amber-500 to-orange-600",
     "from-fuchsia-500 to-pink-600"
+  ];
+  const categories = [
+    { value: "art", label: "Art" },
+    { value: "history", label: "History" },
+    { value: "music", label: "Music" },
+    { value: "science", label: "Science" },
+    { value: "other", label: "Other" },
   ];
   const questionCount = questions.length;
   const passPercent = questionCount > 0 ? Math.round((reqToPass / questionCount) * 100) : 0;
@@ -222,9 +231,25 @@ export default function CreateQuiz() {
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/20">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-white font-semibold text-lg">Quiz Options</h2>
-              <span className="text-xs uppercase tracking-widest text-white/50">Setup</span>
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
+              <div>
+                <label className="block text-gray-300 font-medium mb-2 text-sm">
+                  Category
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                >
+                  {categories.map((item) => (
+                    <option key={item.value} value={item.value} className="bg-slate-900">
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-2">Used for category chips and filters.</p>
+              </div>
               <div>
                 <label className="block text-gray-300 font-medium mb-2 text-sm">
                   Answers per question
@@ -242,7 +267,7 @@ export default function CreateQuiz() {
                 </select>
                 <p className="text-xs text-gray-400 mt-2">Applies to every question.</p>
               </div>
-              <div>
+              <div className="lg:col-span-2">
                 <label className="block text-gray-300 font-medium mb-2 text-sm">
                   Pass threshold
                 </label>
