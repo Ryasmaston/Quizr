@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
@@ -9,6 +9,7 @@ import { toggleFavourite } from "../../services/favourites";
 function TakeQuizPage() {
     //Getting the quiz id from the URL e.g. /quiz/:id
     const { id } = useParams();
+    const navigate = useNavigate();
     //Storing the quiz data from the backend
     const [quiz, setQuiz] = useState(null);
     // Phase of the quiz
@@ -55,25 +56,6 @@ function TakeQuizPage() {
     fetchUser();
     return () => { mounted = false; };
 }, []);
-//While quiz is being loaded or the user is logged out we return a message on the screen
-if (!quiz)
-    return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="relative flex flex-col items-center">
-        <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-        <p className="mt-4 text-white font-medium">Loading quiz...</p>
-        </div>
-    </div>
-    );
-
-const question = quiz.questions[currentIndex];
-const isLastQuestion = currentIndex === quiz.questions.length - 1;
-const currentAnswer = answers[currentIndex];
-const isFavourited = favouriteIds.includes(quiz._id);
-const optionsPerQuestion = Math.max(
-    0,
-    ...quiz.questions.map((item) => item.answers.length)
-);
 const leaderboard = useMemo(() => {
     const attempts = Array.isArray(quiz?.attempts) ? quiz.attempts : [];
     const questionsCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0;
@@ -132,6 +114,26 @@ const leaderboard = useMemo(() => {
     }));
 }, [quiz]);
 
+//While quiz is being loaded or the user is logged out we return a message on the screen
+if (!quiz)
+    return (
+    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="relative flex flex-col items-center">
+        <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+        <p className="mt-4 text-white font-medium">Loading quiz...</p>
+        </div>
+    </div>
+    );
+
+const question = quiz.questions[currentIndex];
+const isLastQuestion = currentIndex === quiz.questions.length - 1;
+const currentAnswer = answers[currentIndex];
+const isFavourited = favouriteIds.includes(quiz._id);
+const optionsPerQuestion = Math.max(
+    0,
+    ...quiz.questions.map((item) => item.answers.length)
+);
+
 function handleSelect(answerId) {
     if (result) return;
     const updatedAnswers = [...answers];
@@ -150,6 +152,13 @@ function goBack() {
 
 function startQuiz() {
     setPhase("inProgress");
+}
+
+function retakeQuiz() {
+    setAnswers([]);
+    setCurrentIndex(0);
+    setResult(null);
+    setPhase("intro");
 }
 
 async function handleToggleFavourite() {
@@ -216,7 +225,7 @@ return (
                 <span className="text-white font-semibold">Created by:</span> {quiz.created_by.username}
             </p>
             </div>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
             <button
                 className="w-full sm:w-auto px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95"
                 onClick={startQuiz}
@@ -224,11 +233,21 @@ return (
                 Take the quiz
             </button>
             <button
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2"
                 type="button"
                 onClick={handleToggleFavourite}
             >
-                {isFavourited ? "Remove from favourites" : "Add to favourites"}
+                <svg
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                fill={isFavourited ? "currentColor" : "none"}
+                strokeWidth={2}
+                aria-hidden="true"
+                >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
+                </svg>
+                <span>{isFavourited ? "Remove from favourites" : "Add to favourites"}</span>
             </button>
             </div>
             <div className="mt-8">
@@ -339,6 +358,22 @@ return (
             <p className="text-gray-300 text-lg">
             Correct answers {result.correctAnswers}, ({result.scorePercentage})
             </p>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95"
+                onClick={retakeQuiz}
+                type="button"
+            >
+                Retake quiz
+            </button>
+            <button
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
+                onClick={() => navigate("/")}
+                type="button"
+            >
+                Go to homepage
+            </button>
+            </div>
         </div>
         )}
     </main>

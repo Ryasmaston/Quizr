@@ -116,15 +116,27 @@ export default function ProfilePage() {
 
         const quizzesWithUserAttempts = quizzesBody.quizzes
           .map((quiz) => {
-            const userAttempt = quiz.attempts?.find(
+            const attempts = Array.isArray(quiz.attempts) ? quiz.attempts : [];
+            const userAttempts = attempts.filter(
               (attempt) => attempt.user_id.toString() === userId.toString()
             );
-            if (!userAttempt) return null;
+            if (userAttempts.length === 0) return null;
+            const bestAttempt = userAttempts.reduce((best, attempt) => {
+              if (!best) return attempt;
+              if (attempt.correct > best.correct) return attempt;
+              if (attempt.correct === best.correct) {
+                const attemptTime = attempt.attempted_at ? new Date(attempt.attempted_at) : null;
+                const bestTime = best.attempted_at ? new Date(best.attempted_at) : null;
+                if (attemptTime && (!bestTime || attemptTime > bestTime)) return attempt;
+              }
+              return best;
+            }, null);
+            if (!bestAttempt) return null;
             return {
               _id: quiz._id,
               title: quiz.title,
-              correct: userAttempt.correct,
-              attempted_at: userAttempt.attempted_at,
+              correct: bestAttempt.correct,
+              attempted_at: bestAttempt.attempted_at,
               totalQuestions: quiz.questions.length,
             };
           })
@@ -484,7 +496,11 @@ export default function ProfilePage() {
                                      "from-red-500 to-pink-600";
 
                 return (
-                  <div key={quiz._id} className="group bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 hover:border-white/30 transition-all hover:bg-white/10">
+                  <Link
+                    key={quiz._id}
+                    to={`/quiz/${quiz._id}`}
+                    className="group block bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 hover:border-white/30 transition-all hover:bg-white/10"
+                  >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-white mb-2">{quiz.title}</h3>
@@ -517,7 +533,7 @@ export default function ProfilePage() {
                         style={{ width: `${percentage}%` }}
                       ></div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
