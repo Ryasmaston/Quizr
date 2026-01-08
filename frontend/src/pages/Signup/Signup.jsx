@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../../services/authentication";
 import { apiFetch } from "../../services/api";
+import brainLogo from "../../assets/brain-logo.png";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL; 
 
@@ -75,7 +76,8 @@ export function Signup() {
     <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
   </div>
 
-<div className="relative flex min-h-dvh items-center justify-center px-4 py-10">
+<div className="relative flex min-h-dvh items-start justify-center px-4 pt-6 pb-6">
+
 {/* Side category pillows (decorative) */}
 <div className="pointer-events-none absolute inset-0 hidden sm:block max-[380px]:hidden">
   {/* Art */}
@@ -103,7 +105,7 @@ export function Signup() {
   </div>
 
   {/* Music */}
-  <div className="absolute right-[clamp(2.0rem,10.2vw,8.0rem)] top-[34%] -translate-y-1/2">
+  <div className="absolute right-[clamp(2.1rem,10.5vw,8.2rem)] top-[34%] -translate-y-1/2">
     <div className="relative">
       <div className="absolute -inset-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/16 via-violet-500/12 to-fuchsia-500/16 blur-2xl"></div>
       <div className="relative inline-flex items-center gap-3 rounded-xl bg-gradient-to-b from-fuchsia-500/[0.16] via-white/[0.09] to-white/[0.06] px-6 py-3 ring-1 ring-white/10 shadow-[0_24px_70px_-50px_rgba(168,85,247,0.38)]">
@@ -115,7 +117,7 @@ export function Signup() {
   </div>
 
   {/* Science */}
-  <div className="absolute right-[clamp(1.7rem,9.6vw,7.4rem)] top-[52%] -translate-y-1/2">
+  <div className="absolute right-[clamp(1.8rem,9.6vw,7.6rem)] top-[54%] -translate-y-1/2">
     <div className="relative">
       <div className="absolute -inset-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/16 via-violet-500/12 to-fuchsia-500/16 blur-2xl"></div>
       <div className="relative inline-flex items-center gap-3 rounded-xl bg-gradient-to-b from-fuchsia-500/[0.16] via-white/[0.09] to-white/[0.06] px-6 py-3 ring-1 ring-white/10 shadow-[0_24px_70px_-50px_rgba(168,85,247,0.38)]">
@@ -127,10 +129,10 @@ export function Signup() {
   </div>
 
   {/* Other */}
-  <div className="absolute right-[clamp(2.7rem,11.8vw,9.0rem)] top-[74%] -translate-y-1/2">
+  <div className="absolute right-[clamp(2.1rem,10.5vw,8.2rem)] top-[74%] -translate-y-1/2">
     <div className="relative">
       <div className="absolute -inset-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/18 via-violet-500/12 to-fuchsia-500/18 blur-2xl"></div>
-      <div className="relative inline-flex items-center gap-3 rounded-xl bg-gradient-to-b from-fuchsia-500/[0.18] via-white/[0.09] to-white/[0.06] px-6 py-3 ring-1 ring-white/10 shadow-[0_24px_70px_-50px_rgba(236,72,153,0.45)]">
+      <div className="relative inline-flex min-w-[170px] justify-center items-center gap-3 rounded-xl bg-gradient-to-b from-fuchsia-500/[0.18] via-white/[0.09] to-white/[0.06] px-6 py-3 ring-1 ring-white/10 shadow-[0_24px_70px_-50px_rgba(236,72,153,0.45)]">
         <div className="absolute inset-x-4 top-1 h-px bg-gradient-to-r from-transparent via-fuchsia-200/60 to-transparent"></div>
         <span className="grid h-11 w-11 place-items-center rounded-full bg-white/10 ring-1 ring-white/10 shadow-[0_14px_40px_-30px_rgba(168,85,247,0.22)] text-orange-200/95 drop-shadow-[0_2px_12px_rgba(251,146,60,0.32)]"><IconStar/></span>
         <span className="text-[20px] font-semibold drop-shadow-[0_2px_10px_rgba(168,85,247,0.16)]"><span className="text-pink-400/75">O</span><span className="text-fuchsia-400/55">t</span><span className="text-violet-400/65">h</span><span className="text-indigo-400/85">e</span><span className="text-indigo-400/85">r</span></span>
@@ -139,9 +141,17 @@ export function Signup() {
   </div>
 </div>
 {/* Auth card container (keeps the form centered and readable) */}
-      <div className="w-full max-w-md">
+<div className="w-full max-w-md">
+  {/* Brain Logo */}
+<div className="flex justify-center mb-1 sm:mb-2 mt-1">
+  <img
+    src={brainLogo}
+    alt="Quiz.app logo"
+    className="w-[clamp(280px,78vw,380px)] h-auto object-contain"
+  />
+</div>
 {/* Top pill */}
-<div className="mx-auto mt-4 mb-4 flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">
+<div className="mx-auto mt-4 mb-3 flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">
 
   <span className="inline-flex items-center gap-2 text-sm sm:text-base font-medium tracking-wide text-white/70">
     <span className="h-1 w-1 rounded-full bg-violet-200/45" />
@@ -151,7 +161,6 @@ export function Signup() {
 <button type="button" className="text-sm sm:text-base font-medium tracking-wide text-white/65 transition hover:text-white/80">
     Play
   </button>
-  <span className="h-1 w-1 rounded-full bg-violet-200/45" />
   <span className="h-1 w-1 rounded-full bg-violet-200/45" />
 <button type="button" className="text-sm sm:text-base font-medium tracking-wide text-white/65 transition hover:text-white/80">
     Add friends
@@ -165,7 +174,7 @@ export function Signup() {
         <p className="mt-2 text-center text-sm sm:text-base font-medium tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300">
           Build confidence — one quiz at a time.
         </p>
-        <div className="mt-6 bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 border border-white/20">
+        <div className="mt-5 bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 border border-white/20">
           <h2 className="text-lg font-medium">Sign up</h2>
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
             <label htmlFor="username" className="block text-sm text-white/80">Username</label>

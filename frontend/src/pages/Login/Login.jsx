@@ -3,6 +3,7 @@ import { auth } from "../../services/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { login } from "../../services/authentication";
+import brainLogo from "../../assets/brain-logo.png";
 
 const IconPalette=()=>(<svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none"><path d="M12 3a9 9 0 0 0 0 18h2.2a2.8 2.8 0 0 0 0-5.6H13.5a1 1 0 0 1 0-2h2.8A4.7 4.7 0 0 0 21 8.7C21 5.55 16.95 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M7.8 10.2h.01M10.3 7.9h.01M13 10.2h.01M15.6 11.7h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>);
 const IconLandmark=()=>(<svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none"><path d="M12 4 3.5 8.5V11h17V8.5L12 4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M5.8 11v8M9.3 11v8M12.8 11v8M16.3 11v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M4.5 19.5h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>);
@@ -41,7 +42,7 @@ return (
   <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
   <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
 </div>
-<div className="relative flex min-h-dvh items-center justify-center px-4 py-10">
+<div className="relative flex min-h-dvh items-start justify-center px-4 pt-6 pb-8">
 {/* Side category pillows (decorative) */}
 <div className="pointer-events-none absolute inset-0 hidden sm:block max-[380px]:hidden">
   {/* Art */}
@@ -69,7 +70,7 @@ return (
   </div>
 
   {/* Music */}
-  <div className="absolute right-[clamp(2.0rem,10.2vw,8.0rem)] top-[34%] -translate-y-1/2">
+  <div className="absolute right-[clamp(2.1rem,10.5vw,8.2rem)] top-[34%] -translate-y-1/2">
     <div className="relative">
       <div className="absolute -inset-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/16 via-violet-500/12 to-fuchsia-500/16 blur-2xl"></div>
       <div className="relative inline-flex items-center gap-3 rounded-xl bg-gradient-to-b from-fuchsia-500/[0.16] via-white/[0.09] to-white/[0.06] px-6 py-3 ring-1 ring-white/10 shadow-[0_24px_70px_-50px_rgba(168,85,247,0.38)]">
@@ -81,7 +82,7 @@ return (
   </div>
 
   {/* Science */}
-  <div className="absolute right-[clamp(1.7rem,9.6vw,7.4rem)] top-[52%] -translate-y-1/2">
+  <div className="absolute right-[clamp(1.8rem,9.6vw,7.6rem)] top-[54%] -translate-y-1/2">
     <div className="relative">
       <div className="absolute -inset-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/16 via-violet-500/12 to-fuchsia-500/16 blur-2xl"></div>
       <div className="relative inline-flex items-center gap-3 rounded-xl bg-gradient-to-b from-fuchsia-500/[0.16] via-white/[0.09] to-white/[0.06] px-6 py-3 ring-1 ring-white/10 shadow-[0_24px_70px_-50px_rgba(168,85,247,0.38)]">
@@ -93,10 +94,10 @@ return (
   </div>
 
   {/* Other */}
-  <div className="absolute right-[clamp(2.7rem,11.8vw,9.0rem)] top-[74%] -translate-y-1/2">
+  <div className="absolute right-[clamp(2.1rem,10.5vw,8.2rem)] top-[74%] -translate-y-1/2">
     <div className="relative">
       <div className="absolute -inset-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/18 via-violet-500/12 to-fuchsia-500/18 blur-2xl"></div>
-      <div className="relative inline-flex items-center gap-3 rounded-xl bg-gradient-to-b from-fuchsia-500/[0.18] via-white/[0.09] to-white/[0.06] px-6 py-3 ring-1 ring-white/10 shadow-[0_24px_70px_-50px_rgba(236,72,153,0.45)]">
+      <div className="relative inline-flex min-w-[170px] justify-center items-center gap-3 rounded-xl bg-gradient-to-b from-fuchsia-500/[0.18] via-white/[0.09] to-white/[0.06] px-6 py-3 ring-1 ring-white/10 shadow-[0_24px_70px_-50px_rgba(236,72,153,0.45)]">
         <div className="absolute inset-x-4 top-1 h-px bg-gradient-to-r from-transparent via-fuchsia-200/60 to-transparent"></div>
         <span className="grid h-11 w-11 place-items-center rounded-full bg-white/10 ring-1 ring-white/10 shadow-[0_14px_40px_-30px_rgba(168,85,247,0.22)] text-orange-200/95 drop-shadow-[0_2px_12px_rgba(251,146,60,0.32)]"><IconStar/></span>
         <span className="text-[20px] font-semibold drop-shadow-[0_2px_10px_rgba(168,85,247,0.16)]"><span className="text-pink-400/75">O</span><span className="text-fuchsia-400/55">t</span><span className="text-violet-400/65">h</span><span className="text-indigo-400/85">e</span><span className="text-indigo-400/85">r</span></span>
@@ -106,6 +107,15 @@ return (
 </div>
 {/* Auth card container (keeps the form centered and readable) */} 
 <div className="w-full max-w-md">
+  {/* Brain Logo */}
+<div className="flex justify-center mb-2 sm:mb-3 mt-2">
+  <img
+    src={brainLogo}
+    alt="Quiz.app logo"
+    className="w-[clamp(280px,78vw,380px)] h-auto object-contain"
+  />
+</div>
+
 {/* Top pill */}
 <div className="mx-auto mt-4 mb-4 flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">
   <span className="inline-flex items-center gap-2 text-sm sm:text-base font-medium tracking-wide text-white/70">
