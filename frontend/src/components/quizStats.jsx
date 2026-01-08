@@ -6,10 +6,14 @@ export function QuizStats({ quiz, onClose }) {
   const attempts = quiz.attempts || [];
   const totalAttempts = attempts.length;
   const questionCount = quiz.questions?.length || 0;
+  const passThreshold = Number.isFinite(quiz.req_to_pass)
+    ? quiz.req_to_pass
+    : questionCount;
+  const passPercent = questionCount > 0 ? Math.round((passThreshold / questionCount) * 100) : 0;
+  const passLabel = `${passThreshold}/${questionCount} (${passPercent}%)`;
 
   const passes = attempts.filter(attempt => {
-    const percentage = questionCount > 0 ? (attempt.correct / questionCount) * 100 : 0;
-    return percentage >= 60;
+    return attempt.correct >= passThreshold;
   }).length;
 
   const passRate = totalAttempts > 0 ? Math.round((passes / totalAttempts) * 100) : 0;
@@ -152,7 +156,7 @@ export function QuizStats({ quiz, onClose }) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Pass Threshold</span>
-                <span className="font-semibold text-white">{quiz.req_to_pass || 60}%</span>
+                <span className="font-semibold text-white">{passLabel}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Created By</span>

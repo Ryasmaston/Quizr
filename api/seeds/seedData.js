@@ -106,6 +106,7 @@ const seed = async () => {
         title: "Guess the Artist",
         category: "art",
         created_by: jane._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "Which of these artists founded the Cubist movement?",
@@ -150,6 +151,7 @@ const seed = async () => {
         title: "The Skeletal System",
         category: "science",
         created_by: alice._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "What is the jawbone more formally known as?",
@@ -194,6 +196,7 @@ const seed = async () => {
         title: "Thermodynamics",
         category: "science",
         created_by: alice._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "What is commonly described as the measure of disorder or randomness?",
@@ -238,6 +241,7 @@ const seed = async () => {
         title: "Renaissance Art",
         category: "art",
         created_by: jane._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "Who painted the ceiling of the Sistine Chapel?",
@@ -282,6 +286,7 @@ const seed = async () => {
         title: "Western Classical Music",
         category: "music",
         created_by: barney._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "Which of these periods was the earliest?",
@@ -326,6 +331,7 @@ const seed = async () => {
         title: "Brazilian History",
         category: "history",
         created_by: alice._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "What year did Brazil gain independence from Portugal?",
@@ -370,6 +376,7 @@ const seed = async () => {
         title: "Cocktails",
         category: "other",
         created_by: jane._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "A Negroni is composed of which 3 components?",
@@ -414,6 +421,7 @@ const seed = async () => {
         title: "History of Coffee",
         category: "history",
         created_by: alice._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "In which country does coffee originate?",
@@ -458,6 +466,7 @@ const seed = async () => {
         title: "Bossa Nova",
         category: "music",
         created_by: barney._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "Who is considered the 'father of bossa nova'?",
@@ -502,6 +511,7 @@ const seed = async () => {
         title: "Mexican Cuisine",
         category: "other",
         created_by: barney._id,
+        req_to_pass: 3,
         questions: [
           {
             text: "Which one of these dishes is not Mexican?",

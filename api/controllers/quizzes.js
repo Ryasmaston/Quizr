@@ -146,8 +146,8 @@ async function deleteQuiz(req, res) {
     res.status(500).json({ message: "Error deleting quiz", error: error.message})
   }
 }
-//In this method the frontend sends here an array of the user's answer choices
-//so req.body.answers will look something like this ["2", "4"] if this was done on a maths quiz and the choices were numbers.
+// In this method the frontend sends an array of answer selections per question.
+// Each entry can be a string (single select) or an array of answer ids (multi select).
 async function submitQuiz(req, res) {
   try {
     const { answers } = req.body; // Here we get the user's answers from the request body
@@ -161,11 +161,34 @@ async function submitQuiz(req, res) {
 
     // Here we compare the user's answers to the correct ones from the seedData
     quiz.questions.forEach((question, index) => {
-      const correctAnswerId = question.answers.find(
-        (answer) => answer.is_correct
-      )?._id?.toString();
+      const correctAnswerIds = question.answers
+        .filter((answer) => answer.is_correct)
+        .map((answer) => answer._id?.toString())
+        .filter(Boolean);
 
-      if (answers[index] === correctAnswerId) {
+      const correctSet = new Set(correctAnswerIds);
+      const selection = answers?.[index];
+      const selectedIds = Array.isArray(selection)
+        ? selection
+        : selection
+        ? [selection]
+        : [];
+      const selectedSet = new Set(selectedIds.map((id) => id?.toString()).filter(Boolean));
+
+      if (selectedSet.size === 0) return;
+
+      const hasIncorrect = Array.from(selectedSet).some((id) => !correctSet.has(id));
+      if (hasIncorrect) return;
+
+      if (quiz.require_all_correct) {
+        if (correctSet.size > 0 && selectedSet.size === correctSet.size) {
+          score++;
+        }
+        return;
+      }
+
+      const hasCorrect = Array.from(selectedSet).some((id) => correctSet.has(id));
+      if (hasCorrect) {
         score++;
       }
     });

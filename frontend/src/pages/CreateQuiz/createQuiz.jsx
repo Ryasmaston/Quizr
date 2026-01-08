@@ -1,24 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { useNavigate } from "react-router-dom";
 import { createQuiz } from "../../services/quizzes";
 
 export default function CreateQuiz() {
+  const ANSWER_COUNT_OPTIONS = [2, 3, 4, 5, 6];
+  const DEFAULT_ANSWERS_PER_QUESTION = 4;
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("other");
+  const [answersPerQuestion, setAnswersPerQuestion] = useState(
+    DEFAULT_ANSWERS_PER_QUESTION
+  );
+  const [allowMultipleCorrect, setAllowMultipleCorrect] = useState(false);
+  const [requireAllCorrect, setRequireAllCorrect] = useState(false);
   const [questions, setQuestions] = useState([
     {
       text: "",
-      answers: [
-        { text: "", is_correct: false },
-        { text: "", is_correct: false },
-        { text: "", is_correct: false },
-        { text: "", is_correct: false },
-      ],
+      answers: Array.from({ length: DEFAULT_ANSWERS_PER_QUESTION }, () => ({
+        text: "",
+        is_correct: false,
+      })),
     },
   ]);
+  const [reqToPass, setReqToPass] = useState(1);
+  const prevQuestionCountRef = useRef(questions.length);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,6 +42,17 @@ export default function CreateQuiz() {
     return unsub;
   }, [navigate]);
 
+  useEffect(() => {
+    const currentCount = questions.length;
+    const prevCount = prevQuestionCountRef.current;
+    if (currentCount !== prevCount) {
+      setReqToPass((prev) =>
+        prev === prevCount ? currentCount : Math.min(prev, currentCount)
+      );
+      prevQuestionCountRef.current = currentCount;
+    }
+  }, [questions.length]);
+
   if (loading)
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -45,6 +64,19 @@ export default function CreateQuiz() {
     );
 
   if (!user) return null;
+
+  function normalizeAnswerCount(question, count) {
+    const answers = Array.isArray(question.answers) ? question.answers : [];
+    if (answers.length === count) return question;
+    if (answers.length > count) {
+      return { ...question, answers: answers.slice(0, count) };
+    }
+    const extras = Array.from({ length: count - answers.length }, () => ({
+      text: "",
+      is_correct: false,
+    }));
+    return { ...question, answers: [...answers, ...extras] };
+  }
 
   function handleQuestionChange(index, value) {
     const updated = [...questions];
@@ -59,12 +91,46 @@ export default function CreateQuiz() {
   }
 
   function setCorrectAnswer(qIndex, aIndex) {
-    const updated = [...questions];
-    updated[qIndex].answers = updated[qIndex].answers.map((a, i) => ({
-      ...a,
-      is_correct: i === aIndex,
-    }));
-    setQuestions(updated);
+    setQuestions((prev) =>
+      prev.map((question, index) => {
+        if (index !== qIndex) return question;
+        if (allowMultipleCorrect) {
+          const answers = question.answers.map((a, i) =>
+            i === aIndex ? { ...a, is_correct: !a.is_correct } : a
+          );
+          return { ...question, answers };
+        }
+        const answers = question.answers.map((a, i) => ({
+          ...a,
+          is_correct: i === aIndex,
+        }));
+        return { ...question, answers };
+      })
+    );
+  }
+
+  function handleAnswersPerQuestionChange(value) {
+    const count = Number(value);
+    setAnswersPerQuestion(count);
+    setQuestions((prev) => prev.map((question) => normalizeAnswerCount(question, count)));
+  }
+
+  function handleAllowMultipleCorrectChange(checked) {
+    setAllowMultipleCorrect(checked);
+    if (!checked) {
+      setRequireAllCorrect(false);
+      setQuestions((prev) =>
+        prev.map((question) => {
+          const firstCorrectIndex = question.answers.findIndex((a) => a.is_correct);
+          if (firstCorrectIndex === -1) return question;
+          const answers = question.answers.map((a, i) => ({
+            ...a,
+            is_correct: i === firstCorrectIndex,
+          }));
+          return { ...question, answers };
+        })
+      );
+    }
   }
 
   function addQuestion() {
@@ -72,12 +138,10 @@ export default function CreateQuiz() {
       ...questions,
       {
         text: "",
-        answers: [
-          { text: "", is_correct: false },
-          { text: "", is_correct: false },
-          { text: "", is_correct: false },
-          { text: "", is_correct: false },
-        ],
+        answers: Array.from({ length: answersPerQuestion }, () => ({
+          text: "",
+          is_correct: false,
+        })),
       },
     ]);
   }
@@ -93,8 +157,23 @@ export default function CreateQuiz() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const invalidQuestionIndex = questions.findIndex((question) =>
+      question.answers.every((answer) => !answer.is_correct)
+    );
+    if (invalidQuestionIndex !== -1) {
+      alert(`Question ${invalidQuestionIndex + 1} needs at least one correct answer.`);
+      return;
+    }
+    const safeReqToPass = Math.min(Math.max(reqToPass, 0), questions.length);
     try {
-      await createQuiz({ title, questions });
+      await createQuiz({
+        title,
+        category,
+        questions,
+        allow_multiple_correct: allowMultipleCorrect,
+        require_all_correct: allowMultipleCorrect ? requireAllCorrect : false,
+        req_to_pass: safeReqToPass,
+      });
       alert("Quiz created!");
       navigate("/");
     } catch (err) {
@@ -110,6 +189,16 @@ export default function CreateQuiz() {
     "from-amber-500 to-orange-600",
     "from-fuchsia-500 to-pink-600"
   ];
+  const categories = [
+    { value: "art", label: "Art" },
+    { value: "history", label: "History" },
+    { value: "music", label: "Music" },
+    { value: "science", label: "Science" },
+    { value: "other", label: "Other" },
+  ];
+  const questionCount = questions.length;
+  const passPercent = questionCount > 0 ? Math.round((reqToPass / questionCount) * 100) : 0;
+  const passLabel = `${reqToPass}/${questionCount} (${passPercent}%)`;
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-y-auto pt-10">
@@ -138,6 +227,107 @@ export default function CreateQuiz() {
               required
               className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
             />
+          </div>
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/20">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-white font-semibold text-lg">Quiz Options</h2>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div>
+                <label className="block text-gray-300 font-medium mb-2 text-sm">
+                  Category
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                >
+                  {categories.map((item) => (
+                    <option key={item.value} value={item.value} className="bg-slate-900">
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-2">Used for category chips and filters.</p>
+              </div>
+              <div>
+                <label className="block text-gray-300 font-medium mb-2 text-sm">
+                  Answers per question
+                </label>
+                <select
+                  value={answersPerQuestion}
+                  onChange={(e) => handleAnswersPerQuestionChange(e.target.value)}
+                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                >
+                  {ANSWER_COUNT_OPTIONS.map((count) => (
+                    <option key={count} value={count} className="bg-slate-900">
+                      {count} answers
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-2">Applies to every question.</p>
+              </div>
+              <div className="lg:col-span-2">
+                <label className="block text-gray-300 font-medium mb-2 text-sm">
+                  Pass threshold
+                </label>
+                <div className="flex items-center justify-between text-xs text-gray-300 mb-2">
+                  <span>Required correct answers</span>
+                  <span className="text-white font-semibold">{passLabel}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max={questionCount}
+                  step="1"
+                  value={reqToPass}
+                  onChange={(e) => setReqToPass(Number(e.target.value))}
+                  className="w-full accent-purple-500"
+                />
+              </div>
+              <div className="lg:col-span-2">
+                <label className="block text-gray-300 font-medium mb-2 text-sm">
+                  Correctness rules
+                </label>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="flex items-start gap-3 rounded-xl border border-white/20 bg-white/5 p-3 hover:border-white/30 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={allowMultipleCorrect}
+                      onChange={(e) => handleAllowMultipleCorrectChange(e.target.checked)}
+                      className="mt-1 h-4 w-4 text-purple-500 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-200">
+                      Allow multiple correct answers
+                      <span className="block text-xs text-gray-400 mt-1">
+                        Enables selecting more than one correct answer per question.
+                      </span>
+                    </span>
+                  </label>
+                  <label
+                    className={`flex items-start gap-3 rounded-xl border border-white/20 bg-white/5 p-3 transition-all ${
+                      allowMultipleCorrect ? "hover:border-white/30 cursor-pointer" : "opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={requireAllCorrect}
+                      onChange={(e) => setRequireAllCorrect(e.target.checked)}
+                      disabled={!allowMultipleCorrect}
+                      className={`mt-1 h-4 w-4 text-purple-500 focus:ring-purple-500 focus:ring-offset-0 ${
+                        allowMultipleCorrect ? "cursor-pointer" : "cursor-not-allowed"
+                      }`}
+                    />
+                    <span className="text-sm text-gray-200">
+                      Require all correct answers
+                      <span className="block text-xs text-gray-400 mt-1">
+                        Mark correct only if the selection matches the full correct set.
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="space-y-6">
             {questions.map((q, qIndex) => {
@@ -183,7 +373,7 @@ export default function CreateQuiz() {
                   </div>
                   <div className="space-y-3">
                     <label className="block text-gray-300 font-medium mb-3 text-sm">
-                      Answer Options (select the correct one)
+                      Answer Options (select the correct {allowMultipleCorrect ? "answers" : "answer"})
                     </label>
                     {q.answers.map((a, aIndex) => (
                       <div
@@ -195,7 +385,7 @@ export default function CreateQuiz() {
                         }`}
                       >
                         <input
-                          type="radio"
+                          type={allowMultipleCorrect ? "checkbox" : "radio"}
                           name={`correct-${qIndex}`}
                           checked={a.is_correct}
                           onChange={() => setCorrectAnswer(qIndex, aIndex)}

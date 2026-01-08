@@ -32,7 +32,9 @@ const QuizSchema = new mongoose.Schema({
       correct: { type: Number, required: true}
     }
   ],
-  req_to_pass: {type: Number, required: false},
+  allow_multiple_correct: { type: Boolean, default: false },
+  require_all_correct: { type: Boolean, default: false },
+  req_to_pass: {type: Number, required: true},
   created_at: {type: Date, default: Date.now }
 });
 
