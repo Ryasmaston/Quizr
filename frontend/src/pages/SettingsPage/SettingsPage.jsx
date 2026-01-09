@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { onAuthStateChanged, updatePassword, updateEmail } from "firebase/auth";
+import { onAuthStateChanged, updatePassword, updateEmail, EmailAuthProvider, reauthenticateWithCredential, verifyBeforeUpdateEmail } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 
@@ -10,13 +10,12 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Form states
   const [username, setUsername] = useState("");
   const [profilePic, setProfilePic] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
@@ -99,10 +98,36 @@ export default function SettingsPage() {
     setSaving(true);
 
     try {
+      if (newEmail === loggedInUser.email) {
+        setError("This is already your current email");
+        setSaving(false);
+        return;
+      }
+      if (!currentPassword) {
+        setError("Please enter your current password to change email");
+        setSaving(false);
+        return;
+      }
+      const credential = EmailAuthProvider.credential(
+        loggedInUser.email,
+        currentPassword
+      );
+      await reauthenticateWithCredential(loggedInUser, credential);
       await updateEmail(loggedInUser, newEmail);
       setMessage("Email updated successfully!");
+      setCurrentPassword("");
     } catch (err) {
-      setError(err.message || "Failed to update email");
+      if (err.code === 'auth/requires-recent-login') {
+        setError("Please log out and log back in before changing your email");
+      } else if (err.code === 'auth/invalid-email') {
+        setError("Invalid email address");
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError("This email is already in use");
+      } else if (err.code === 'auth/wrong-password') {
+        setError("Current password is incorrect");
+      } else {
+        setError(err.message || "Failed to update email");
+      }
     } finally {
       setSaving(false);
     }
@@ -123,15 +148,32 @@ export default function SettingsPage() {
       return;
     }
 
+    if (!currentPassword) {
+      setError("Please enter your current password");
+      return;
+    }
+
     setSaving(true);
 
     try {
+      const credential = EmailAuthProvider.credential(
+        loggedInUser.email,
+        currentPassword
+      );
+      await reauthenticateWithCredential(loggedInUser, credential);
       await updatePassword(loggedInUser, newPassword);
       setMessage("Password updated successfully!");
       setNewPassword("");
       setConfirmPassword("");
+      setCurrentPassword("");
     } catch (err) {
-      setError(err.message || "Failed to update password");
+      if (err.code === 'auth/wrong-password') {
+        setError("Current password is incorrect");
+      } else if (err.code === 'auth/too-many-requests') {
+        setError("Too many failed attempts. Please try again later.");
+      } else {
+        setError(err.message || "Failed to update password");
+      }
     } finally {
       setSaving(false);
     }
@@ -215,7 +257,7 @@ export default function SettingsPage() {
           <h2 className="text-2xl font-bold text-white mb-6">Email Address</h2>
           <form onSubmit={handleUpdateEmail} className="space-y-4">
             <div>
-              <label className="block text-gray-300 mb-2">Email</label>
+              <label className="block text-gray-300 mb-2">New Email</label>
               <input
                 type="email"
                 value={newEmail}
@@ -224,9 +266,20 @@ export default function SettingsPage() {
                 required
               />
             </div>
+            <div>
+              <label className="block text-gray-300 mb-2">Current Password (required for security)</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                required
+              />
+            </div>
             <button
               type="submit"
-              disabled={saving || newEmail === loggedInUser?.email}
+              disabled={saving || newEmail === loggedInUser?.email || !currentPassword}
               className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? "Updating..." : "Update Email"}
@@ -236,6 +289,17 @@ export default function SettingsPage() {
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
           <h2 className="text-2xl font-bold text-white mb-6">Change Password</h2>
           <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div>
+              <label className="block text-gray-300 mb-2">Current Password</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                required
+              />
+            </div>
             <div>
               <label className="block text-gray-300 mb-2">New Password</label>
               <input
@@ -260,7 +324,7 @@ export default function SettingsPage() {
             </div>
             <button
               type="submit"
-              disabled={saving || !newPassword || !confirmPassword}
+              disabled={saving || !currentPassword || !newPassword || !confirmPassword}
               className="px-6 py-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:shadow-lg hover:shadow-emerald-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? "Updating..." : "Change Password"}
