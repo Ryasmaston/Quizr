@@ -4,6 +4,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
 import { useAuth } from "./Auth";
 import { apiFetch } from "../services/api";
+import UserSearchBar from "./UserSearchBar";
 
 function NavBar() {
   const user = useAuth();
@@ -83,10 +84,16 @@ function NavBar() {
               </NavLink>
             )}
           </div>
+
+          {/* Global user search (only when logged in) */}
+          <div className="flex-1 flex justify-center px-4">
+            {user && <UserSearchBar excludeUsername={username} />}
+          </div>
+
           <div className="flex items-center gap-3">
             {user && username && (
               <NavLink
-                to={`/users/${username}`} // Fixed: added curly braces
+                to={`/users/${username}`}
                 className={({ isActive }) =>
                   `text-sm font-medium transition-colors ${
                     isActive

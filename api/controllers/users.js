@@ -1,6 +1,11 @@
 const User = require("../models/user");
 const Quiz = require("../models/quiz");
 
+// function added to escape user input to build a RegExp for partial matching
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 async function createUser(req, res) {
   const username = req.body.username;
   const authId = req.user.uid;
@@ -83,6 +88,37 @@ async function showUser(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Unable to load profile", error: error.message });
+  }
+}
+
+// Search users by partial username for navbar search dropdown
+// Returns minimal fields only to keep responses light
+async function searchUsers(req, res) {
+  try {
+    const q = (req.query.q || "").trim();
+    if (q.length < 2) {
+      return res.status(200).json({ users: [] });
+    }
+
+    const regex = new RegExp(escapeRegex(q), "i");
+
+    const users = await User.find({ username: regex })
+      .select("username profile_pic")
+      .limit(8);
+
+    return res.status(200).json({
+      users: users.map((u) => ({
+        id: u._id,
+        username: u.username,
+        profile_pic: u.profile_pic || null,
+      })),
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Error searching users",
+      error: error.message,
+    });
   }
 }
 
@@ -179,6 +215,7 @@ const UsersController = {
   checkUsernameAvailability: checkUsernameAvailability,
   updateUser: updateUser,
   showUser: showUser,
+  searchUsers: searchUsers, //used by navbar user search dropdown
   getUserById: getUserById,
   getUserIdByUsername: getUserIdByUsername,
   deleteUser: deleteUser,

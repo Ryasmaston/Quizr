@@ -61,14 +61,13 @@ useEffect(() => {
     }
   }
 
-  const gradients = [
-    "from-rose-500 to-pink-600",
-    "from-violet-500 to-purple-600",
-    "from-blue-500 to-cyan-600",
-    "from-emerald-500 to-teal-600",
-    "from-amber-500 to-orange-600",
-    "from-fuchsia-500 to-pink-600"
-  ];
+  const categoryGradients = {
+    art: "from-pink-500 to-rose-500",
+    history: "from-amber-500 to-orange-500",
+    music: "from-purple-500 to-indigo-500",
+    science: "from-blue-500 to-cyan-500",
+    other: "from-gray-500 to-slate-500"
+  };
 
   const categories = [
     "all",
@@ -97,7 +96,7 @@ useEffect(() => {
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
         <div className="mb-8 sm:mb-12 text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 mb-3 sm:mb-4 animate-fade-in px-4">
-            Quiz app
+            Quizr.app
           </h1>
           <p className="text-gray-300 text-base sm:text-lg px-4">Challenge yourself and expand your knowledge</p>
         </div>
@@ -160,8 +159,8 @@ useEffect(() => {
         )}
         {quizzes.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-4">
-            {filteredQuizzes.map((quiz, index) => {
-              const gradient = gradients[index % gradients.length];
+            {filteredQuizzes.map((quiz) => {
+              const gradient = categoryGradients[quiz.category] || categoryGradients.other;
               const isFavourited = favouriteIds.includes(quiz._id);
               return (
                 <Link
@@ -195,13 +194,19 @@ useEffect(() => {
                   </button>
                   <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10"
                     style={{ background: `linear-gradient(135deg, rgb(168 85 247), rgb(236 72 153))` }}></div>
-                  <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/20 hover:border-white/40 transition-all transform group-hover:-translate-y-2 group-hover:shadow-2xl overflow-hidden">
-                    <div className={`absolute top-0 left-0 right-0 h-1.5 sm:h-2 bg-gradient-to-r ${gradient}`}></div>
-                    <div className="relative z-10 pt-2">
-                      <div className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br ${gradient} mb-3 sm:mb-4 transform group-hover:scale-110 transition-transform`}>
-                        <span className="text-white font-bold text-lg sm:text-xl">{index + 1}</span>
+                  <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/20 hover:border-white/40 transition-all transform group-hover:-translate-y-2 group-hover:shadow-2xl overflow-hidden h-full flex flex-col">                    <div className={`absolute top-0 left-0 right-0 h-1.5 sm:h-2 bg-gradient-to-r ${gradient}`}></div>
+                    <div className="relative z-10 pt-2 flex-1 flex flex-col">
+                      <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${gradient} text-white text-xs font-semibold`}>
+                          <img
+                            src={`/${quiz.category}.svg`}
+                            alt={quiz.category}
+                            className="w-4 h-4"
+                          />
+                          <span className="capitalize">{quiz.category}</span>
+                        </div>
                       </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 line-clamp-2 transition-all">
+                      <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 line-clamp-2 transition-all flex-1">
                         {quiz.title}
                       </h3>
                       <div className="flex flex-col items-center justify-center gap-1 text-gray-300 text-xs sm:text-sm mb-3 sm:mb-4">
