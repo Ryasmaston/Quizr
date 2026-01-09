@@ -45,8 +45,6 @@ We dealt with real engineering challenges like version control conflicts, debugg
  ## 🤝✨ How We Worked as a Team  
 
 - [Welcome to our Drawing Board with diagrams, retro and MVP 🎨 🖌️](https://app.diagrams.net/#G17S0vzclr3jfS2ZoSj4lJApLi3fK_iR20#%7B%22pageId%22%3A%22Hymm-zf7g9Td7m3pdbtD%22%7D)
-- [Track done Tickets on Quiz.app Trello Board 🏁👀](https://trello.com/b/lXygOvjd/project-creative)
-- [Visit our Brainstorm Miro Board 🧠✨](https://miro.com/app/board/uXjVJEHg27A=/)
 - [Dive into our Team Charter & Process  📜✨](TEAM_CHARTER.md)
 
 ## 🛠️✨ Tech Stack
