@@ -98,21 +98,16 @@ export default function SettingsPage() {
     setSaving(true);
 
     try {
-      // Check if email actually changed
       if (newEmail === loggedInUser.email) {
         setError("This is already your current email");
         setSaving(false);
         return;
       }
-
-      // Require password re-authentication for security
       if (!currentPassword) {
         setError("Please enter your current password to change email");
         setSaving(false);
         return;
       }
-
-      // Re-authenticate user first (required by Firebase for security)
       const credential = EmailAuthProvider.credential(
         loggedInUser.email,
         currentPassword
