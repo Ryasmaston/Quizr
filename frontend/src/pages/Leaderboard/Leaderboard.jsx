@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getLeaderboard } from "../../services/quizzes";
 
 const columns = [
+  { key: "rank", label: "#", isNumeric: true },
   { key: "username", label: "Player", isNumeric: false },
   { key: "avgPercent", label: "Average Score", isNumeric: true },
   // { key: "bestPercent", label: "Best %", isNumeric: true },
@@ -54,12 +55,27 @@ export default function LeaderboardPage() {
     });
   }, [entries]);
 
+  const baseRanks = useMemo(() => {
+    const base = [...rows];
+    base.sort((a, b) => {
+      if (a.avgPercent !== b.avgPercent) return b.avgPercent - a.avgPercent;
+      return a.username.localeCompare(b.username);
+    });
+    return new Map(base.map((entry, index) => [entry.user_id, index + 1]));
+  }, [rows]);
+
   const sortedRows = useMemo(() => {
     const sorted = [...rows];
     const { key, direction } = sortConfig;
     const order = direction === "asc" ? 1 : -1;
 
     sorted.sort((a, b) => {
+      if (key === "rank") {
+        const aRank = baseRanks.get(a.user_id) || 0;
+        const bRank = baseRanks.get(b.user_id) || 0;
+        if (aRank !== bRank) return (aRank - bRank) * order;
+        return a.username.localeCompare(b.username);
+      }
       if (key === "username") {
         return a.username.localeCompare(b.username) * order;
       }
@@ -182,8 +198,11 @@ export default function LeaderboardPage() {
                     </td>
                   </tr>
                 ) : (
-                  sortedRows.map((entry) => (
+                  sortedRows.map((entry, index) => (
                     <tr key={entry.user_id}>
+                      <td className="px-3 sm:px-4 py-3 font-medium text-white">
+                        {baseRanks.get(entry.user_id) || index + 1}
+                      </td>
                       <td className="px-3 sm:px-4 py-3 font-medium text-white">{entry.username}</td>
                       <td className="px-3 sm:px-4 py-3">{Math.round(entry.avgPercent)}%</td>
                       <td className="px-3 sm:px-4 py-3">{entry.totalCorrect}</td>

@@ -68,6 +68,30 @@ useEffect(() => {
     science: "from-blue-500 to-cyan-500",
     other: "from-gray-500 to-slate-500"
   };
+  const categoryIcons = {
+    art: "/art.svg",
+    history: "/history.svg",
+    music: "/music.svg",
+    science: "/science.svg",
+    other: "/other.svg"
+  };
+  const difficultyChips = {
+    easy: {
+      label: "Easy",
+      className: "border-emerald-300/50 bg-emerald-400/25 text-emerald-100",
+      icon: "/easy.svg"
+    },
+    medium: {
+      label: "Medium",
+      className: "border-amber-400/40 bg-amber-500/20 text-amber-100",
+      icon: "/medium.svg"
+    },
+    hard: {
+      label: "Hard",
+      className: "border-rose-400/40 bg-rose-500/20 text-rose-100",
+      icon: "/hard.svg"
+    }
+  };
 
   const categories = [
     "all",
@@ -113,10 +137,10 @@ useEffect(() => {
       value={selectedCategory}
       onChange={(e) => setSelectedCategory(e.target.value)}
       className="
-        h-16
+        h-14
         w-full max-w-md
         bg-white/10 text-white
-        px-6
+        px-4
         rounded-2xl
         border border-white/20
         backdrop-blur
@@ -161,6 +185,10 @@ useEffect(() => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-4">
             {filteredQuizzes.map((quiz) => {
               const gradient = categoryGradients[quiz.category] || categoryGradients.other;
+              const categoryLabel = quiz.category || "other";
+              const categoryIcon = categoryIcons[quiz.category] || categoryIcons.other;
+              const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
+              const difficulty = difficultyChips[difficultyKey];
               const isFavourited = favouriteIds.includes(quiz._id);
               return (
                 <Link
@@ -197,13 +225,24 @@ useEffect(() => {
                   <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-white/20 hover:border-white/40 transition-all transform group-hover:-translate-y-2 group-hover:shadow-2xl overflow-hidden h-full flex flex-col">                    <div className={`absolute top-0 left-0 right-0 h-1.5 sm:h-2 bg-gradient-to-r ${gradient}`}></div>
                     <div className="relative z-10 pt-2 flex-1 flex flex-col">
                       <div className="flex items-center justify-between mb-3 sm:mb-4">
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${gradient} text-white text-xs font-semibold`}>
-                          <img
-                            src={`/${quiz.category}.svg`}
-                            alt={quiz.category}
-                            className="w-4 h-4"
-                          />
-                          <span className="capitalize">{quiz.category}</span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${gradient} text-white text-xs font-semibold`}>
+                            <img
+                              src={categoryIcon}
+                              alt={categoryLabel}
+                              className="w-4 h-4"
+                            />
+                            <span className="capitalize">{categoryLabel}</span>
+                          </div>
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${difficulty.className}`}>
+                            <img
+                              src={difficulty.icon}
+                              alt=""
+                              aria-hidden="true"
+                              className="w-4 h-4"
+                            />
+                            <span>{difficulty.label}</span>
+                          </div>
                         </div>
                       </div>
                       <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 line-clamp-2 transition-all flex-1">

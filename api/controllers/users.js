@@ -76,7 +76,7 @@ async function showUser(req, res) {
       .select("username profile_pic favourites")
       .populate({
         path: "favourites",
-        select: "title category created_by",
+        select: "title category created_by questions req_to_pass allow_multiple_correct require_all_correct lock_answers difficulty",
         populate: {path: "created_by", select: "username"}
       })
 

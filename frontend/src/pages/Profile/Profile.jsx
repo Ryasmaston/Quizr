@@ -277,6 +277,23 @@ export default function ProfilePage() {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
     )
   };
+  const difficultyChips = {
+    easy: {
+      label: "Easy",
+      className: "border-emerald-400/40 bg-emerald-500/20 text-emerald-100",
+      icon: "/easy.svg"
+    },
+    medium: {
+      label: "Medium",
+      className: "border-amber-400/40 bg-amber-500/20 text-amber-100",
+      icon: "/medium.svg"
+    },
+    hard: {
+      label: "Hard",
+      className: "border-rose-400/40 bg-rose-500/20 text-rose-100",
+      icon: "/hard.svg"
+    }
+  };
 
   const totalQuestions = takenQuizzes.reduce((sum, quiz) => sum + quiz.totalQuestions, 0);
   const totalCorrect = takenQuizzes.reduce((sum, quiz) => sum + quiz.correct, 0);
@@ -428,30 +445,27 @@ export default function ProfilePage() {
                   const quizTitle = typeof quiz === "string" ? "Quiz" : quiz.title;
                   const quizCategory = typeof quiz === "string" ? null : quiz.category;
                   const creatorName = typeof quiz === "string" ? null : quiz.created_by?.username;
+                  const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
+                  const difficulty = difficultyChips[difficultyKey];
+                  const questionCount = typeof quiz === "string" ? 0 : quiz?.questions?.length || 0;
+                  const passThreshold = typeof quiz === "string" ? null : quiz?.req_to_pass;
+                  const passPercent = questionCount > 0 && typeof passThreshold === "number"
+                    ? Math.round((passThreshold / questionCount) * 100)
+                    : null;
+                  const allowsMultiple = typeof quiz === "string" ? null : quiz?.allow_multiple_correct;
+                  const isLocked = typeof quiz === "string" ? null : quiz?.lock_answers;
                   return (
                     <Link
                       key={quizId}
                       to={`/quiz/${quizId}`}
-                      className="group block bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 hover:border-white/30 transition-all hover:bg-white/10"
+                      className="group relative block bg-white/5 backdrop-blur rounded-2xl border border-white/10 hover:border-white/30 transition-all hover:bg-white/10 overflow-hidden"
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white mb-2">{quizTitle}</h3>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-300">
-                            {quizCategory && (
-                              <span className="inline-flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span>{quizCategory}</span>
-                              </span>
-                            )}
-                            {creatorName && (
-                              <span>Created by {creatorName}</span>
-                            )}
+                      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other}`}></div>
+                      <div className="p-5 sm:p-6">
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+                            <h3 className="text-lg sm:text-xl font-semibold text-white truncate">{quizTitle}</h3>
                           </div>
-                        </div>
-                        <div className="flex items-center">
                           <button
                             type="button"
                             onClick={(event) => {
@@ -459,10 +473,52 @@ export default function ProfilePage() {
                               event.stopPropagation();
                               handleRemoveFavourite(quizId);
                             }}
-                            className="px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-pink-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-red-500/50 transition-all transform hover:scale-105 active:scale-95"
+                            className="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-semibold hover:shadow-lg hover:shadow-red-500/50 transition-all transform hover:scale-105 active:scale-95"
                           >
                             Remove
                           </button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <div className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other} px-3 py-1.5 text-xs font-semibold text-white`}>
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {categoryIcons[quizCategory] || categoryIcons.other}
+                              </svg>
+                              <span className="capitalize">{quizCategory || "other"}</span>
+                            </div>
+                            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${difficulty.className}`}>
+                              <img src={difficulty.icon} alt="" aria-hidden="true" className="h-4 w-4" />
+                              <span>{difficulty.label}</span>
+                            </div>
+                            {creatorName && (
+                              <Link
+                                to={`/users/${creatorName}`}
+                                className="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 bg-white/10 border border-white/20"
+                              >
+                                Created by {creatorName}
+                              </Link>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-200">
+                          <span className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1">
+                            <span className="font-semibold text-white">{questionCount}</span>
+                            <span className="text-white/70">Questions</span>
+                          </span>
+                          <span className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1">
+                            <span className="font-semibold text-white">
+                              {passThreshold ?? 0}/{questionCount || 0}
+                            </span>
+                            <span className="text-white/70">
+                              Pass {passPercent !== null ? `${passPercent}%` : "--"}
+                            </span>
+                          </span>
+                          <span className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1">
+                            <span className="font-semibold text-white">{allowsMultiple ? "Multi" : "Single"}</span>
+                            <span className="text-white">Correct</span>
+                          </span>
+                          <span className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1">
+                            <span className="font-semibold text-white">{isLocked ? "Locked" : "Editable"}</span>
+                            <span className="text-white">Answers</span>
+                          </span>
                         </div>
                       </div>
                     </Link>
@@ -509,7 +565,7 @@ export default function ProfilePage() {
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span>{new Date(quiz.attempted_at).toLocaleDateString()}</span>
+                            <span>{new Date(quiz.attempted_at).toLocaleDateString("en-GB")}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

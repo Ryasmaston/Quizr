@@ -8,6 +8,12 @@ const QUIZ_CAT = Object.freeze({
   OTHER: 'other',
 });
 
+const QUIZ_DIFFICULTY = Object.freeze({
+  EASY: 'easy',
+  MEDIUM: 'medium',
+  HARD: 'hard',
+});
+
 const QuizSchema = new mongoose.Schema({
   title: { type: String, required: true },
   questions: [
@@ -24,6 +30,7 @@ const QuizSchema = new mongoose.Schema({
     }
   ],
   category: { type: String, enum: Object.values(QUIZ_CAT), required: true, default: "other"},
+  difficulty: { type: String, enum: Object.values(QUIZ_DIFFICULTY), default: "medium" },
   created_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true},
   attempts: [
     {
@@ -34,6 +41,7 @@ const QuizSchema = new mongoose.Schema({
   ],
   allow_multiple_correct: { type: Boolean, default: false },
   require_all_correct: { type: Boolean, default: false },
+  lock_answers: { type: Boolean, default: false },
   req_to_pass: {type: Number, required: true},
   created_at: {type: Date, default: Date.now }
 });

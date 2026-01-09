@@ -11,6 +11,8 @@ export default function CreateQuiz() {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("other");
+  const [difficulty, setDifficulty] = useState("medium");
+  const [lockAnswers, setLockAnswers] = useState(false);
   const [answersPerQuestion, setAnswersPerQuestion] = useState(
     DEFAULT_ANSWERS_PER_QUESTION
   );
@@ -166,15 +168,21 @@ export default function CreateQuiz() {
     }
     const safeReqToPass = Math.min(Math.max(reqToPass, 0), questions.length);
     try {
-      await createQuiz({
+      const data = await createQuiz({
         title,
         category,
+        difficulty,
         questions,
         allow_multiple_correct: allowMultipleCorrect,
         require_all_correct: allowMultipleCorrect ? requireAllCorrect : false,
+        lock_answers: lockAnswers,
         req_to_pass: safeReqToPass,
       });
-      alert("Quiz created!");
+      const quizId = data?.quiz?._id;
+      if (quizId) {
+        navigate(`/quiz/${quizId}`);
+        return;
+      }
       navigate("/");
     } catch (err) {
       alert(err.message);
@@ -188,6 +196,32 @@ export default function CreateQuiz() {
     "from-emerald-500 to-teal-600",
     "from-amber-500 to-orange-600",
     "from-fuchsia-500 to-pink-600"
+  ];
+  const difficultyOptions = [
+    {
+      value: "easy",
+      label: "Easy",
+      description: "Review every question after finishing, including the correct answers.",
+      gradient: "from-emerald-500 to-lime-500",
+      border: "border-emerald-400/60",
+      icon: "/easy.svg",
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      description: "Review every question after finishing, showing which selections were right or wrong.",
+      gradient: "from-amber-500 to-yellow-500",
+      border: "border-amber-400/60",
+      icon: "/medium.svg",
+    },
+    {
+      value: "hard",
+      label: "Hard",
+      description: "Only see the total number of correct answers after finishing.",
+      gradient: "from-rose-500 to-red-600",
+      border: "border-rose-400/60",
+      icon: "/hard.svg",
+    },
   ];
   const categories = [
     { value: "art", label: "Art" },
@@ -233,6 +267,44 @@ export default function CreateQuiz() {
               <h2 className="text-white font-semibold text-lg">Quiz Options</h2>
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
+              <div className="lg:col-span-2">
+                <label className="block text-gray-300 font-medium mb-3 text-sm">
+                  Difficulty
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {difficultyOptions.map((option) => {
+                    const isActive = difficulty === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setDifficulty(option.value)}
+                        aria-pressed={isActive}
+                        className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs sm:text-sm font-semibold uppercase tracking-wide transition-all ${
+                          isActive
+                            ? `bg-gradient-to-r ${option.gradient} ${option.border} text-white shadow-lg shadow-black/20`
+                            : "bg-white/5 border-white/20 text-white/60 opacity-60 hover:border-white/40 hover:text-white/80 hover:opacity-90"
+                        }`}
+                      >
+                        <img
+                          src={option.icon}
+                          alt=""
+                          aria-hidden="true"
+                          className="h-4 w-4"
+                        />
+                        <span>{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-3 px-1 text-sm text-gray-200 min-h-[60px]">
+                  {difficultyOptions.map((option) => (
+                    <p key={option.value} className={difficulty === option.value ? "block" : "hidden"}>
+                      {option.description}
+                    </p>
+                  ))}
+                </div>
+              </div>
               <div>
                 <label className="block text-gray-300 font-medium mb-2 text-sm">
                   Category
@@ -297,7 +369,7 @@ export default function CreateQuiz() {
                       onChange={(e) => handleAllowMultipleCorrectChange(e.target.checked)}
                       className="mt-1 h-4 w-4 text-purple-500 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
                     />
-                    <span className="text-sm text-gray-200">
+                    <span className="text-left text-sm text-gray-200">
                       Allow multiple correct answers
                       <span className="block text-xs text-gray-400 mt-1">
                         Enables selecting more than one correct answer per question.
@@ -318,7 +390,7 @@ export default function CreateQuiz() {
                         allowMultipleCorrect ? "cursor-pointer" : "cursor-not-allowed"
                       }`}
                     />
-                    <span className="text-sm text-gray-200">
+                    <span className="text-left text-sm text-gray-200">
                       Require all correct answers
                       <span className="block text-xs text-gray-400 mt-1">
                         Mark correct only if the selection matches the full correct set.
@@ -326,6 +398,25 @@ export default function CreateQuiz() {
                     </span>
                   </label>
                 </div>
+              </div>
+              <div className="lg:col-span-2">
+                <label className="block text-gray-300 font-medium mb-2 text-sm">
+                  Answer lock
+                </label>
+                <label className="flex items-start gap-3 rounded-xl border border-white/20 bg-white/5 p-3 hover:border-white/30 transition-all cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={lockAnswers}
+                    onChange={(e) => setLockAnswers(e.target.checked)}
+                    className="mt-1 h-4 w-4 text-purple-500 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                  />
+                  <span className="text-left text-sm text-gray-200">
+                    Lock answers after Next
+                    <span className="block text-xs text-gray-400 mt-1">
+                      You can go back to review, but answers cannot be changed.
+                    </span>
+                  </span>
+                </label>
               </div>
             </div>
           </div>
