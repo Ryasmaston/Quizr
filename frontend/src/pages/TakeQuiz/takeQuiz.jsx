@@ -22,6 +22,8 @@ function TakeQuizPage() {
     const [result, setResult] = useState(null);
     const [lockedUntil, setLockedUntil] = useState(-1);
     const [favouriteIds, setFavouriteIds] = useState([]);
+    const [currentUserId, setCurrentUserId] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const loadQuiz = useCallback(async () => {
     const res = await apiFetch(`/quizzes/${id}`);
@@ -52,6 +54,7 @@ function TakeQuizPage() {
     const favs = Array.isArray(body.user?.favourites) ? body.user.favourites : [];
     const ids = favs.map((q) => (typeof q === "string" ? q : q._id));
     setFavouriteIds(ids);
+    setCurrentUserId(body.user?._id || null);
     } catch (error) {
     console.error("Failed to load user", error);
     }
@@ -59,6 +62,13 @@ function TakeQuizPage() {
     fetchUser();
     return () => { mounted = false; };
 }, []);
+const isQuizOwner = useMemo(() => {
+    if (!quiz || !currentUserId) return false;
+    const creatorId = typeof quiz.created_by === "string"
+    ? quiz.created_by
+    : quiz.created_by?._id;
+    return creatorId === currentUserId;
+}, [quiz, currentUserId]);
 const leaderboard = useMemo(() => {
     const attempts = Array.isArray(quiz?.attempts) ? quiz.attempts : [];
     const questionsCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0;
@@ -296,6 +306,21 @@ async function handleToggleFavourite() {
     }
 }
 
+async function handleDeleteQuiz() {
+    try {
+    const res = await apiFetch(`/quizzes/${id}`, {
+        method: "DELETE"
+    });
+    if (res.ok) {
+        navigate("/");
+    } else {
+        console.error("Failed to delete quiz");
+    }
+    } catch (error) {
+    console.error("Error deleting quiz:", error);
+    }
+}
+
 async function submitQuiz() {
     //Making sure user is still logged in
     const user = auth.currentUser;
@@ -465,6 +490,76 @@ return (
                 </svg>
                 <span>{isFavourited ? "Remove from favourites" : "Add to favourites"}</span>
             </button>
+            {isQuizOwner && (
+            <>
+                <button
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-rose-500/20 border border-rose-400/50 text-rose-200 font-semibold hover:bg-rose-500/30 transition-all flex items-center justify-center gap-2"
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                >
+                <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                >
+                    <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                </svg>
+                <span>Delete Quiz</span>
+                </button>
+                {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-slate-800 rounded-2xl border border-white/20 p-6 max-w-md w-full shadow-2xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/20">
+                        <svg
+                            className="h-6 w-6 text-rose-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                        >
+                            <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                            />
+                        </svg>
+                        </div>
+                        <div>
+                        <h3 className="text-lg font-semibold text-white">Delete Quiz</h3>
+                        <p className="text-sm text-gray-400">This action cannot be undone</p>
+                        </div>
+                    </div>
+                    <p className="text-gray-300 mb-6">
+                        Are you sure you want to delete &apos;{quiz.title}&apos;? All quiz data, attempts, and leaderboard entries will be permanently removed.
+                    </p>
+                    <div className="flex gap-3">
+                        <button
+                        className="flex-1 px-4 py-2.5 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-700 transition-all"
+                        type="button"
+                        onClick={handleDeleteQuiz}
+                        >
+                        Delete Quiz
+                        </button>
+                        <button
+                        className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
+                        type="button"
+                        onClick={() => setShowDeleteConfirm(false)}
+                        >
+                        Cancel
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                )}
+            </>
+            )}
             </div>
             <div className="mt-8">
             <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Leaderboard</h3>
