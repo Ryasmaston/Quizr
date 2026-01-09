@@ -109,7 +109,6 @@ export default function ProfilePage() {
         const quizzesBody = await quizzesResponse.json();
         const userId = userProfile._id;
 
-        // Fetch quizzes created by this specific user
         const createdResponse = await apiFetch("/quizzes?created_by=" + userId);
         const createdBody = await createdResponse.json();
         setCreatedQuizzes(createdBody.quizzes || []);
@@ -573,7 +572,7 @@ export default function ProfilePage() {
                 return (
                   <div
                     key={quiz._id}
-                    onClick={() => handleViewStats(quiz._id)}
+                    onClick={() => window.location.href = `/quiz/${quiz._id}`}
                     className="group relative bg-white/5 backdrop-blur rounded-2xl border border-white/10 hover:border-white/30 transition-all hover:bg-white/10 cursor-pointer overflow-hidden hover:scale-105 transform duration-300"
                   >
                     <div className={`h-2 bg-gradient-to-r ${categoryColors[quiz.category] || categoryColors.other}`}></div>
@@ -638,17 +637,17 @@ export default function ProfilePage() {
                         </div>
                       )}
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewStats(quiz._id);
-                        }}
-                        className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white text-sm font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center gap-2 group-hover:scale-105 transform duration-200"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        View Details
-                      </button>
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewStats(quiz._id);
+                          }}
+                          className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white text-sm font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center gap-2 group-hover:scale-105 transform duration-200"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          View Stats
+                        </button>
                       <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-1 text-xs text-gray-500">
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
