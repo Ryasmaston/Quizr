@@ -27,8 +27,8 @@ We dealt with real engineering challenges like version control conflicts, debugg
 
 ## 🧠✨ Our Team of 5 Contributors  
 
-- [Ryan Osmaston](https://github.com/Ryasmaston)
 - [Matt Kajdan](https://github.com/Matt-Kajdan)
+- [Ryan Osmaston](https://github.com/Ryasmaston)
 - [Dylan Scott](https://github.com/dylanscottvr11)
 - [Dominik Nowak](https://github.com/DominikNowak-DN)
 - [Emilia Furtan](https://github.com/EmilkaFn)
