@@ -26,9 +26,9 @@ describe("/quizzes", () => {
     await testUser.save();
   });
 
-  describe("GET /quizzes", () => {
+  describe("GET /api/quizzes", () => {
     test("returns an empty array when there are no quizzes", async () => {
-      const response = await request(app).get("/quizzes");
+      const response = await request(app).get("/api/quizzes");
       expect(response.status).toEqual(200);
       expect(response.body.quizzes).toEqual([]);
     });
@@ -49,7 +49,7 @@ describe("/quizzes", () => {
         questions: []
       });
       await quiz2.save();
-      const response = await request(app).get("/quizzes");
+      const response = await request(app).get("/api/quizzes");
       expect(response.status).toEqual(200);
       expect(response.body.quizzes).toHaveLength(2);
       expect(response.body.quizzes[0].created_by.username).toEqual("testuser");
@@ -78,7 +78,7 @@ describe("/quizzes", () => {
       });
       await quiz2.save();
       const response = await request(app)
-        .get("/quizzes")
+        .get("/api/quizzes")
         .query({ created_by: testUser._id.toString() });
       expect(response.status).toEqual(200);
       expect(response.body.quizzes).toHaveLength(1);
@@ -86,10 +86,10 @@ describe("/quizzes", () => {
     });
   });
 
-  describe("POST /quizzes", () => {
+  describe("POST /api/quizzes", () => {
     test("returns status 200 when quiz is created", async () => {
       const response = await request(app)
-        .post("/quizzes")
+        .post("/api/quizzes")
         .send({
           title: "Test title",
           category: "science",
@@ -101,7 +101,7 @@ describe("/quizzes", () => {
     });
     test("creates and adds a quiz to the database", async () => {
       await request(app)
-        .post("/quizzes")
+        .post("/api/quizzes")
         .send({
           title: "Test title",
           category: "art",
@@ -118,7 +118,7 @@ describe("/quizzes", () => {
 
     test("creates a quiz with questions and answers", async () => {
       await request(app)
-        .post("/quizzes")
+        .post("/api/quizzes")
         .send({
           title: "Test title",
           category: "history",
@@ -151,7 +151,7 @@ describe("/quizzes", () => {
     test("returns 404 when user is not found", async () => {
       await User.deleteMany({});
       const response = await request(app)
-        .post("/quizzes")
+        .post("/api/quizzes")
         .send({
           title: "Test title",
           category: "science",
@@ -163,7 +163,7 @@ describe("/quizzes", () => {
     });
     test("creates quiz with allow_multiple_correct and require_all_correct flags", async () => {
       await request(app)
-        .post("/quizzes")
+        .post("/api/quizzes")
         .send({
           title: "Multi-select Quiz",
           category: "music",
@@ -178,7 +178,7 @@ describe("/quizzes", () => {
     });
   });
 
-  describe("GET /quizzes/:id", () => {
+  describe("GET /api/quizzes/:id", () => {
     test("returns a quiz when it exists", async () => {
       const quiz = new Quiz({
         title: "Test quiz",
@@ -207,21 +207,21 @@ describe("/quizzes", () => {
         }]
       });
       await quiz.save();
-      const response = await request(app).get(`/quizzes/${quiz._id}`);
+      const response = await request(app).get(`/api/quizzes/${quiz._id}`);
       expect(response.status).toEqual(200);
       expect(response.body.quiz.attempts).toHaveLength(1);
       expect(response.body.quiz.attempts[0].user_id.username).toEqual("testuser");
     });
     test("returns 404 when quiz does not exist", async () => {
-      const response = await request(app).get("/quizzes/507f1f77bcf86cd799439011");
+      const response = await request(app).get("/api/quizzes/507f1f77bcf86cd799439011");
       expect(response.status).toEqual(404);
       expect(response.body.message).toEqual("Quiz not found");
     });
   });
 
-  describe("GET /quizzes/leaderboard", () => {
+  describe("GET /api/quizzes/leaderboard", () => {
     test("returns an empty leaderboard when no attempts exist", async () => {
-      const response = await request(app).get("/quizzes/leaderboard");
+      const response = await request(app).get("/api/quizzes/leaderboard");
       expect(response.status).toEqual(200);
       expect(response.body.leaderboard).toEqual([]);
     });
@@ -250,7 +250,7 @@ describe("/quizzes", () => {
         ]
       });
       await quiz.save();
-      const response = await request(app).get("/quizzes/leaderboard");
+      const response = await request(app).get("/api/quizzes/leaderboard");
       expect(response.status).toEqual(200);
       expect(response.body.leaderboard).toHaveLength(1);
       expect(response.body.leaderboard[0].username).toEqual("testuser");
@@ -282,14 +282,14 @@ describe("/quizzes", () => {
         ]
       });
       await quiz.save();
-      const response = await request(app).get("/quizzes/leaderboard");
+      const response = await request(app).get("/api/quizzes/leaderboard");
       expect(response.status).toEqual(200);
       expect(response.body.leaderboard[0].bestPercent).toEqual(100);
       expect(response.body.leaderboard[0].avgPercent).toEqual(75);
     });
   });
 
-  describe("DELETE /quizzes/:id", () => {
+  describe("DELETE /api/quizzes/:id", () => {
     test("deletes a quiz when it exists", async () => {
       const quiz = new Quiz({
         title: "Test quiz",
@@ -306,13 +306,13 @@ describe("/quizzes", () => {
       expect(deletedQuiz).toBeNull();
     });
     test("returns 200 with message when quiz does not exist", async () => {
-      const response = await request(app).delete("/quizzes/507f1f77bcf86cd799439011");
+      const response = await request(app).delete("/api/quizzes/507f1f77bcf86cd799439011");
       expect(response.status).toEqual(200);
       expect(response.body.message).toEqual("Quiz not found");
     });
   });
 
-  describe("POST /quizzes/:id/submit", () => {
+  describe("POST /api/quizzes/:id/submit", () => {
     let quiz;
     beforeEach(async () => {
       quiz = new Quiz({
@@ -343,7 +343,7 @@ describe("/quizzes", () => {
     });
     test("returns 404 when quiz does not exist", async () => {
       const response = await request(app)
-        .post("/quizzes/507f1f77bcf86cd799439011/submit")
+        .post("/api/quizzes/507f1f77bcf86cd799439011/submit")
         .send({ answers: [] });
 
       expect(response.status).toEqual(404);
@@ -353,7 +353,7 @@ describe("/quizzes", () => {
       const correctAnswer1 = quiz.questions[0].answers.find(a => a.is_correct)._id;
       const correctAnswer2 = quiz.questions[1].answers.find(a => a.is_correct)._id;
       const response = await request(app)
-        .post(`/quizzes/${quiz._id}/submit`)
+        .post(`/api/quizzes/${quiz._id}/submit`)
         .send({
           answers: [correctAnswer1.toString(), correctAnswer2.toString()]
         });
@@ -365,7 +365,7 @@ describe("/quizzes", () => {
       const correctAnswer1 = quiz.questions[0].answers.find(a => a.is_correct)._id;
       const incorrectAnswer2 = quiz.questions[1].answers.find(a => !a.is_correct)._id;
       const response = await request(app)
-        .post(`/quizzes/${quiz._id}/submit`)
+        .post(`/api/quizzes/${quiz._id}/submit`)
         .send({
           answers: [correctAnswer1.toString(), incorrectAnswer2.toString()]
         });
@@ -377,7 +377,7 @@ describe("/quizzes", () => {
       const incorrectAnswer1 = quiz.questions[0].answers.find(a => !a.is_correct)._id;
       const incorrectAnswer2 = quiz.questions[1].answers.find(a => !a.is_correct)._id;
       const response = await request(app)
-        .post(`/quizzes/${quiz._id}/submit`)
+        .post(`/api/quizzes/${quiz._id}/submit`)
         .send({
           answers: [incorrectAnswer1.toString(), incorrectAnswer2.toString()]
         });
@@ -389,7 +389,7 @@ describe("/quizzes", () => {
       const correctAnswer1 = quiz.questions[0].answers.find(a => a.is_correct)._id;
       const correctAnswer2 = quiz.questions[1].answers.find(a => a.is_correct)._id;
       await request(app)
-        .post(`/quizzes/${quiz._id}/submit`)
+        .post(`/api/quizzes/${quiz._id}/submit`)
         .send({
           answers: [correctAnswer1.toString(), correctAnswer2.toString()]
         });
@@ -423,7 +423,7 @@ describe("/quizzes", () => {
         .filter(a => a.is_correct)
         .map(a => a._id.toString());
       const response = await request(app)
-        .post(`/quizzes/${multiChoiceQuiz._id}/submit`)
+        .post(`/api/quizzes/${multiChoiceQuiz._id}/submit`)
         .send({
           answers: [correctAnswers]
         });
@@ -452,7 +452,7 @@ describe("/quizzes", () => {
       await multiChoiceQuiz.save();
       const partialAnswer = [multiChoiceQuiz.questions[0].answers[0]._id.toString()];
       const response = await request(app)
-        .post(`/quizzes/${multiChoiceQuiz._id}/submit`)
+        .post(`/api/quizzes/${multiChoiceQuiz._id}/submit`)
         .send({
           answers: [partialAnswer]
         });
@@ -462,7 +462,7 @@ describe("/quizzes", () => {
     });
     test("handles empty answer submissions", async () => {
       const response = await request(app)
-        .post(`/quizzes/${quiz._id}/submit`)
+        .post(`/api/quizzes/${quiz._id}/submit`)
         .send({
           answers: []
         });
@@ -473,7 +473,7 @@ describe("/quizzes", () => {
     test("ignores questions with no selection", async () => {
       const correctAnswer1 = quiz.questions[0].answers.find(a => a.is_correct)._id;
       const response = await request(app)
-        .post(`/quizzes/${quiz._id}/submit`)
+        .post(`/api/quizzes/${quiz._id}/submit`)
         .send({
           answers: [correctAnswer1.toString(), null]
         });

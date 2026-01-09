@@ -19,17 +19,17 @@ describe("/users", () => {
     await Quiz.deleteMany({});
   });
 
-  describe("POST /users - createUser", () => {
+  describe("POST /api/users - createUser", () => {
     describe("when username is provided and user is authenticated", () => {
       test("the response code is 201", async () => {
         const response = await request(app)
-          .post("/users")
+          .post("/api/users")
           .send({ username: "testuser" });
         expect(response.statusCode).toBe(201);
       });
       test("a user is created with correct fields", async () => {
         const response = await request(app)
-          .post("/users")
+          .post("/api/users")
           .send({ username: "testuser" });
 
         const users = await User.find();
@@ -41,7 +41,7 @@ describe("/users", () => {
       });
       test("returns user data in response", async () => {
         const response = await request(app)
-          .post("/users")
+          .post("/api/users")
           .send({ username: "testuser" });
         expect(response.body.message).toEqual("User created");
         expect(response.body.user.username).toEqual("testuser");
@@ -53,13 +53,13 @@ describe("/users", () => {
     describe("when username is missing", () => {
       test("response code is 400", async () => {
         const response = await request(app)
-          .post("/users")
+          .post("/api/users")
           .send({});
         expect(response.statusCode).toBe(400);
       });
       test("does not create a user", async () => {
         await request(app)
-          .post("/users")
+          .post("/api/users")
           .send({});
         const users = await User.find();
         expect(users.length).toEqual(0);
@@ -67,7 +67,7 @@ describe("/users", () => {
     });
   });
 
-  describe("GET /users/availability - checkUsernameAvailability", () => {
+  describe("GET /api/users/availability - checkUsernameAvailability", () => {
     beforeEach(async () => {
       const user = new User({
         username: "existinguser",
@@ -78,27 +78,27 @@ describe("/users", () => {
     });
     test("returns available: false when username exists", async () => {
       const response = await request(app)
-        .get("/users/availability")
+        .get("/api/users/availability")
         .query({ username: "existinguser" });
       expect(response.statusCode).toBe(200);
       expect(response.body.available).toBe(false);
     });
     test("returns available: true when username is available", async () => {
       const response = await request(app)
-        .get("/users/availability")
+        .get("/api/users/availability")
         .query({ username: "newuser" });
       expect(response.statusCode).toBe(200);
       expect(response.body.available).toBe(true);
     });
     test("returns 400 when username parameter is missing", async () => {
       const response = await request(app)
-        .get("/users/availability");
+        .get("/api/users/availability");
       expect(response.statusCode).toBe(400);
       expect(response.body.message).toEqual("Username is required");
     });
   });
 
-  describe("PATCH /users/:userId - updateUser", () => {
+  describe("PATCH /api/users/:userId - updateUser", () => {
     let user;
 
     beforeEach(async () => {
@@ -111,7 +111,7 @@ describe("/users", () => {
     });
     test("updates username successfully", async () => {
       const response = await request(app)
-        .patch(`/users/${user._id}`)
+        .patch(`/api/users/${user._id}`)
         .send({ username: "updateduser" });
 
       expect(response.statusCode).toBe(200);
@@ -119,7 +119,7 @@ describe("/users", () => {
     });
     test("updates profile_pic successfully", async () => {
       const response = await request(app)
-        .patch(`/users/${user._id}`)
+        .patch(`/api/users/${user._id}`)
         .send({
           username: "testuser",
           profile_pic: "http://example.com/pic.jpg"
@@ -135,7 +135,7 @@ describe("/users", () => {
       });
       await otherUser.save();
       const response = await request(app)
-        .patch(`/users/${otherUser._id}`)
+        .patch(`/api/users/${otherUser._id}`)
         .send({ username: "hacked" });
 
       expect(response.statusCode).toBe(403);
@@ -145,13 +145,13 @@ describe("/users", () => {
       const fakeId = "507f1f77bcf86cd799439011";
       const authenticatedUser = await User.findOne({ authId: "test-auth-id" });
       const response = await request(app)
-        .patch(`/users/${fakeId}`)
+        .patch(`/api/users/${fakeId}`)
         .send({ username: "updateduser" });
       expect(response.statusCode).toBe(403);
     });
   });
 
-  describe("GET /users/me - showUser", () => {
+  describe("GET /api/users/me - showUser", () => {
     let user, quiz;
     beforeEach(async () => {
       user = new User({
@@ -180,7 +180,7 @@ describe("/users", () => {
     });
     test("returns user profile with favourites", async () => {
       const response = await request(app)
-        .get("/users/me");
+        .get("/api/users/me");
       expect(response.statusCode).toBe(200);
       expect(response.body.user.username).toEqual("testuser");
       expect(response.body.user.profile_pic).toEqual("http://example.com/pic.jpg");
@@ -190,14 +190,14 @@ describe("/users", () => {
     test("returns 404 when user not found", async () => {
       await User.deleteMany({});
       const response = await request(app)
-        .get("/users/me");
+        .get("/api/users/me");
 
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual("User not found");
     });
   });
 
-  describe("GET /users/search - searchUsers", () => {
+  describe("GET /api/users/search - searchUsers", () => {
     beforeEach(async () => {
       const users = [
         { username: "alice", email: "alice@email.com", authId: "alice-id" },
@@ -209,7 +209,7 @@ describe("/users", () => {
     });
     test("returns matching users for partial search", async () => {
       const response = await request(app)
-        .get("/users/search")
+        .get("/api/users/search")
         .query({ q: "ali" });
       expect(response.statusCode).toBe(200);
       expect(response.body.users).toHaveLength(2);
@@ -217,14 +217,14 @@ describe("/users", () => {
     });
     test("returns empty array for query less than 2 characters", async () => {
       const response = await request(app)
-        .get("/users/search")
+        .get("/api/users/search")
         .query({ q: "a" });
       expect(response.statusCode).toBe(200);
       expect(response.body.users).toHaveLength(0);
     });
     test("search is case insensitive", async () => {
       const response = await request(app)
-        .get("/users/search")
+        .get("/api/users/search")
         .query({ q: "BOB" });
 
       expect(response.statusCode).toBe(200);
@@ -240,7 +240,7 @@ describe("/users", () => {
       }));
       await User.insertMany(manyUsers);
       const response = await request(app)
-        .get("/users/search")
+        .get("/api/users/search")
         .query({ q: "user" });
 
       expect(response.statusCode).toBe(200);
@@ -248,7 +248,7 @@ describe("/users", () => {
     });
   });
 
-  describe("GET /users/:userId - getUserById", () => {
+  describe("GET /api/users/:userId - getUserById", () => {
     let user;
     beforeEach(async () => {
       user = new User({
@@ -261,7 +261,7 @@ describe("/users", () => {
     });
     test("returns user by id", async () => {
       const response = await request(app)
-        .get(`/users/${user._id}`);
+        .get(`/api/users/${user._id}`);
 
       expect(response.statusCode).toBe(200);
       expect(response.body.user.username).toEqual("testuser");
@@ -271,14 +271,14 @@ describe("/users", () => {
     test("returns 404 when user not found", async () => {
       const fakeId = "507f1f77bcf86cd799439011";
       const response = await request(app)
-        .get(`/users/${fakeId}`);
+        .get(`/api/users/${fakeId}`);
 
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual("User not found");
     });
   });
 
-  describe("GET /users/username/:username - getUserIdByUsername", () => {
+  describe("GET /api/users/username/:username - getUserIdByUsername", () => {
     let user;
     beforeEach(async () => {
       user = new User({
@@ -290,21 +290,21 @@ describe("/users", () => {
     });
     test("returns userId for valid username", async () => {
       const response = await request(app)
-        .get("/users/username/testuser");
+        .get("/api/users/username/testuser");
 
       expect(response.statusCode).toBe(200);
       expect(response.body.userId).toEqual(user._id.toString());
     });
     test("returns 404 when username not found", async () => {
       const response = await request(app)
-        .get("/users/username/nonexistent");
+        .get("/api/users/username/nonexistent");
 
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual("User not found");
     });
   });
 
-  describe("DELETE /users/:userId - deleteUser", () => {
+  describe("DELETE /api/users/:userId - deleteUser", () => {
     let user;
     beforeEach(async () => {
       user = new User({
@@ -316,7 +316,7 @@ describe("/users", () => {
     });
     test("deletes user successfully", async () => {
       const response = await request(app)
-        .delete(`/users/${user._id}`);
+        .delete(`/api/users/${user._id}`);
       expect(response.statusCode).toBe(200);
       expect(response.body.message).toEqual("User deleted");
 
@@ -326,14 +326,14 @@ describe("/users", () => {
     test("returns 404 when user not found", async () => {
       const fakeId = "507f1f77bcf86cd799439011";
       const response = await request(app)
-        .delete(`/users/${fakeId}`);
+        .delete(`/api/users/${fakeId}`);
 
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual("User not found");
     });
   });
 
-  describe("POST /users/me/favourites/:quizId - addFavourite", () => {
+  describe("POST /api/users/me/favourites/:quizId - addFavourite", () => {
     let user, quiz;
     beforeEach(async () => {
       user = new User({
@@ -353,7 +353,7 @@ describe("/users", () => {
     });
     test("adds quiz to favourites successfully", async () => {
       const response = await request(app)
-        .post(`/users/me/favourites/${quiz._id}`);
+        .post(`/api/users/me/favourites/${quiz._id}`);
 
       expect(response.statusCode).toBe(200);
       expect(response.body.message).toEqual("Quiz added to favourites");
@@ -362,8 +362,8 @@ describe("/users", () => {
       expect(updatedUser.favourites).toContainEqual(quiz._id);
     });
     test("does not add duplicate favourites", async () => {
-      await request(app).post(`/users/me/favourites/${quiz._id}`);
-      await request(app).post(`/users/me/favourites/${quiz._id}`);
+      await request(app).post(`/api/users/me/favourites/${quiz._id}`);
+      await request(app).post(`/api/users/me/favourites/${quiz._id}`);
 
       const updatedUser = await User.findById(user._id);
       expect(updatedUser.favourites).toHaveLength(1);
@@ -371,14 +371,14 @@ describe("/users", () => {
     test("returns 404 when quiz not found", async () => {
       const fakeId = "507f1f77bcf86cd799439011";
       const response = await request(app)
-        .post(`/users/me/favourites/${fakeId}`);
+        .post(`/api/users/me/favourites/${fakeId}`);
 
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual("Quiz not found");
     });
   });
 
-  describe("DELETE /users/me/favourites/:quizId - removeFavourite", () => {
+  describe("DELETE /api/users/me/favourites/:quizId - removeFavourite", () => {
     let user, quiz;
     beforeEach(async () => {
       user = new User({
@@ -399,7 +399,7 @@ describe("/users", () => {
     });
     test("removes quiz from favourites successfully", async () => {
       const response = await request(app)
-        .delete(`/users/me/favourites/${quiz._id}`);
+        .delete(`/api/users/me/favourites/${quiz._id}`);
       expect(response.statusCode).toBe(200);
       expect(response.body.message).toEqual("Quiz removed from favourites");
       const updatedUser = await User.findById(user._id);
@@ -408,7 +408,7 @@ describe("/users", () => {
     test("returns 404 when quiz not found", async () => {
       const fakeId = "507f1f77bcf86cd799439011";
       const response = await request(app)
-        .delete(`/users/me/favourites/${fakeId}`);
+        .delete(`/api/users/me/favourites/${fakeId}`);
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual("Quiz not found");
     });
