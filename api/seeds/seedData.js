@@ -54,13 +54,33 @@ const seed = async () => {
       username: "Alice",
       email: "alice@email.com",
       password: "Password123"
-    })
+    });
     const barney = await createSeedUser({
       username: "Barney",
       email: "barney@email.com",
       password: "Password123"
-    })
-    console.log("Seed users created")
+    });
+    const dylan = await createSeedUser({
+      username: "Dylan",
+      email: "dylan@email.com",
+      password: "Password123"
+    });
+    const matt = await createSeedUser({
+      username: "Matt",
+      email: "matt@email.com",
+      password: "Password123"
+    });
+    const dominik = await createSeedUser({
+      username: "Dominik",
+      email: "dominik@email.com",
+      password: "Password123"
+    });
+    const emilia = await createSeedUser({
+      username: "Emilia",
+      email: "emilia@email.com",
+      password: "Password123"  
+    });
+    console.log("Seed users created");
 
     await Friend.deleteMany({});
 
@@ -79,9 +99,49 @@ const seed = async () => {
         user1: alice._id,
         user2: barney._id,
         accepted: true
+      },
+      {
+        user1: matt._id,
+        user2: dylan._id,
+        accepted: true
+      },
+      {
+        user1: matt._id,
+        user2: dominik._id,
+        accepted: true
+      },
+      {
+        user1: matt._id,
+        user2: emilia._id,
+        accepted: true
+      },
+      {
+        user1: dylan._id,
+        user2: dominik._id,
+        accepted: true
+      },
+      {
+        user1: dylan._id,
+        user2: emilia._id,
+        accepted: true
+      },
+      {
+        user1: dominik._id,
+        user2: emilia._id,
+        accepted: true
+      },
+      {
+        user1: alice._id,
+        user2: jane._id,
+        accepted: false
+      },
+      {
+        user1: barney._id,
+        user2: alice._id,
+        accepted: false
       }
     ])
-    console.log("Seed friends created")
+    console.log("Seed friends created");
 
     const quizId1 = new mongoose.Types.ObjectId();
     const quizId2 = new mongoose.Types.ObjectId();
@@ -93,6 +153,14 @@ const seed = async () => {
     const quizId8 = new mongoose.Types.ObjectId();
     const quizId9 = new mongoose.Types.ObjectId();
     const quizId10 = new mongoose.Types.ObjectId();
+    const quizId11 = new mongoose.Types.ObjectId();
+    const quizId12 = new mongoose.Types.ObjectId();
+    const quizId13 = new mongoose.Types.ObjectId();
+    const quizId14 = new mongoose.Types.ObjectId();
+    const quizId15 = new mongoose.Types.ObjectId();
+    const quizId16 = new mongoose.Types.ObjectId();
+    const quizId17 = new mongoose.Types.ObjectId();
+    const quizId18 = new mongoose.Types.ObjectId();
 
     const addAnswerIds = (items) =>
       items.map((item) => ({
@@ -105,7 +173,7 @@ const seed = async () => {
         _id: quizId1,
         title: "Guess the Artist",
         category: "art",
-        created_by: jane._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -150,7 +218,7 @@ const seed = async () => {
         _id: quizId2,
         title: "The Skeletal System",
         category: "science",
-        created_by: alice._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -195,7 +263,7 @@ const seed = async () => {
         _id: quizId3,
         title: "Thermodynamics",
         category: "science",
-        created_by: alice._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -240,7 +308,7 @@ const seed = async () => {
         _id: quizId4,
         title: "Renaissance Art",
         category: "art",
-        created_by: jane._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -285,7 +353,7 @@ const seed = async () => {
         _id: quizId5,
         title: "Western Classical Music",
         category: "music",
-        created_by: barney._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -330,7 +398,7 @@ const seed = async () => {
         _id: quizId6,
         title: "Brazilian History",
         category: "history",
-        created_by: alice._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -375,7 +443,7 @@ const seed = async () => {
         _id: quizId7,
         title: "Cocktails",
         category: "other",
-        created_by: jane._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -420,7 +488,7 @@ const seed = async () => {
         _id: quizId8,
         title: "History of Coffee",
         category: "history",
-        created_by: alice._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -465,7 +533,7 @@ const seed = async () => {
         _id: quizId9,
         title: "Bossa Nova",
         category: "music",
-        created_by: barney._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -510,7 +578,7 @@ const seed = async () => {
         _id: quizId10,
         title: "Mexican Cuisine",
         category: "other",
-        created_by: barney._id,
+        created_by: dylan._id,
         req_to_pass: 3,
         questions: [
           {
@@ -636,7 +704,7 @@ const seed = async () => {
         _id: new mongoose.Types.ObjectId(),
         title: "Impressionism: Masters of Light",
         category: "art",
-        created_by: jane._id,
+        created_by: alice._id,
         req_to_pass: 4,
         questions: [
           {
@@ -763,6 +831,366 @@ const seed = async () => {
               { text: "1968", is_correct: false },
               { text: "1969", is_correct: true },
               { text: "1970", is_correct: false },
+            ]),
+          }
+        ],
+      },
+      {
+        _id: quizId11,
+        title: "Modern World Capitals",
+        category: "geography",
+        created_by: alice._id,
+        req_to_pass: 3,
+        questions: [
+          {
+            text: "What is the capital of Canada?",
+            answers: addAnswerIds([
+              { text: "Toronto", is_correct: false },
+              { text: "Ottawa", is_correct: true },
+              { text: "Vancouver", is_correct: false },
+              { text: "Montreal", is_correct: false },
+            ]),
+          },
+          {
+            text: "What is the capital of Australia?",
+            answers: addAnswerIds([
+              { text: "Sydney", is_correct: false },
+              { text: "Canberra", is_correct: true },
+              { text: "Melbourne", is_correct: false },
+              { text: "Perth", is_correct: false },
+            ]),
+          },
+          {
+            text: "What is the capital of South Korea?",
+            answers: addAnswerIds([
+              { text: "Seoul", is_correct: true },
+              { text: "Busan", is_correct: false },
+              { text: "Incheon", is_correct: false },
+              { text: "Daegu", is_correct: false },
+            ]),
+          },
+          {
+            text: "What is the capital of Argentina?",
+            answers: addAnswerIds([
+              { text: "Cordoba", is_correct: false },
+              { text: "Rosario", is_correct: false },
+              { text: "Buenos Aires", is_correct: true },
+              { text: "Mendoza", is_correct: false },
+            ]),
+          }
+        ],
+      },
+      {
+        _id: quizId12,
+        title: "Ocean Life",
+        category: "science",
+        created_by: alice._id,
+        req_to_pass: 3,
+        questions: [
+          {
+            text: "Which of these is a marine mammal?",
+            answers: addAnswerIds([
+              { text: "Dolphin", is_correct: true },
+              { text: "Shark", is_correct: false },
+              { text: "Seahorse", is_correct: false },
+              { text: "Octopus", is_correct: false },
+            ]),
+          },
+          {
+            text: "What is the largest species of shark?",
+            answers: addAnswerIds([
+              { text: "Great white shark", is_correct: false },
+              { text: "Whale shark", is_correct: true },
+              { text: "Hammerhead shark", is_correct: false },
+              { text: "Tiger shark", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which part of the ocean has the most sunlight?",
+            answers: addAnswerIds([
+              { text: "Abyssal zone", is_correct: false },
+              { text: "Bathypelagic zone", is_correct: false },
+              { text: "Epipelagic zone", is_correct: true },
+              { text: "Hadal zone", is_correct: false },
+            ]),
+          },
+          {
+            text: "Coral reefs are built by tiny animals called what?",
+            answers: addAnswerIds([
+              { text: "Polyps", is_correct: true },
+              { text: "Plankton", is_correct: false },
+              { text: "Krill", is_correct: false },
+              { text: "Sponges", is_correct: false },
+            ]),
+          }
+        ],
+      },
+      {
+        _id: quizId13,
+        title: "World Mythology",
+        category: "history",
+        created_by: alice._id,
+        req_to_pass: 3,
+        questions: [
+          {
+            text: "Who is the Norse god of thunder?",
+            answers: addAnswerIds([
+              { text: "Odin", is_correct: false },
+              { text: "Thor", is_correct: true },
+              { text: "Loki", is_correct: false },
+              { text: "Tyr", is_correct: false },
+            ]),
+          },
+          {
+            text: "In Greek mythology, who rules the sea?",
+            answers: addAnswerIds([
+              { text: "Hades", is_correct: false },
+              { text: "Zeus", is_correct: false },
+              { text: "Poseidon", is_correct: true },
+              { text: "Apollo", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which Egyptian god is associated with the sun?",
+            answers: addAnswerIds([
+              { text: "Ra", is_correct: true },
+              { text: "Osiris", is_correct: false },
+              { text: "Anubis", is_correct: false },
+              { text: "Horus", is_correct: false },
+            ]),
+          },
+          {
+            text: "In Hindu mythology, who is the preserver?",
+            answers: addAnswerIds([
+              { text: "Brahma", is_correct: false },
+              { text: "Shiva", is_correct: false },
+              { text: "Vishnu", is_correct: true },
+              { text: "Indra", is_correct: false },
+            ]),
+          }
+        ],
+      },
+      {
+        _id: quizId14,
+        title: "European Rivers",
+        category: "geography",
+        created_by: jane._id,
+        req_to_pass: 3,
+        questions: [
+          {
+            text: "Which river flows through Paris?",
+            answers: addAnswerIds([
+              { text: "Seine", is_correct: true },
+              { text: "Rhine", is_correct: false },
+              { text: "Danube", is_correct: false },
+              { text: "Loire", is_correct: false },
+            ]),
+          },
+          {
+            text: "The Danube empties into which sea?",
+            answers: addAnswerIds([
+              { text: "Baltic Sea", is_correct: false },
+              { text: "Black Sea", is_correct: true },
+              { text: "Adriatic Sea", is_correct: false },
+              { text: "North Sea", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which river runs through London?",
+            answers: addAnswerIds([
+              { text: "Thames", is_correct: true },
+              { text: "Trent", is_correct: false },
+              { text: "Severn", is_correct: false },
+              { text: "Mersey", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which river passes through Vienna, Bratislava, and Budapest?",
+            answers: addAnswerIds([
+              { text: "Rhine", is_correct: false },
+              { text: "Danube", is_correct: true },
+              { text: "Elbe", is_correct: false },
+              { text: "Po", is_correct: false },
+            ]),
+          }
+        ],
+      },
+      {
+        _id: quizId15,
+        title: "Classic Film Trivia",
+        category: "other",
+        created_by: barney._id,
+        req_to_pass: 3,
+        questions: [
+          {
+            text: "Which film features the quote, 'Here's looking at you, kid'?",
+            answers: addAnswerIds([
+              { text: "Casablanca", is_correct: true },
+              { text: "Citizen Kane", is_correct: false },
+              { text: "The Maltese Falcon", is_correct: false },
+              { text: "Sunset Boulevard", is_correct: false },
+            ]),
+          },
+          {
+            text: "Who directed 'Psycho'?",
+            answers: addAnswerIds([
+              { text: "Alfred Hitchcock", is_correct: true },
+              { text: "Orson Welles", is_correct: false },
+              { text: "Billy Wilder", is_correct: false },
+              { text: "John Ford", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which film won Best Picture at the 1940 Oscars?",
+            answers: addAnswerIds([
+              { text: "Gone with the Wind", is_correct: true },
+              { text: "The Wizard of Oz", is_correct: false },
+              { text: "Stagecoach", is_correct: false },
+              { text: "Mr. Smith Goes to Washington", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which actor starred in 'The Godfather' as Michael Corleone?",
+            answers: addAnswerIds([
+              { text: "Al Pacino", is_correct: true },
+              { text: "Robert De Niro", is_correct: false },
+              { text: "Marlon Brando", is_correct: false },
+              { text: "James Caan", is_correct: false },
+            ]),
+          }
+        ],
+      },
+      {
+        _id: quizId16,
+        title: "World Sports Legends",
+        category: "other",
+        created_by: barney._id,
+        req_to_pass: 3,
+        questions: [
+          {
+            text: "Which tennis player has won the most Grand Slam singles titles?",
+            answers: addAnswerIds([
+              { text: "Serena Williams", is_correct: false },
+              { text: "Rafael Nadal", is_correct: false },
+              { text: "Novak Djokovic", is_correct: true },
+              { text: "Roger Federer", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which boxer was known as 'The Greatest'?",
+            answers: addAnswerIds([
+              { text: "Mike Tyson", is_correct: false },
+              { text: "Muhammad Ali", is_correct: true },
+              { text: "Joe Frazier", is_correct: false },
+              { text: "George Foreman", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which country has won the most FIFA World Cups?",
+            answers: addAnswerIds([
+              { text: "Germany", is_correct: false },
+              { text: "Italy", is_correct: false },
+              { text: "Brazil", is_correct: true },
+              { text: "Argentina", is_correct: false },
+            ]),
+          },
+          {
+            text: "Who holds the NBA record for most career points?",
+            answers: addAnswerIds([
+              { text: "Michael Jordan", is_correct: false },
+              { text: "LeBron James", is_correct: true },
+              { text: "Kareem Abdul-Jabbar", is_correct: false },
+              { text: "Kobe Bryant", is_correct: false },
+            ]),
+          }
+        ],
+      },
+      {
+        _id: quizId17,
+        title: "Home Cooking Basics",
+        category: "other",
+        created_by: barney._id,
+        req_to_pass: 3,
+        questions: [
+          {
+            text: "What does it mean to 'saute'?",
+            answers: addAnswerIds([
+              { text: "Simmer in liquid", is_correct: false },
+              { text: "Cook quickly in a small amount of fat", is_correct: true },
+              { text: "Cook with steam", is_correct: false },
+              { text: "Cook slowly in the oven", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which of these is a whole grain?",
+            answers: addAnswerIds([
+              { text: "White rice", is_correct: false },
+              { text: "Brown rice", is_correct: true },
+              { text: "White bread", is_correct: false },
+              { text: "Grits", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which herb is commonly used in pesto?",
+            answers: addAnswerIds([
+              { text: "Basil", is_correct: true },
+              { text: "Cilantro", is_correct: false },
+              { text: "Parsley", is_correct: false },
+              { text: "Thyme", is_correct: false },
+            ]),
+          },
+          {
+            text: "What is the main ingredient in hummus?",
+            answers: addAnswerIds([
+              { text: "Lentils", is_correct: false },
+              { text: "Chickpeas", is_correct: true },
+              { text: "Black beans", is_correct: false },
+              { text: "Kidney beans", is_correct: false },
+            ]),
+          }
+        ],
+      },
+      {
+        _id: quizId18,
+        title: "Icons of Jazz",
+        category: "music",
+        created_by: barney._id,
+        req_to_pass: 3,
+        questions: [
+          {
+            text: "Which musician was known as 'Satchmo'?",
+            answers: addAnswerIds([
+              { text: "Louis Armstrong", is_correct: true },
+              { text: "Duke Ellington", is_correct: false },
+              { text: "Miles Davis", is_correct: false },
+              { text: "Charlie Parker", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which saxophonist recorded the album 'A Love Supreme'?",
+            answers: addAnswerIds([
+              { text: "John Coltrane", is_correct: true },
+              { text: "Sonny Rollins", is_correct: false },
+              { text: "Dexter Gordon", is_correct: false },
+              { text: "Lester Young", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which jazz pianist composed 'Take the A Train'?",
+            answers: addAnswerIds([
+              { text: "Thelonious Monk", is_correct: false },
+              { text: "Duke Ellington", is_correct: true },
+              { text: "Bill Evans", is_correct: false },
+              { text: "Art Tatum", is_correct: false },
+            ]),
+          },
+          {
+            text: "Which trumpeter was famous for the song 'So What'?",
+            answers: addAnswerIds([
+              { text: "Miles Davis", is_correct: true },
+              { text: "Chet Baker", is_correct: false },
+              { text: "Clifford Brown", is_correct: false },
+              { text: "Dizzy Gillespie", is_correct: false },
             ]),
           }
         ],
