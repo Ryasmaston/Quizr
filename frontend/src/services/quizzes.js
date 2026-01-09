@@ -16,6 +16,14 @@ export async function createQuiz(quizData) {
   return res.json();
 }
 
+export async function deleteQuiz(quizId) {
+  const res = await apiFetch(`/quizzes/${quizId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Unable to delete quiz");
+  return res.json();
+}
+
 export async function getLeaderboard() {
   const res = await apiFetch("/quizzes/leaderboard");
   if (!res.ok) throw new Error("Unable to fetch leaderboard");
