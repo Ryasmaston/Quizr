@@ -188,7 +188,7 @@ describe("/quizzes", () => {
         questions: []
       });
       await quiz.save();
-      const response = await request(app).get(`/quizzes/${quiz._id}`);
+      const response = await request(app).get(`/api/quizzes/${quiz._id}`);
       expect(response.status).toEqual(200);
       expect(response.body.quiz.title).toEqual("Test quiz");
       expect(response.body.quiz.created_by.username).toEqual("testuser");
@@ -299,7 +299,7 @@ describe("/quizzes", () => {
         questions: []
       });
       await quiz.save();
-      const response = await request(app).delete(`/quizzes/${quiz._id}`);
+      const response = await request(app).delete(`/api/quizzes/${quiz._id}`);
       expect(response.status).toEqual(200);
       expect(response.body.message).toEqual("Quiz deleted");
       const deletedQuiz = await Quiz.findById(quiz._id);
