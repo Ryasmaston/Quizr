@@ -10,26 +10,27 @@ const quizzesRouter = require("./routes/quizzes");
 const friendsRouter = require("./routes/friends")
 
 const app = express();
+const apiBase = "/api";
 
 app.use(cors());
 app.use(bodyParser.json());
 
 // public health route, only for API testing
-app.get("/health", (_req, res) => {
+app.get(["/health", `${apiBase}/health`], (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
 // public username availability check
-app.use("/users", usersRouter);
+app.use(`${apiBase}/users`, usersRouter);
 
-app.use("/me", requireAuth, meRouter);
-app.use("/quizzes", requireAuth, quizzesRouter);
-app.use("/friends", requireAuth, friendsRouter);
+app.use(`${apiBase}/me`, requireAuth, meRouter);
+app.use(`${apiBase}/quizzes`, requireAuth, quizzesRouter);
+app.use(`${apiBase}/friends`, requireAuth, friendsRouter);
 
 if (process.env.NODE_ENV === "production") {
   const frontendDir = path.join(__dirname, "..", "frontend", "dist");
   const spaIndex = path.join(frontendDir, "index.html");
-  const apiPrefixes = ["/users", "/me", "/quizzes", "/friends", "/health"];
+  const apiPrefixes = [apiBase];
 
   app.use(express.static(frontendDir));
   app.get("*", (req, res, next) => {

@@ -5,7 +5,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../../services/authentication";
 import { apiFetch } from "../../services/api";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL; 
+const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
+const NORMALIZED_BASE = RAW_BACKEND_URL.replace(/\/$/, "");
+const BACKEND_URL = NORMALIZED_BASE
+  ? (NORMALIZED_BASE.endsWith("/api") ? NORMALIZED_BASE : `${NORMALIZED_BASE}/api`)
+  : "/api";
 
 const IconPalette=()=>(<svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none"><path d="M12 3a9 9 0 0 0 0 18h2.2a2.8 2.8 0 0 0 0-5.6H13.5a1 1 0 0 1 0-2h2.8A4.7 4.7 0 0 0 21 8.7C21 5.55 16.95 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M7.8 10.2h.01M10.3 7.9h.01M13 10.2h.01M15.6 11.7h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>);
 const IconLandmark=()=>(<svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none"><path d="M12 4 3.5 8.5V11h17V8.5L12 4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><path d="M5.8 11v8M9.3 11v8M12.8 11v8M16.3 11v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M4.5 19.5h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>);
