@@ -108,7 +108,6 @@ export default function ProfilePage() {
         const quizzesResponse = await apiFetch("/quizzes");
         const quizzesBody = await quizzesResponse.json();
         const userId = userProfile._id;
-
         const createdResponse = await apiFetch("/quizzes?created_by=" + userId);
         const createdBody = await createdResponse.json();
         setCreatedQuizzes(createdBody.quizzes || []);

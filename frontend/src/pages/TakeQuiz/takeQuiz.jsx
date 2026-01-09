@@ -602,7 +602,7 @@ function TakeQuizPage() {
                             </div>
                           </div>
                           <p className="text-gray-300 mb-6">
-                            Are you sure you want to delete "{quiz.title}"? All quiz data, attempts, and leaderboard entries will be permanently removed.
+                            Are you sure you want to delete &apos;{quiz.title}&apos;? All quiz data, attempts, and leaderboard entries will be permanently removed.
                           </p>
                           <div className="flex gap-3">
                             <button
