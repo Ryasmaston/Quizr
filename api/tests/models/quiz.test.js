@@ -10,7 +10,6 @@ describe("Quiz model", () => {
     await Quiz.deleteMany({});
     await User.deleteMany({});
 
-    // Create a test user to satisfy the required created_by field
     testUser = await User.create({
       authId: "test-auth-id-123",
       username: "testuser",
@@ -82,7 +81,6 @@ describe("Quiz model", () => {
         },
       ],
     });
-
     expect(quiz.questions.length).toEqual(2);
     expect(quiz.questions[0].answers.length).toEqual(4);
     expect(quiz.questions[0].answers[0].is_correct).toEqual(false);
@@ -102,7 +100,6 @@ describe("Quiz model", () => {
         },
       ],
     });
-
     expect(quiz.questions[0].question_id).toBeInstanceOf(mongoose.Types.ObjectId);
     expect(quiz.questions[0].answers[0].answer_id).toBeInstanceOf(
       mongoose.Types.ObjectId
@@ -165,7 +162,6 @@ describe("Quiz model", () => {
 
     await quiz.save();
     const quizzes = await Quiz.find();
-
     expect(quizzes.length).toEqual(1);
     expect(quizzes[0].title).toEqual("Test quiz");
     expect(quizzes[0].category).toEqual("history");
@@ -191,7 +187,6 @@ describe("Quiz model", () => {
 
     await quiz.save();
     const savedQuiz = await Quiz.findById(quiz._id).populate("created_by");
-
     expect(savedQuiz.created_by.username).toEqual("testuser");
     expect(savedQuiz.created_by.email).toEqual("test@test.com");
   });
@@ -213,7 +208,6 @@ describe("Quiz model", () => {
 
     await quiz.save();
     const savedQuiz = await Quiz.findById(quiz._id);
-
     expect(savedQuiz.attempts.length).toEqual(1);
     expect(savedQuiz.attempts[0].correct).toEqual(5);
   });
@@ -225,24 +219,19 @@ describe("Quiz model", () => {
       category: "other",
       req_to_pass: 1,
     });
-
     await quiz.save();
-
     quiz.attempts.push({
       user_id: testUser._id,
       attempted_at: new Date(),
       correct: 3,
     });
-
     quiz.attempts.push({
       user_id: testUser._id,
       attempted_at: new Date(),
       correct: 4,
     });
-
     await quiz.save();
     const updatedQuiz = await Quiz.findById(quiz._id);
-
     expect(updatedQuiz.attempts.length).toEqual(2);
     expect(updatedQuiz.attempts[0].correct).toEqual(3);
     expect(updatedQuiz.attempts[1].correct).toEqual(4);
@@ -266,11 +255,9 @@ describe("Quiz model", () => {
         },
       ],
     });
-
     await quiz.save();
     let quizzes = await Quiz.find();
     expect(quizzes.length).toEqual(1);
-
     await Quiz.findByIdAndDelete(quizzes[0]._id);
     quizzes = await Quiz.find();
     expect(quizzes.length).toEqual(0);
@@ -283,7 +270,6 @@ describe("Quiz model", () => {
       category: "other",
       req_to_pass: 1,
     });
-
     await quiz.save();
     expect(quiz.created_at).toBeInstanceOf(Date);
   });
