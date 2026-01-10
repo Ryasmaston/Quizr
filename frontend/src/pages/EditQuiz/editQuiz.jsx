@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, unstable_useBlocker as useBlocker } from "react-router-dom";
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { getQuizById, updateQuiz } from "../../services/quizzes";
@@ -91,6 +91,8 @@ export default function EditQuiz() {
   ]);
   const [reqToPass, setReqToPass] = useState(1);
   const prevQuestionCountRef = useRef(questions.length);
+  const [initialSnapshot, setInitialSnapshot] = useState(null);
+  const ignoreBlockRef = useRef(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (nextUser) => {
@@ -150,14 +152,26 @@ export default function EditQuiz() {
             };
           }),
         }));
+        const resolvedQuestions = normalizedQuestions.length ? normalizedQuestions : questions;
+        const resolvedReqToPass = Number.isFinite(quiz.req_to_pass)
+          ? Math.min(quiz.req_to_pass, normalizedQuestions.length || 1)
+          : 1;
         setAnswersPerQuestion(maxAnswers);
-        setQuestions(normalizedQuestions.length ? normalizedQuestions : questions);
-        setReqToPass(
-          Number.isFinite(quiz.req_to_pass)
-            ? Math.min(quiz.req_to_pass, normalizedQuestions.length || 1)
-            : 1
-        );
+        setQuestions(resolvedQuestions);
+        setReqToPass(resolvedReqToPass);
         prevQuestionCountRef.current = normalizedQuestions.length || 1;
+        setInitialSnapshot(
+          buildSnapshot({
+            title: quiz.title || "",
+            category: quiz.category || "other",
+            difficulty: quiz.difficulty || "medium",
+            lockAnswers: Boolean(quiz.lock_answers),
+            allowMultipleCorrect: Boolean(quiz.allow_multiple_correct),
+            requireAllCorrect: Boolean(quiz.require_all_correct),
+            reqToPass: resolvedReqToPass,
+            questions: resolvedQuestions,
+          })
+        );
       } catch (error) {
         alert(error.message);
         navigate(returnTo);
@@ -182,18 +196,6 @@ export default function EditQuiz() {
       prevQuestionCountRef.current = currentCount;
     }
   }, [questions.length]);
-
-  if (loading)
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="relative flex flex-col items-center">
-          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-          <p className="mt-4 text-white font-medium">Loading...</p>
-        </div>
-      </div>
-    );
-
-  if (!user) return null;
 
   function normalizeAnswerCount(question, count) {
     const answers = Array.isArray(question.answers) ? question.answers : [];
@@ -238,6 +240,100 @@ export default function EditQuiz() {
       })
     );
   }
+
+  function buildSnapshot(data) {
+    const normalizedQuestions = (data.questions || []).map((question) => ({
+      text: normalizeText(question?.text),
+      answers: (question?.answers || []).map((answer) => ({
+        text: normalizeText(answer?.text),
+        is_correct: Boolean(answer?.is_correct),
+      })),
+    }));
+
+    return JSON.stringify({
+      title: normalizeText(data.title),
+      category: data.category || "other",
+      difficulty: data.difficulty || "medium",
+      lockAnswers: Boolean(data.lockAnswers),
+      allowMultipleCorrect: Boolean(data.allowMultipleCorrect),
+      requireAllCorrect: data.allowMultipleCorrect ? Boolean(data.requireAllCorrect) : false,
+      reqToPass: Number.isFinite(data.reqToPass) ? data.reqToPass : 1,
+      questions: normalizedQuestions,
+    });
+  }
+
+  const currentSnapshot = useMemo(
+    () =>
+      buildSnapshot({
+        title,
+        category,
+        difficulty,
+        lockAnswers,
+        allowMultipleCorrect,
+        requireAllCorrect,
+        reqToPass,
+        questions,
+      }),
+    [
+      title,
+      category,
+      difficulty,
+      lockAnswers,
+      allowMultipleCorrect,
+      requireAllCorrect,
+      reqToPass,
+      questions,
+    ]
+  );
+  const hasChanges = Boolean(initialSnapshot) && currentSnapshot !== initialSnapshot;
+
+  const blocker = useBlocker(hasChanges && !ignoreBlockRef.current);
+
+  useEffect(() => {
+    if (blocker.state !== "blocked") return;
+    const shouldLeave = window.confirm("You have unsaved changes. Discard them?");
+    if (shouldLeave) {
+      blocker.proceed();
+    } else {
+      blocker.reset();
+    }
+  }, [blocker.state, blocker.proceed, blocker.reset]);
+
+  const handleCancel = useCallback(() => {
+    navigate(returnTo);
+  }, [navigate, returnTo]);
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        handleCancel();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleCancel]);
+
+  useEffect(() => {
+    if (!hasChanges) return undefined;
+    function handleBeforeUnload(event) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasChanges]);
+
+  if (loading)
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="relative flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <p className="mt-4 text-white font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+
+  if (!user) return null;
 
   function handleAnswersPerQuestionChange(value) {
     const count = Number(value);
@@ -317,6 +413,7 @@ export default function EditQuiz() {
         lock_answers: lockAnswers,
         req_to_pass: safeReqToPass,
       });
+      ignoreBlockRef.current = true;
       navigate(returnTo);
     } catch (err) {
       alert(err.message);
@@ -653,7 +750,12 @@ export default function EditQuiz() {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+              disabled={!hasChanges}
+              className={`flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                hasChanges
+                  ? "hover:shadow-lg hover:shadow-purple-500/50 transform hover:scale-105 active:scale-95"
+                  : "opacity-50 cursor-not-allowed"
+              }`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -662,10 +764,10 @@ export default function EditQuiz() {
             </button>
             <button
               type="button"
-              onClick={() => navigate(returnTo)}
+              onClick={handleCancel}
               className="flex-1 bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/20 transition-all"
             >
-              Discard Changes
+              {hasChanges ? "Discard Changes" : "Cancel"}
             </button>
           </div>
         </form>

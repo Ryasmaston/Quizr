@@ -373,32 +373,78 @@ return (
             categoryColors[quiz.category] || categoryColors.other
             }`}>
             <div className="inline-flex items-center gap-2 text-white font-semibold text-sm uppercase tracking-wide">
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold">
+                <span className="inline-flex items-center gap-2 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-semibold">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {categoryIcons[quiz.category] || categoryIcons.other}
                 </svg>
                 <span className="capitalize">{quiz.category}</span>
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white/90">
+                <span className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white/90">
                 <img src={difficulty.icon} alt="" aria-hidden="true" className="h-4 w-4" />
                 <span>{difficulty.label}</span>
                 </span>
             </div>
-            {canNavigateToAuthor ? (
-              <button
-                type="button"
-                onClick={() => {
-                  navigate(`/users/${authorName}`);
-                }}
-                className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
-              >
-                Created by {authorName}
-              </button>
-            ) : (
-              <span className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white/60 cursor-default">
-                Created by {authorName}
-              </span>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {canNavigateToAuthor ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate(`/users/${authorName}`);
+                  }}
+                  className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
+                >
+                  Created by {isQuizOwner ? "you" : authorName}
+                </button>
+              ) : (
+                <span className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white/60 cursor-default">
+                  Created by {authorName}
+                </span>
+              )}
+              {isQuizOwner && (
+                <>
+                  <button
+                    className="rounded-xl bg-white/10 border border-white/20 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 flex items-center justify-center gap-2"
+                    type="button"
+                    onClick={() => navigate(`/quiz/${id}/edit`, { state: { from: "quiz", returnTo: `/quiz/${id}` } })}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.862 4.487a2 2 0 112.828 2.828L8.828 18.175a4 4 0 01-1.414.944l-3.536 1.178 1.178-3.536a4 4 0 01.944-1.414L16.862 4.487z"
+                      />
+                    </svg>
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    className="rounded-xl bg-white/10 border border-white/20 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 flex items-center justify-center gap-2"
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    <span>Delete</span>
+                  </button>
+                </>
+              )}
+            </div>
             </div>
             <div className="p-6 sm:p-8">
             <div className="grid gap-4 sm:grid-cols-2 text-gray-200 text-sm sm:text-base">
@@ -484,13 +530,13 @@ return (
             </div>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
             <button
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95"
+                className="w-full sm:flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95"
                 onClick={startQuiz}
             >
                 Take the quiz
             </button>
             <button
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                className="w-full sm:flex-1 px-6 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2"
                 type="button"
                 onClick={handleToggleFavourite}
             >
@@ -508,46 +554,6 @@ return (
             </button>
             {isQuizOwner && (
             <>
-                <button
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2"
-                type="button"
-                onClick={() => navigate(`/quiz/${id}/edit`, { state: { from: "quiz", returnTo: `/quiz/${id}` } })}
-                >
-                <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                >
-                    <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M16.862 4.487a2 2 0 112.828 2.828L8.828 18.175a4 4 0 01-1.414.944l-3.536 1.178 1.178-3.536a4 4 0 01.944-1.414L16.862 4.487z"
-                    />
-                </svg>
-                <span>Edit Quiz</span>
-                </button>
-                <button
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-rose-500/20 border border-rose-400/50 text-rose-200 font-semibold hover:bg-rose-500/30 transition-all flex items-center justify-center gap-2"
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                >
-                <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                >
-                    <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                </svg>
-                <span>Delete Quiz</span>
-                </button>
                 {showDeleteConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
                     <div className="bg-slate-800 rounded-2xl border border-white/20 p-6 max-w-md w-full shadow-2xl">
@@ -613,7 +619,7 @@ return (
                 <tbody className="divide-y divide-white/10 text-gray-100">
                     {leaderboard.length === 0 ? (
                     <tr>
-                        <td className="px-4 py-4 text-center text-gray-300" colSpan={4}>
+                        <td className="px-4 py-4 text-center text-gray-300" colSpan={5}>
                         No attempts yet.
                         </td>
                     </tr>
