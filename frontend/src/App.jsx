@@ -7,6 +7,7 @@ import { Login } from "./pages/Login/Login";
 import { Signup } from "./pages/Signup/Signup";
 import TakeQuizPage from "./pages/TakeQuiz/takeQuiz";
 import CreateQuiz from "./pages/CreateQuiz/createQuiz";
+import EditQuiz from "./pages/EditQuiz/editQuiz";
 import Layout from "./components/Layout";
 import ProfilePage from "./pages/Profile/Profile";
 import FriendsPage from "./pages/Friends/Friends"
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
       {path: "login", element: <Login /> },
       {path: "signup", element: <Signup /> },
       {path: "quiz/:id", element: <TakeQuizPage /> },
+      {path: "quiz/:id/edit", element: <EditQuiz /> },
       {path: "quizzes/create", element: <CreateQuiz /> },
       {path: "users/:username", element: <ProfilePage /> },
       {path: "friends", element: <FriendsPage /> },
