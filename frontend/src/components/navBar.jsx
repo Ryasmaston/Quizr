@@ -55,54 +55,82 @@ function NavBar() {
   const isAccountLocked = accountStatus === "pending_deletion";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
+    <nav className="fixed top-0 left-0 z-50 w-screen bg-white/70 backdrop-blur-lg border-b border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-0">
             {!isAccountLocked && (
               <>
                 <NavLink
                   to="/"
                   className={({ isActive }) =>
-                    `text-sm font-medium transition-colors ${isActive ? "text-purple-400" : "text-gray-300 hover:text-white"}`
+                    `text-sm transition-colors h-16 px-5 inline-flex items-center ${
+                      isActive
+                        ? "text-slate-900 font-semibold hover:text-slate-800"
+                        : "text-slate-700 hover:text-slate-500"
+                    }`
                   }
                 >
-                  Home
+                  <span className="inline-grid items-center leading-none">
+                    <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                      Home
+                    </span>
+                    <span className="col-start-1 row-start-1 leading-none">Home</span>
+                  </span>
                 </NavLink>
                 <NavLink
                   to="/quizzes/create"
                   className={({ isActive }) =>
-                    `text-sm font-medium transition-colors ${isActive ? "text-purple-400" : "text-gray-300 hover:text-white"}`
+                    `text-sm transition-colors h-16 px-5 inline-flex items-center ${
+                      isActive
+                        ? "text-slate-900 font-semibold hover:text-slate-800"
+                        : "text-slate-700 hover:text-slate-500"
+                    }`
                   }
                 >
-                  Create Quiz
+                  <span className="inline-grid items-center leading-none">
+                    <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                      Create Quiz
+                    </span>
+                    <span className="col-start-1 row-start-1 leading-none">Create Quiz</span>
+                  </span>
                 </NavLink>
                 {user && (
                   <NavLink
                     to="/friends"
                     className={({ isActive }) =>
-                      `text-sm font-medium transition-colors ${
+                      `text-sm transition-colors h-16 px-5 inline-flex items-center ${
                         isActive
-                          ? "text-purple-400"
-                          : "text-gray-300 hover:text-white"
+                          ? "text-slate-900 font-semibold hover:text-slate-800"
+                          : "text-slate-700 hover:text-slate-500"
                       }`
                     }
                   >
-                    Friends
+                    <span className="inline-grid items-center leading-none">
+                      <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                        Friends
+                      </span>
+                      <span className="col-start-1 row-start-1 leading-none">Friends</span>
+                    </span>
                   </NavLink>
                 )}
                 {user && (
                   <NavLink
                     to="/leaderboard"
                     className={({ isActive }) =>
-                      `text-sm font-medium transition-colors ${
+                      `text-sm transition-colors h-16 px-5 inline-flex items-center ${
                         isActive
-                          ? "text-purple-400"
-                          : "text-gray-300 hover:text-white"
+                          ? "text-slate-900 font-semibold hover:text-slate-800"
+                          : "text-slate-700 hover:text-slate-500"
                       }`
                     }
                   >
-                    Leaderboard
+                    <span className="inline-grid items-center leading-none">
+                      <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                        Leaderboard
+                      </span>
+                      <span className="col-start-1 row-start-1 leading-none">Leaderboard</span>
+                    </span>
                   </NavLink>
                 )}
               </>
@@ -119,20 +147,25 @@ function NavBar() {
               <NavLink
                 to={`/users/${username}`}
                 className={({ isActive }) =>
-                  `${profileSizeClass} font-medium transition-colors ${
+                  `${profileSizeClass} transition-colors h-16 px-5 inline-flex items-center ${
                     isActive
-                      ? "text-purple-400"
-                      : "text-gray-300 hover:text-white"
+                      ? "text-slate-900 font-semibold hover:text-slate-800"
+                      : "text-slate-700 hover:text-slate-500"
                   }`
                 }
               >
-                {profileLabel}
+                <span className="inline-grid items-center leading-none">
+                  <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                    {profileLabel}
+                  </span>
+                  <span className="col-start-1 row-start-1 leading-none">{profileLabel}</span>
+                </span>
               </NavLink>
             )}
             {user && (
               <button
                 onClick={() => signOut(auth)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95"
+                className="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors hover:bg-slate-700"
               >
                 Sign out
               </button>

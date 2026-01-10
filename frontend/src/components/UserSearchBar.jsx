@@ -81,17 +81,17 @@ export default function UserSearchBar({ excludeUsername }) {
           }
         }}
         placeholder="Search users…"
-        className="w-full rounded-full bg-white/10 border border-white/10 px-4 py-2 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        className="w-full rounded-xl bg-white/70 border border-slate-200/80 px-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0 focus:shadow-[0_0_16px_-6px_rgba(148,163,184,0.6)]"
       />
 
       {open && (
-        <div className="absolute mt-2 w-full rounded-xl border border-white/10 bg-slate-900 backdrop-blur-md shadow-lg overflow-hidden z-50">
+        <div className="absolute mt-2 w-full rounded-xl border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-lg overflow-hidden z-50">
           {loading && (
-            <div className="px-4 py-2 text-sm text-gray-300">Searching…</div>
+            <div className="px-4 py-2 text-sm text-slate-500">Searching…</div>
           )}
 
           {!loading && users.length === 0 && (
-            <div className="px-4 py-2 text-sm text-gray-400">No users found</div>
+            <div className="px-4 py-2 text-sm text-slate-400">No users found</div>
           )}
 
           {!loading &&
@@ -101,7 +101,7 @@ export default function UserSearchBar({ excludeUsername }) {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => selectUser(u.username)}
-                className="w-full text-left px-4 py-5 text-sm text-gray-200 hover:bg-white/10 flex items-center gap-3"
+                className="w-full text-left px-4 py-5 text-sm text-slate-800 hover:bg-slate-100/80 flex items-center gap-3"
               >
                 {u.profile_pic ? (
                   <img
@@ -110,7 +110,7 @@ export default function UserSearchBar({ excludeUsername }) {
                     className="h-7 w-7 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="h-7 w-7 rounded-full bg-white/10" />
+                  <div className="h-7 w-7 rounded-full bg-slate-200/80" />
                 )}
                 <span>{u.username}</span>
               </button>
