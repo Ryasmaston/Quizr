@@ -1,6 +1,61 @@
 const Quiz = require("../models/quiz");
 const User = require("../models/user");
 
+function normalizeText(value) {
+  return value == null ? "" : String(value);
+}
+
+function shouldResetAttempts(originalQuiz, updatedData) {
+  const originalQuestions = Array.isArray(originalQuiz?.questions)
+    ? originalQuiz.questions
+    : [];
+  const updatedQuestions = Array.isArray(updatedData?.questions)
+    ? updatedData.questions
+    : [];
+
+  if (originalQuestions.length !== updatedQuestions.length) return true;
+
+  for (let i = 0; i < originalQuestions.length; i += 1) {
+    const originalQuestion = originalQuestions[i];
+    const updatedQuestion = updatedQuestions[i];
+    if (!updatedQuestion) return true;
+
+    if (normalizeText(originalQuestion?.text) !== normalizeText(updatedQuestion?.text)) {
+      return true;
+    }
+
+    const originalAnswers = Array.isArray(originalQuestion?.answers)
+      ? originalQuestion.answers
+      : [];
+    const updatedAnswers = Array.isArray(updatedQuestion?.answers)
+      ? updatedQuestion.answers
+      : [];
+    const sharedCount = Math.min(originalAnswers.length, updatedAnswers.length);
+
+    for (let j = 0; j < sharedCount; j += 1) {
+      if (normalizeText(originalAnswers[j]?.text) !== normalizeText(updatedAnswers[j]?.text)) {
+        return true;
+      }
+    }
+
+    const originalCorrectIndices = originalAnswers
+      .map((answer, index) => (answer?.is_correct ? index : null))
+      .filter((index) => index !== null);
+    if (originalCorrectIndices.length > 0) {
+      const remainingOriginalCorrect = originalCorrectIndices.filter(
+        (index) => index < updatedAnswers.length
+      );
+      const hasOverlap = remainingOriginalCorrect.some(
+        (index) => Boolean(updatedAnswers[index]?.is_correct)
+      );
+      if (!hasOverlap) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 async function getAllQuizzes(req, res) {
   try{
@@ -28,6 +83,50 @@ async function createQuiz(req, res) {
     res.status(200).json({ message: "Quiz created", quiz: quiz })
   } catch (error) {
     res.status(500).json({ message: "Error creating quiz", error: error.message})
+  }
+}
+
+async function updateQuiz(req, res) {
+  try {
+    const user = await User.findOne({ authId: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const quiz = await Quiz.findById(req.params.id);
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    if (quiz.created_by.toString() !== user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const resetAttempts = shouldResetAttempts(quiz, req.body);
+
+    quiz.title = req.body.title ?? quiz.title;
+    quiz.category = req.body.category ?? quiz.category;
+    quiz.difficulty = req.body.difficulty ?? quiz.difficulty;
+    if (Array.isArray(req.body.questions)) {
+      quiz.questions = req.body.questions;
+    }
+    quiz.allow_multiple_correct = Boolean(req.body.allow_multiple_correct);
+    quiz.require_all_correct = quiz.allow_multiple_correct
+      ? Boolean(req.body.require_all_correct)
+      : false;
+    quiz.lock_answers = Boolean(req.body.lock_answers);
+    if (typeof req.body.req_to_pass === "number") {
+      quiz.req_to_pass = req.body.req_to_pass;
+    }
+
+    if (resetAttempts) {
+      quiz.attempts = [];
+    }
+
+    await quiz.save();
+    res.status(200).json({ message: "Quiz updated", quiz, attempts_reset: resetAttempts });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating quiz", error: error.message });
   }
 }
 
@@ -220,6 +319,7 @@ async function submitQuiz(req, res) {
 const QuizzesController = {
   getAllQuizzes: getAllQuizzes,
   createQuiz: createQuiz,
+  updateQuiz: updateQuiz,
   getQuizById: getQuizById,
   getLeaderboard: getLeaderboard,
   deleteQuiz: deleteQuiz,

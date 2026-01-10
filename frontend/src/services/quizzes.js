@@ -16,6 +16,22 @@ export async function createQuiz(quizData) {
   return res.json();
 }
 
+export async function getQuizById(quizId) {
+  const res = await apiFetch(`/quizzes/${quizId}`);
+  if (!res.ok) throw new Error("Unable to fetch quiz");
+  return res.json();
+}
+
+export async function updateQuiz(quizId, quizData) {
+  const res = await apiFetch(`/quizzes/${quizId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(quizData),
+  });
+  if (!res.ok) throw new Error("Unable to update quiz");
+  return res.json();
+}
+
 export async function deleteQuiz(quizId) {
   const res = await apiFetch(`/quizzes/${quizId}`, {
     method: "DELETE",
