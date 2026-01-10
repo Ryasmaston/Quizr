@@ -40,7 +40,7 @@ We dealt with real engineering challenges like version control conflicts, debugg
 
 ## ☁️✨ Deployment 
 
-- Deployment in progress (planned via Firebase Hosting) — live demo link coming soon
+The project is deployed on Reder under www.quizr.fun
 
  ## 🤝✨ How We Worked as a Team  
 
@@ -249,5 +249,3 @@ No auth logic here. It’s already enforced globally.
 ### Extra explainer
 Internally, `apiFetch` retrieves the Firebase ID token from the current session and sends it as an `Authorization: Bearer <token>` header. The backend verifies this token once per request.
 
-### Deployment instructions
-The project is deployed on Reder under www.quizr.fun
