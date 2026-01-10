@@ -173,8 +173,12 @@ const seed = async () => {
         _id: quizId1,
         title: "Guess the Artist",
         category: "art",
+        difficulty: "easy",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "Which of these artists founded the Cubist movement?",
@@ -218,8 +222,12 @@ const seed = async () => {
         _id: quizId2,
         title: "The Skeletal System",
         category: "science",
+        difficulty: "medium",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "What is the jawbone more formally known as?",
@@ -263,8 +271,12 @@ const seed = async () => {
         _id: quizId3,
         title: "Thermodynamics",
         category: "science",
+        difficulty: "hard",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "What is commonly described as the measure of disorder or randomness?",
@@ -308,8 +320,12 @@ const seed = async () => {
         _id: quizId4,
         title: "Renaissance Art",
         category: "art",
+        difficulty: "medium",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "Who painted the ceiling of the Sistine Chapel?",
@@ -353,8 +369,12 @@ const seed = async () => {
         _id: quizId5,
         title: "Western Classical Music",
         category: "music",
+        difficulty: "medium",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "Which of these periods was the earliest?",
@@ -398,8 +418,12 @@ const seed = async () => {
         _id: quizId6,
         title: "Brazilian History",
         category: "history",
+        difficulty: "medium",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "What year did Brazil gain independence from Portugal?",
@@ -443,8 +467,12 @@ const seed = async () => {
         _id: quizId7,
         title: "Cocktails",
         category: "other",
+        difficulty: "easy",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "A Negroni is composed of which 3 components?",
@@ -488,8 +516,12 @@ const seed = async () => {
         _id: quizId8,
         title: "History of Coffee",
         category: "history",
+        difficulty: "easy",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "In which country does coffee originate?",
@@ -533,8 +565,12 @@ const seed = async () => {
         _id: quizId9,
         title: "Bossa Nova",
         category: "music",
+        difficulty: "medium",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "Who is considered the 'father of bossa nova'?",
@@ -578,8 +614,12 @@ const seed = async () => {
         _id: quizId10,
         title: "Mexican Cuisine",
         category: "other",
+        difficulty: "easy",
         created_by: dylan._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "Which one of these dishes is not Mexican?",
@@ -623,8 +663,12 @@ const seed = async () => {
         _id: new mongoose.Types.ObjectId(),
         title: "Ancient Egypt - The Comprehensive Test",
         category: "history",
+        difficulty: "hard",
         created_by: jane._id,
         req_to_pass: 6,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "Which pharaoh built the Great Pyramid of Giza?",
@@ -704,8 +748,12 @@ const seed = async () => {
         _id: new mongoose.Types.ObjectId(),
         title: "Impressionism: Masters of Light",
         category: "art",
+        difficulty: "medium",
         created_by: alice._id,
         req_to_pass: 4,
+        allow_multiple_correct: true,
+        require_all_correct: true,
+        lock_answers: true,
         questions: [
           {
             text: "Which artist painted 'Impression, Sunrise', giving the movement its name?",
@@ -735,12 +783,12 @@ const seed = async () => {
             ]),
           },
           {
-            text: "Which Impressionist painter was known for painting outdoor social gatherings?",
+            text: "Which of these artists are associated with Impressionism? (Select all that apply)",
             answers: addAnswerIds([
-              { text: "Pierre-Auguste Renoir", is_correct: true },
-              { text: "Berthe Morisot", is_correct: false },
-              { text: "Mary Cassatt", is_correct: false },
-              { text: "Alfred Sisley", is_correct: false },
+              { text: "Claude Monet", is_correct: true },
+              { text: "Edgar Degas", is_correct: true },
+              { text: "Pablo Picasso", is_correct: false },
+              { text: "Salvador Dalí", is_correct: false },
             ]),
           },
           {
@@ -767,8 +815,12 @@ const seed = async () => {
         _id: new mongoose.Types.ObjectId(),
         title: "Space Exploration Milestones",
         category: "science",
+        difficulty: "medium",
         created_by: alice._id,
         req_to_pass: 5,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "Who was the first human in space?",
@@ -838,9 +890,13 @@ const seed = async () => {
       {
         _id: quizId11,
         title: "Modern World Capitals",
-        category: "geography",
+        category: "other",
+        difficulty: "easy",
         created_by: alice._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "What is the capital of Canada?",
@@ -884,8 +940,12 @@ const seed = async () => {
         _id: quizId12,
         title: "Ocean Life",
         category: "science",
+        difficulty: "easy",
         created_by: alice._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "Which of these is a marine mammal?",
@@ -929,8 +989,12 @@ const seed = async () => {
         _id: quizId13,
         title: "World Mythology",
         category: "history",
+        difficulty: "medium",
         created_by: alice._id,
         req_to_pass: 3,
+        allow_multiple_correct: true,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "Who is the Norse god of thunder?",
@@ -951,12 +1015,12 @@ const seed = async () => {
             ]),
           },
           {
-            text: "Which Egyptian god is associated with the sun?",
+            text: "Which of these are Egyptian deities? (Select all that apply)",
             answers: addAnswerIds([
               { text: "Ra", is_correct: true },
-              { text: "Osiris", is_correct: false },
-              { text: "Anubis", is_correct: false },
-              { text: "Horus", is_correct: false },
+              { text: "Anubis", is_correct: true },
+              { text: "Zeus", is_correct: false },
+              { text: "Odin", is_correct: false },
             ]),
           },
           {
@@ -973,9 +1037,13 @@ const seed = async () => {
       {
         _id: quizId14,
         title: "European Rivers",
-        category: "geography",
+        category: "other",
+        difficulty: "easy",
         created_by: jane._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "Which river flows through Paris?",
@@ -1019,8 +1087,12 @@ const seed = async () => {
         _id: quizId15,
         title: "Classic Film Trivia",
         category: "other",
+        difficulty: "medium",
         created_by: barney._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "Which film features the quote, 'Here's looking at you, kid'?",
@@ -1064,8 +1136,12 @@ const seed = async () => {
         _id: quizId16,
         title: "World Sports Legends",
         category: "other",
+        difficulty: "easy",
         created_by: barney._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "Which tennis player has won the most Grand Slam singles titles?",
@@ -1109,8 +1185,12 @@ const seed = async () => {
         _id: quizId17,
         title: "Home Cooking Basics",
         category: "other",
+        difficulty: "easy",
         created_by: barney._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: false,
         questions: [
           {
             text: "What does it mean to 'saute'?",
@@ -1154,8 +1234,12 @@ const seed = async () => {
         _id: quizId18,
         title: "Icons of Jazz",
         category: "music",
+        difficulty: "medium",
         created_by: barney._id,
         req_to_pass: 3,
+        allow_multiple_correct: false,
+        require_all_correct: false,
+        lock_answers: true,
         questions: [
           {
             text: "Which musician was known as 'Satchmo'?",
