@@ -96,12 +96,19 @@ useEffect(() => {
 
   const categories = [
     "all",
-    ...new Set(quizzes.map((quiz) => quiz.category))
+    "favourites",
+    ...new Set(
+      quizzes
+        .map((quiz) => quiz.category)
+        .filter((category) => category && category !== "favourites")
+    )
   ];
 
-  const filteredQuizzes = selectedCategory === "all" ? quizzes : quizzes.filter(
-    (quiz) => quiz.category === selectedCategory
-  );
+  const filteredQuizzes = selectedCategory === "all"
+    ? quizzes
+    : selectedCategory === "favourites"
+      ? quizzes.filter((quiz) => favouriteIds.includes(quiz._id))
+      : quizzes.filter((quiz) => quiz.category === selectedCategory);
   if (loading)
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -165,7 +172,9 @@ useEffect(() => {
         >
           {category === "all"
             ? "All Quizzes"
-            : category.charAt(0).toUpperCase() + category.slice(1)}
+            : category === "favourites"
+              ? "Favourites"
+              : category.charAt(0).toUpperCase() + category.slice(1)}
         </option>
       ))}
     </select>

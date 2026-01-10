@@ -6,6 +6,17 @@ import { apiFetch } from "../../services/api";
 import { authReady } from "../../services/authState";
 import { toggleFavourite } from "../../services/favourites";
 
+function formatScorePercentage(value) {
+    if (value == null) return "";
+    if (typeof value === "number") return `${Math.round(value)}%`;
+    if (typeof value === "string") {
+      const numeric = Number.parseFloat(value.replace("%", ""));
+      if (!Number.isFinite(numeric)) return value;
+      return `${Math.round(numeric)}%`;
+    }
+    return String(value);
+}
+
 function TakeQuizPage() {
     //Getting the quiz id from the URL e.g. /quiz/:id
     const { id } = useParams();
@@ -24,6 +35,7 @@ function TakeQuizPage() {
     const [favouriteIds, setFavouriteIds] = useState([]);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [summaryFilter, setSummaryFilter] = useState("all");
 
     const loadQuiz = useCallback(async () => {
     const res = await apiFetch(`/quizzes/${id}`);
@@ -162,6 +174,7 @@ const summaryItems = useMemo(() => {
         (quiz.require_all_correct ? selectedSet.size === correctSet.size : hasCorrect);
     const missingCorrectIds = Array.from(correctSet).filter((id) => !selectedSet.has(id));
     return {
+        questionIndex: index,
         question,
         selectedSet,
         correctSet,
@@ -170,6 +183,16 @@ const summaryItems = useMemo(() => {
     };
     });
 }, [answers, quiz]);
+
+const filteredSummaryItems = useMemo(() => {
+    if (summaryFilter === "correct") {
+    return summaryItems.filter((item) => item.isCorrect);
+    }
+    if (summaryFilter === "wrong") {
+    return summaryItems.filter((item) => !item.isCorrect);
+    }
+    return summaryItems;
+}, [summaryItems, summaryFilter]);
 
 const categoryColors = {
     art: "from-pink-500 to-rose-500",
@@ -668,7 +691,7 @@ return (
                 <span className="capitalize">{quiz.category}</span>
                 </span>
                 <span
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${difficulty.gradient} text-white text-xs font-semibold`}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-white/90 text-xs font-semibold"
                 >
                 <img src={difficulty.icon} alt="" aria-hidden="true" className="h-4 w-4" />
                 <span>{difficulty.label}</span>
@@ -762,13 +785,29 @@ return (
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Quiz Complete</h2>
             <p className="text-gray-300 text-lg">
-            Correct answers {result.correctAnswers}, ({result.scorePercentage})
+            Correct answers {result.correctAnswers}, ({formatScorePercentage(result.scorePercentage)})
             </p>
             {difficultyKey !== "hard" && (
             <div className="mt-6 text-left">
-                <h3 className="text-lg font-semibold text-white mb-3">Answer summary</h3>
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                  <h3 className="text-lg font-semibold text-white">Answer summary</h3>
+                  <select
+                    value={summaryFilter}
+                    onChange={(event) => setSummaryFilter(event.target.value)}
+                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20 focus:outline-none"
+                  >
+                    <option value="all" className="text-black">All</option>
+                    <option value="correct" className="text-black">Correct</option>
+                    <option value="wrong" className="text-black">Wrong</option>
+                  </select>
+                </div>
                 <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
-                {summaryItems.map((item, index) => {
+                {filteredSummaryItems.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-white/70">
+                    No answers match this filter.
+                  </div>
+                ) : (
+                filteredSummaryItems.map((item, index) => {
                     const statusClasses = item.isCorrect
                     ? "border-emerald-400/40 bg-emerald-500/10"
                     : "border-rose-400/40 bg-rose-500/10";
@@ -781,8 +820,11 @@ return (
                         className={`rounded-2xl border ${statusClasses} px-4 py-3`}
                     >
                         <div className="flex items-start justify-between gap-3">
-                        <div className="text-sm font-semibold text-white">
-                            {index + 1}. {item.question.text}
+                        <div className="flex items-start gap-2 text-sm font-semibold text-white">
+                            <span className="inline-flex items-center justify-center rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold tracking-wide text-white/80 whitespace-nowrap">
+                              Q{item.questionIndex + 1}
+                            </span>
+                            <span>{item.question.text}</span>
                         </div>
                         <span
                             className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${statusBadge}`}
@@ -814,7 +856,7 @@ return (
                             >
                                 {answer.text}
                             </span>
-                            );
+                        );
                         })}
                         </div>
                         {item.selectedSet.size === 0 && (
@@ -822,7 +864,8 @@ return (
                         )}
                     </div>
                     );
-                })}
+                })
+                )}
                 </div>
             </div>
             )}

@@ -4,10 +4,10 @@
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --scrollbar-track: rgba(15, 23, 42, 0.65);
-  --scrollbar-thumb: rgba(139, 92, 246, 0.7);
-  --scrollbar-thumb-hover: rgba(236, 72, 153, 0.8);
-  --scrollbar-border: rgba(255, 255, 255, 0.12);
+  --scrollbar-track: rgba(255, 255, 255, 0.06);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
+  --scrollbar-border: rgba(255, 255, 255, 0.08);
 }
 
 * {
@@ -27,13 +27,13 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(236, 72, 153, 0.9));
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
   border: 3px solid var(--scrollbar-track);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--scrollbar-thumb-hover), rgba(99, 102, 241, 0.85));
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Keep browser autofill from forcing a white background */
