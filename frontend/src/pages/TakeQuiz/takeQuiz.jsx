@@ -69,11 +69,14 @@ const isQuizOwner = useMemo(() => {
     : quiz.created_by?._id;
     return creatorId === currentUserId;
 }, [quiz, currentUserId]);
-const authorIsDeleted = Boolean(quiz?.created_by?.is_placeholder);
+const authorUsername = quiz?.created_by?.username;
+const authorIsDeleted = quiz?.created_by?.authId === "deleted-user"
+  || authorUsername === "__deleted__"
+  || authorUsername === "Deleted user";
 const authorName = authorIsDeleted
-  ? "Deleted user"
-  : quiz?.created_by?.username || "Unknown";
-const canNavigateToAuthor = !authorIsDeleted && Boolean(quiz?.created_by?.username);
+  ? "deleted user"
+  : authorUsername || "Unknown";
+const canNavigateToAuthor = !authorIsDeleted && Boolean(authorUsername);
 const leaderboard = useMemo(() => {
     const attempts = Array.isArray(quiz?.attempts) ? quiz.attempts : [];
     const questionsCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0;
@@ -381,19 +384,21 @@ return (
                 <span>{difficulty.label}</span>
                 </span>
             </div>
-            <button
+            {canNavigateToAuthor ? (
+              <button
                 type="button"
                 onClick={() => {
-                  if (!canNavigateToAuthor) return;
                   navigate(`/users/${authorName}`);
                 }}
-                disabled={!canNavigateToAuthor}
-                className={`self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all ${
-                  canNavigateToAuthor ? "hover:bg-white/20" : "cursor-default text-white/60"
-                }`}
-            >
+                className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
+              >
                 Created by {authorName}
-            </button>
+              </button>
+            ) : (
+              <span className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white/60 cursor-default">
+                Created by {authorName}
+              </span>
+            )}
             </div>
             <div className="p-6 sm:p-8">
             <div className="grid gap-4 sm:grid-cols-2 text-gray-200 text-sm sm:text-base">

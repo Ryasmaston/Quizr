@@ -430,7 +430,7 @@ export default function SettingsPage() {
                 <p className="text-gray-300">
                   You can delete all quizzes you created (this removes other users&apos; attempt history
                   on those quizzes), or preserve your quizzes and anonymise your authorship as
-                  Deleted user.
+                  deleted user.
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <button

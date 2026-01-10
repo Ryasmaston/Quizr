@@ -35,6 +35,9 @@ export async function executeAccountDeletion(mode) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mode })
   });
-  if (!res.ok) throw new Error("Unable to delete account");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.message || "Unable to delete account");
+  }
   return res.json();
 }

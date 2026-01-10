@@ -199,11 +199,14 @@ useEffect(() => {
               const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
               const difficulty = difficultyChips[difficultyKey];
               const isFavourited = favouriteIds.includes(quiz._id);
-              const authorIsDeleted = Boolean(quiz?.created_by?.is_placeholder);
+              const authorUsername = quiz?.created_by?.username;
+              const authorIsDeleted = quiz?.created_by?.authId === "deleted-user"
+                || authorUsername === "__deleted__"
+                || authorUsername === "Deleted user";
               const authorName = authorIsDeleted
-                ? "Deleted user"
-                : quiz?.created_by?.username || "Unknown";
-              const canNavigateToAuthor = !authorIsDeleted && Boolean(quiz?.created_by?.username);
+                ? "deleted user"
+                : authorUsername || "Unknown";
+              const canNavigateToAuthor = !authorIsDeleted && Boolean(authorUsername);
               return (
                 <Link
                   key={quiz._id}
@@ -271,19 +274,23 @@ useEffect(() => {
                             <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-200 text-[10px] text-gray-200 select-none">?</span>
                             <span>{quiz?.questions?.length || 0} questions</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              if (!canNavigateToAuthor) return;
-                              navigate(`/users/${authorName}`);
-                            }}
-                            disabled={!canNavigateToAuthor}
-                            className={`rounded-lg px-3 py-1.5 transition-colors ${canNavigateToAuthor ? "hover:bg-white/10 hover:text-white hover:backdrop-blur" : "cursor-default text-white/60"}`}
-                          >
-                            <span>By {authorName}</span>
-                          </button>
+                          {canNavigateToAuthor ? (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                navigate(`/users/${authorName}`);
+                              }}
+                              className="rounded-lg px-3 py-1.5 transition-colors hover:bg-white/10 hover:text-white hover:backdrop-blur"
+                            >
+                              <span>By {authorName}</span>
+                            </button>
+                          ) : (
+                            <span className="rounded-lg px-3 py-1.5 text-white/60 cursor-default">
+                              By {authorName}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

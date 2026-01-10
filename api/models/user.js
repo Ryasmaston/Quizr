@@ -48,11 +48,6 @@ const UserSchema = new mongoose.Schema({
     }
   },
 
-  is_placeholder: {
-    type: Boolean,
-    default: false
-  },
-
   favourites: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Quiz"

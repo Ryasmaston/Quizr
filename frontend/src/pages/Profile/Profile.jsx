@@ -348,7 +348,7 @@ export default function ProfilePage() {
       : "less than 1 hour"
     : "soon";
   const deletionModeLabel = deletionInfo?.mode === "preserve_quizzes"
-    ? "Your quizzes will remain, with author shown as Deleted user."
+    ? "Your quizzes will remain, with author shown as deleted user."
     : "Your quizzes and attempts will be deleted.";
 
   if (loading) {
@@ -648,7 +648,10 @@ export default function ProfilePage() {
                   const quizTitle = typeof quiz === "string" ? "Quiz" : quiz.title;
                   const quizCategory = typeof quiz === "string" ? null : quiz.category;
                   const creatorName = typeof quiz === "string" ? null : quiz.created_by?.username;
-                  const creatorIsDeleted = typeof quiz === "string" ? false : quiz.created_by?.is_placeholder;
+                  const creatorAuthId = typeof quiz === "string" ? null : quiz.created_by?.authId;
+                  const creatorIsDeleted = creatorAuthId === "deleted-user"
+                    || creatorName === "__deleted__"
+                    || creatorName === "Deleted user";
                   const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
                   const difficulty = difficultyChips[difficultyKey];
                   const questionCount = typeof quiz === "string" ? 0 : quiz?.questions?.length || 0;
@@ -694,15 +697,20 @@ export default function ProfilePage() {
                             {creatorName && (
                               creatorIsDeleted || isAccountLocked ? (
                                 <span className="rounded-full px-3 py-1.5 text-xs font-semibold text-white/70 bg-white/10 border border-white/20">
-                                  Created by {creatorName}
+                                  Created by {creatorIsDeleted ? "deleted user" : creatorName}
                                 </span>
                               ) : (
-                                <Link
-                                  to={`/users/${creatorName}`}
-                                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 bg-white/10 border border-white/20"
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    navigate(`/users/${creatorName}`);
+                                  }}
+                                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 hover:text-white bg-white/10 border border-white/20"
                                 >
                                   Created by {creatorName}
-                                </Link>
+                                </button>
                               )
                             )}
                         </div>
@@ -763,6 +771,16 @@ export default function ProfilePage() {
               <p className="text-gray-300">
                 {isOwnProfile ? "Start taking quizzes to see your progress here" : `${profile.username} hasn't taken any quizzes yet`}
               </p>
+              {isOwnProfile && !isAccountLocked && (
+                <div className="mt-6">
+                  <Link
+                    to="/"
+                    className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-purple-500/40 active:scale-95"
+                  >
+                    Take a quiz
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -850,6 +868,16 @@ export default function ProfilePage() {
               <p className="text-gray-300">
                 {isOwnProfile ? "Create your first quiz to see it here" : `${profile.username} hasn't created any quizzes yet`}
               </p>
+              {isOwnProfile && !isAccountLocked && (
+                <div className="mt-6">
+                  <Link
+                    to="/quizzes/create"
+                    className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-indigo-500/40 active:scale-95"
+                  >
+                    Create a quiz
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -945,7 +973,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="mb-3 h-16 w-full">
                         <h3
-                          className={`${titleSizeClass} font-bold text-white group-hover:text-purple-300 transition-colors line-clamp-2 text-center h-full w-full flex items-center justify-center`}
+                          className={`${titleSizeClass} font-bold text-white ${isAccountLocked ? "" : "group-hover:text-purple-300"} transition-colors line-clamp-2 text-center h-full w-full flex items-center justify-center`}
                         >
                           {quiz.title}
                         </h3>

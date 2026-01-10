@@ -4,29 +4,35 @@ const Friend = require("../models/friend");
 const admin = require("../lib/firebaseAdmin");
 
 const PLACEHOLDER_AUTH_ID = "deleted-user";
-const PLACEHOLDER_USERNAME = "Deleted user";
+const PLACEHOLDER_USERNAME = "__deleted__";
 const PLACEHOLDER_EMAIL = "deleted@quiz.invalid";
 const DEFAULT_MODE = "delete_quizzes";
 
 async function getDeletedUserPlaceholder() {
-  const placeholder = await User.findOneAndUpdate(
-    { authId: PLACEHOLDER_AUTH_ID },
-    {
-      $setOnInsert: {
-        authId: PLACEHOLDER_AUTH_ID,
-        username: PLACEHOLDER_USERNAME,
-        email: PLACEHOLDER_EMAIL,
-        status: "active",
-        is_placeholder: true
+  try {
+    const placeholder = await User.findOneAndUpdate(
+      { authId: PLACEHOLDER_AUTH_ID },
+      {
+        $setOnInsert: {
+          authId: PLACEHOLDER_AUTH_ID,
+          email: PLACEHOLDER_EMAIL,
+          status: "active"
+        },
+        $set: {
+          username: PLACEHOLDER_USERNAME
+        }
       },
-      $set: {
-        is_placeholder: true
-      }
-    },
-    { new: true, upsert: true }
-  );
+      { new: true, upsert: true }
+    );
 
-  return placeholder;
+    return placeholder;
+  } catch (error) {
+    if (error.code === 11000) {
+      const existing = await User.findOne({ authId: PLACEHOLDER_AUTH_ID });
+      if (existing) return existing;
+    }
+    throw error;
+  }
 }
 
 async function removeUserAttempts(userId) {
@@ -64,7 +70,7 @@ async function executeUserDeletion(user, modeOverride) {
   if (!user) {
     throw new Error("User not found");
   }
-  if (user.is_placeholder) {
+  if (user.authId === PLACEHOLDER_AUTH_ID) {
     throw new Error("Cannot delete placeholder user");
   }
 
@@ -99,7 +105,7 @@ async function runDueDeletions() {
   const dueUsers = await User.find({
     status: "pending_deletion",
     "deletion.scheduled_for": { $lte: now },
-    is_placeholder: { $ne: true }
+    authId: { $ne: PLACEHOLDER_AUTH_ID }
   });
 
   if (dueUsers.length === 0) return { processed: 0 };

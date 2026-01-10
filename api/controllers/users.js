@@ -2,6 +2,8 @@ const User = require("../models/user");
 const Quiz = require("../models/quiz");
 const { executeUserDeletion } = require("../services/userDeletion");
 
+const PLACEHOLDER_AUTH_ID = "deleted-user";
+
 // function added to escape user input to build a RegExp for partial matching
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -58,6 +60,9 @@ async function checkUsernameAvailability(req, res) {
   if (!username) {
     return res.status(400).json({ message: "Username is required" });
   }
+  if (username === "__deleted__") {
+    return res.status(200).json({ available: false });
+  }
 
   try {
     const exists = await User.exists({ username });
@@ -78,7 +83,7 @@ async function showUser(req, res) {
       .populate({
         path: "favourites",
         select: "title category created_by questions req_to_pass allow_multiple_correct require_all_correct lock_answers difficulty",
-        populate: {path: "created_by", select: "username is_placeholder"}
+        populate: {path: "created_by", select: "username authId"}
       })
 
     if (!user) {
@@ -103,7 +108,7 @@ async function searchUsers(req, res) {
 
     const regex = new RegExp(escapeRegex(q), "i");
 
-    const users = await User.find({ username: regex, is_placeholder: { $ne: true } })
+    const users = await User.find({ username: regex, authId: { $ne: PLACEHOLDER_AUTH_ID } })
       .select("username profile_pic")
       .limit(8);
 
@@ -127,7 +132,7 @@ async function getUserById(req, res) {
   try {
     const user = await User.findOne({
       _id: req.params.userId,
-      is_placeholder: { $ne: true }
+      authId: { $ne: PLACEHOLDER_AUTH_ID }
     }).select("username profile_pic created_at");
 
     if (!user) {
@@ -146,7 +151,7 @@ async function getUserIdByUsername(req, res) {
     const { username } = req.params;
     const user = await User.findOne({
       username,
-      is_placeholder: { $ne: true }
+      authId: { $ne: PLACEHOLDER_AUTH_ID }
     }).select("_id");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -188,7 +193,7 @@ async function scheduleDeletion(req, res) {
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
-    if (user.is_placeholder) {
+    if (user.authId === PLACEHOLDER_AUTH_ID) {
       return res.status(400).json({ message: "Invalid user" });
     }
 

@@ -37,8 +37,9 @@ export function QuizStats({ quiz, onClose }) {
     else scoreDistribution.poor++;
   });
 
-  const authorName = quiz?.created_by?.is_placeholder
-    ? "Deleted user"
+  const authorName = quiz?.created_by?.authId === "deleted-user"
+    || quiz?.created_by?.username === "__deleted__"
+    ? "deleted user"
     : quiz?.created_by?.username || "Unknown";
 
   return (

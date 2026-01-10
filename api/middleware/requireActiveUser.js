@@ -3,12 +3,12 @@ const User = require("../models/user");
 async function requireActiveUser(req, res, next) {
   try {
     const user = await User.findOne({ authId: req.user.uid }).select(
-      "username status is_placeholder"
+      "username status authId"
     );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (user.is_placeholder) {
+    if (user.authId === "deleted-user") {
       return res.status(403).json({ message: "Unauthorized" });
     }
     if (user.status === "pending_deletion") {

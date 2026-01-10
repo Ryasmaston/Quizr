@@ -64,7 +64,7 @@ async function getAllQuizzes(req, res) {
     if (created_by) {
       filter.created_by = created_by;
     }
-    const quizzes = await Quiz.find(filter).populate("created_by", "username is_placeholder");
+    const quizzes = await Quiz.find(filter).populate("created_by", "username authId");
     res.status(200).json({ quizzes: quizzes })
   } catch (error) {
     console.error("Error in getAllQuizzes:", error);  // Add this to see the error
@@ -133,7 +133,7 @@ async function updateQuiz(req, res) {
 async function getQuizById(req, res) {
   try{
     const quiz = await Quiz.findById(req.params.id)
-      .populate("created_by", "username is_placeholder")
+      .populate("created_by", "username authId")
       .populate("attempts.user_id", "username");
     if(!quiz){
       return res.status(404).json({ message: "Quiz not found" });
