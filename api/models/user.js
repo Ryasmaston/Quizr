@@ -29,6 +29,25 @@ const UserSchema = new mongoose.Schema({
     default: Date.now
   },
 
+  status: {
+    type: String,
+    enum: ["active", "pending_deletion"],
+    default: "active"
+  },
+
+  deletion: {
+    requested_at: {
+      type: Date
+    },
+    scheduled_for: {
+      type: Date
+    },
+    mode: {
+      type: String,
+      enum: ["delete_quizzes", "preserve_quizzes"]
+    }
+  },
+
   favourites: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Quiz"

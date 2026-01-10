@@ -1,5 +1,8 @@
 const User = require("../models/user");
 const Quiz = require("../models/quiz");
+const { executeUserDeletion } = require("../services/userDeletion");
+
+const PLACEHOLDER_AUTH_ID = "deleted-user";
 
 // function added to escape user input to build a RegExp for partial matching
 function escapeRegex(str) {
@@ -57,6 +60,9 @@ async function checkUsernameAvailability(req, res) {
   if (!username) {
     return res.status(400).json({ message: "Username is required" });
   }
+  if (username === "__deleted__") {
+    return res.status(200).json({ available: false });
+  }
 
   try {
     const exists = await User.exists({ username });
@@ -73,11 +79,11 @@ async function checkUsernameAvailability(req, res) {
 async function showUser(req, res) {
   try {
     const user = await User.findOne({ authId: req.user.uid })
-      .select("username profile_pic favourites")
+      .select("username profile_pic favourites status deletion")
       .populate({
         path: "favourites",
         select: "title category created_by questions req_to_pass allow_multiple_correct require_all_correct lock_answers difficulty",
-        populate: {path: "created_by", select: "username"}
+        populate: {path: "created_by", select: "username authId"}
       })
 
     if (!user) {
@@ -102,7 +108,7 @@ async function searchUsers(req, res) {
 
     const regex = new RegExp(escapeRegex(q), "i");
 
-    const users = await User.find({ username: regex })
+    const users = await User.find({ username: regex, authId: { $ne: PLACEHOLDER_AUTH_ID } })
       .select("username profile_pic")
       .limit(8);
 
@@ -124,9 +130,10 @@ async function searchUsers(req, res) {
 
 async function getUserById(req, res) {
   try {
-    const user = await User.findById(req.params.userId).select(
-      "username profile_pic created_at"
-    );
+    const user = await User.findOne({
+      _id: req.params.userId,
+      authId: { $ne: PLACEHOLDER_AUTH_ID }
+    }).select("username profile_pic created_at");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -142,7 +149,10 @@ async function getUserById(req, res) {
 async function getUserIdByUsername(req, res) {
   try {
     const { username } = req.params;
-    const user = await User.findOne({ username }).select("_id");
+    const user = await User.findOne({
+      username,
+      authId: { $ne: PLACEHOLDER_AUTH_ID }
+    }).select("_id");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -155,11 +165,100 @@ async function getUserIdByUsername(req, res) {
 
 async function deleteUser(req, res) {
   try{
-    const user = await User.findByIdAndDelete(req.params.userId);
-    if(!user){
+    const currentUser = await User.findOne({ authId: req.user.uid });
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (currentUser._id.toString() !== req.params.userId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    await executeUserDeletion(currentUser, req.body?.mode);
+    res.status(200).json({ message: "User deleted" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting user", error: error.message})
+  }
+}
+
+async function scheduleDeletion(req, res) {
+  try {
+    const { mode } = req.body || {};
+    const allowedModes = new Set(["delete_quizzes", "preserve_quizzes"]);
+    if (!allowedModes.has(mode)) {
+      return res.status(400).json({ message: "Invalid deletion mode" });
+    }
+
+    const user = await User.findOne({ authId: req.user.uid });
+    if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
-    res.status(200).json({ message: "User deleted" })
+    if (user.authId === PLACEHOLDER_AUTH_ID) {
+      return res.status(400).json({ message: "Invalid user" });
+    }
+
+    const requestedAt = new Date();
+    const scheduledFor = new Date(requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    user.status = "pending_deletion";
+    user.deletion = {
+      requested_at: requestedAt,
+      scheduled_for: scheduledFor,
+      mode
+    };
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Deletion scheduled",
+      user: {
+        status: user.status,
+        deletion: user.deletion
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error scheduling deletion", error: error.message });
+  }
+}
+
+async function cancelDeletion(req, res) {
+  try {
+    const user = await User.findOneAndUpdate(
+      { authId: req.user.uid, status: "pending_deletion" },
+      { $set: { status: "active" }, $unset: { deletion: "" } },
+      { new: true }
+    );
+    if (!user) {
+      const exists = await User.exists({ authId: req.user.uid });
+      if (!exists) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      return res.status(400).json({ message: "No deletion scheduled" });
+    }
+
+    res.status(200).json({
+      message: "Deletion cancelled",
+      user: {
+        status: user.status,
+        deletion: user.deletion
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error cancelling deletion", error: error.message });
+  }
+}
+
+async function executeDeletion(req, res) {
+  try {
+    const user = await User.findOne({ authId: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await executeUserDeletion(user, req.body?.mode);
+    res.status(200).json({ message: "User deleted" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error deleting user", error: error.message})
@@ -219,6 +318,9 @@ const UsersController = {
   getUserById: getUserById,
   getUserIdByUsername: getUserIdByUsername,
   deleteUser: deleteUser,
+  scheduleDeletion: scheduleDeletion,
+  cancelDeletion: cancelDeletion,
+  executeDeletion: executeDeletion,
   addFavourite: addFavourite,
   removeFavourite: removeFavourite
 };

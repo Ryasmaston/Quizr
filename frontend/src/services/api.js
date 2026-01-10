@@ -30,5 +30,17 @@ export async function apiFetch(path, options = {}) {
         window.location.href = "/login";
         throw new Error("Unauthorized");
     }
+    if (res.status === 423) {
+        let body = null;
+        try {
+            body = await res.json();
+        } catch {
+            body = null;
+        }
+        if (body?.username) {
+            window.location.href = `/users/${body.username}`;
+        }
+        throw new Error(body?.message || "Account pending deletion");
+    }
     return res;
 }

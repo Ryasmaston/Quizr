@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const app = require("./app.js");
 const { connectToDatabase } = require("./db/db.js");
+const { runDueDeletions } = require("./services/userDeletion");
 
 function listenForRequests() {
   const port = process.env.PORT || 3000;
@@ -12,5 +13,15 @@ function listenForRequests() {
 }
 
 connectToDatabase().then(() => {
+  if (process.env.NODE_ENV !== "test") {
+    runDueDeletions().catch((error) => {
+      console.error("Error processing scheduled deletions:", error);
+    });
+    setInterval(() => {
+      runDueDeletions().catch((error) => {
+        console.error("Error processing scheduled deletions:", error);
+      });
+    }, 60 * 60 * 1000);
+  }
   listenForRequests();
 });

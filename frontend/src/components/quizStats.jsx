@@ -1,7 +1,25 @@
-import { useState } from "react";
+import { useCallback, useEffect } from "react";
 
 export function QuizStats({ quiz, onClose }) {
   if (!quiz) return null;
+
+  const closeModal = useCallback(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        closeModal();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [closeModal]);
 
   const attempts = quiz.attempts || [];
   const totalAttempts = attempts.length;
@@ -37,10 +55,23 @@ export function QuizStats({ quiz, onClose }) {
     else scoreDistribution.poor++;
   });
 
+  const authorName = quiz?.created_by?.authId === "deleted-user"
+    || quiz?.created_by?.username === "__deleted__"
+    ? "deleted user"
+    : quiz?.created_by?.username || "Unknown";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6 space-y-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 sm:px-6 sm:py-10 bg-black/60 backdrop-blur-sm"
+      onClick={closeModal}
+      role="presentation"
+    >
+      <div
+        className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl border border-white/20 max-w-2xl w-full shadow-2xl overflow-hidden"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-6 py-6 sm:px-8 sm:py-7">
+          <div className="space-y-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1 pr-4">
               <h2 className="text-2xl font-bold text-white mb-2">Quiz Statistics</h2>
@@ -161,7 +192,7 @@ export function QuizStats({ quiz, onClose }) {
               <div className="flex items-center justify-between">
                 <span className="text-sm">Created By</span>
                 <span className="font-semibold text-white">
-                  {quiz.created_by?.username || 'Unknown'}
+                  {authorName}
                 </span>
               </div>
             </div>
@@ -177,6 +208,7 @@ export function QuizStats({ quiz, onClose }) {
               <p className="text-gray-300">Statistics will appear once users start taking this quiz</p>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

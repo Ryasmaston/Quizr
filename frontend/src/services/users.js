@@ -10,3 +10,34 @@ export async function getUserByUsername(username) {
   // backend returns { user }, unwrap to return the user object directly
   return body.user
 }
+
+export async function scheduleAccountDeletion(mode) {
+  const res = await apiFetch("/users/me/deletion", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode })
+  });
+  if (!res.ok) throw new Error("Unable to schedule deletion");
+  return res.json();
+}
+
+export async function cancelAccountDeletion() {
+  const res = await apiFetch("/users/me/deletion/cancel", {
+    method: "POST"
+  });
+  if (!res.ok) throw new Error("Unable to cancel deletion");
+  return res.json();
+}
+
+export async function executeAccountDeletion(mode) {
+  const res = await apiFetch("/users/me/deletion/execute", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.message || "Unable to delete account");
+  }
+  return res.json();
+}

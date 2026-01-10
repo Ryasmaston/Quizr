@@ -96,12 +96,19 @@ useEffect(() => {
 
   const categories = [
     "all",
-    ...new Set(quizzes.map((quiz) => quiz.category))
+    "favourites",
+    ...new Set(
+      quizzes
+        .map((quiz) => quiz.category)
+        .filter((category) => category && category !== "favourites")
+    )
   ];
 
-  const filteredQuizzes = selectedCategory === "all" ? quizzes : quizzes.filter(
-    (quiz) => quiz.category === selectedCategory
-  );
+  const filteredQuizzes = selectedCategory === "all"
+    ? quizzes
+    : selectedCategory === "favourites"
+      ? quizzes.filter((quiz) => favouriteIds.includes(quiz._id))
+      : quizzes.filter((quiz) => quiz.category === selectedCategory);
   if (loading)
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -165,7 +172,9 @@ useEffect(() => {
         >
           {category === "all"
             ? "All Quizzes"
-            : category.charAt(0).toUpperCase() + category.slice(1)}
+            : category === "favourites"
+              ? "Favourites"
+              : category.charAt(0).toUpperCase() + category.slice(1)}
         </option>
       ))}
     </select>
@@ -199,6 +208,14 @@ useEffect(() => {
               const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
               const difficulty = difficultyChips[difficultyKey];
               const isFavourited = favouriteIds.includes(quiz._id);
+              const authorUsername = quiz?.created_by?.username;
+              const authorIsDeleted = quiz?.created_by?.authId === "deleted-user"
+                || authorUsername === "__deleted__"
+                || authorUsername === "Deleted user";
+              const authorName = authorIsDeleted
+                ? "deleted user"
+                : authorUsername || "Unknown";
+              const canNavigateToAuthor = !authorIsDeleted && Boolean(authorUsername);
               return (
                 <Link
                   key={quiz._id}
@@ -266,19 +283,23 @@ useEffect(() => {
                             <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-200 text-[10px] text-gray-200 select-none">?</span>
                             <span>{quiz?.questions?.length || 0} questions</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              if (quiz?.created_by?.username) {
-                                navigate(`/users/${quiz.created_by.username}`);
-                              }
-                            }}
-                            className="rounded-lg px-3 py-1.5 transition-colors hover:bg-white/10 hover:text-white hover:backdrop-blur"
-                          >
-                            <span>By {quiz?.created_by?.username}</span>
-                          </button>
+                          {canNavigateToAuthor ? (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                navigate(`/users/${authorName}`);
+                              }}
+                              className="rounded-lg px-3 py-1.5 transition-colors hover:bg-white/10 hover:text-white hover:backdrop-blur"
+                            >
+                              <span>By {authorName}</span>
+                            </button>
+                          ) : (
+                            <span className="rounded-lg px-3 py-1.5 text-white/60 cursor-default">
+                              By {authorName}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

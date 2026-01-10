@@ -4,6 +4,7 @@ const cors = require("cors");
 const path = require("path");
 
 const requireAuth = require("./middleware/requireAuth");
+const requireActiveUser = require("./middleware/requireActiveUser");
 const usersRouter = require("./routes/users");
 const meRouter = require("./routes/me");
 const quizzesRouter = require("./routes/quizzes");
@@ -24,8 +25,8 @@ app.get(["/health", `${apiBase}/health`], (_req, res) => {
 app.use(`${apiBase}/users`, usersRouter);
 
 app.use(`${apiBase}/me`, requireAuth, meRouter);
-app.use(`${apiBase}/quizzes`, requireAuth, quizzesRouter);
-app.use(`${apiBase}/friends`, requireAuth, friendsRouter);
+app.use(`${apiBase}/quizzes`, requireAuth, requireActiveUser, quizzesRouter);
+app.use(`${apiBase}/friends`, requireAuth, requireActiveUser, friendsRouter);
 
 if (process.env.NODE_ENV === "production") {
   const frontendDir = path.join(__dirname, "..", "frontend", "dist");

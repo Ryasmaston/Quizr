@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../services/firebase";
-import { getUserByUsername } from '../../services/users';
+import { getUserByUsername, cancelAccountDeletion, executeAccountDeletion } from '../../services/users';
 import { apiFetch } from "../../services/api";
 import { getPendingRequests, sendFriendRequest, getFriends, removeRequest, acceptFriendRequest } from '../../services/friends';
-import { removeFavourite } from "../../services/favourites";
+import { removeFavourite, toggleFavourite } from "../../services/favourites";
 import { QuizStats } from '../../components/quizStats'
 
 export default function ProfilePage() {
@@ -20,6 +20,12 @@ export default function ProfilePage() {
   const [error, setError] = useState(null);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [myUserId, setMyUserId] = useState(null);
+  const [myUsername, setMyUsername] = useState(null);
+  const [accountStatus, setAccountStatus] = useState("loading");
+  const [deletionInfo, setDeletionInfo] = useState(null);
+  const [deletionActionLoading, setDeletionActionLoading] = useState(false);
+  const [deletionActionError, setDeletionActionError] = useState(null);
+  const [now, setNow] = useState(Date.now());
   const [isFriend, setIsFriend] = useState(false);
   const [pendingSent, setPendingSent] = useState(false);
   const [incomingRequest, setIncomingRequest] = useState(null);
@@ -40,7 +46,10 @@ export default function ProfilePage() {
     async function loadMyProfile() {
       if (!loggedInUser) {
         setMyUserId(null);
+        setMyUsername(null);
         setMyFavourites([]);
+        setAccountStatus("active");
+        setDeletionInfo(null);
         return;
       }
       try {
@@ -48,11 +57,17 @@ export default function ProfilePage() {
         if (!mounted) return;
         const body = await res.json();
         setMyUserId(body.user?._id || null);
+        setMyUsername(body.user?.username || null);
+        setAccountStatus(body.user?.status || "active");
+        setDeletionInfo(body.user?.deletion || null);
         const favs = Array.isArray(body.user?.favourites) ? body.user.favourites : [];
         setMyFavourites(favs);
       } catch (err) {
         setMyUserId(null);
+        setMyUsername(null);
         setMyFavourites([]);
+        setAccountStatus("active");
+        setDeletionInfo(null);
       }
     }
     loadMyProfile();
@@ -64,6 +79,7 @@ export default function ProfilePage() {
   }
 
   async function loadFriendState() {
+    if (accountStatus === "pending_deletion") return;
     if (!loggedInUser || !profile?._id || !myUserId) return;
     setFriendsLoading(true);
     try {
@@ -100,14 +116,45 @@ export default function ProfilePage() {
 
   useEffect(() => {
     loadFriendState();
-  }, [loggedInUser, profile, myUserId]);
+  }, [loggedInUser, profile, myUserId, accountStatus]);
 
   useEffect(() => {
+    if (accountStatus !== "pending_deletion") return;
+    const interval = setInterval(() => setNow(Date.now()), 60 * 1000);
+    return () => clearInterval(interval);
+  }, [accountStatus]);
+
+  useEffect(() => {
+    if (
+      accountStatus === "pending_deletion" &&
+      myUsername &&
+      routeUsername &&
+      routeUsername !== myUsername
+    ) {
+      navigate(`/users/${myUsername}`);
+    }
+  }, [accountStatus, myUsername, routeUsername, navigate]);
+
+  useEffect(() => {
+    let mounted = true;
     async function fetchProfileAndQuizzes() {
+      if (loggedInUser && accountStatus === "loading") return;
+      if (
+        accountStatus === "pending_deletion" &&
+        myUsername &&
+        routeUsername &&
+        routeUsername !== myUsername
+      ) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
+      setError(null);
       try {
         const userProfile = await getUserByUsername(routeUsername);
+        if (!mounted) return;
         setProfile(userProfile);
+
         const quizzesResponse = await apiFetch("/quizzes");
         const quizzesBody = await quizzesResponse.json();
         const userId = userProfile._id;
@@ -144,13 +191,19 @@ export default function ProfilePage() {
           .filter(Boolean);
         setTakenQuizzes(quizzesWithUserAttempts);
       } catch (err) {
+        if (!mounted) return;
         setError(err.message);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
     fetchProfileAndQuizzes();
-  }, [routeUsername]);
+    return () => {
+      mounted = false;
+    };
+  }, [routeUsername, accountStatus, myUsername, loggedInUser]);
 
   async function handleSendRequest() {
     try {
@@ -198,6 +251,25 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleToggleFavourite(quizId, isFavourited) {
+    const previous = myFavourites;
+    setMyFavourites((prev) => {
+      if (isFavourited) {
+        return prev.filter((item) => {
+          const itemId = typeof item === "string" ? item : item._id;
+          return itemId !== quizId;
+        });
+      }
+      return [...prev, quizId];
+    });
+    try {
+      await toggleFavourite(quizId, isFavourited);
+    } catch (err) {
+      console.error("Could not toggle favourite", err);
+      setMyFavourites(previous);
+    }
+  }
+
   async function handleViewStats(quizId) {
     try {
       const response = await apiFetch(`/quizzes/${quizId}`);
@@ -220,6 +292,12 @@ export default function ProfilePage() {
       setCreatedQuizzes((prev) =>
         prev.filter((quiz) => quiz._id !== quizToDelete._id)
       );
+      setMyFavourites((prev) =>
+        prev.filter((item) => {
+          const itemId = typeof item === "string" ? item : item._id;
+          return itemId !== quizToDelete._id;
+        })
+      );
       setShowDeleteConfirm(false);
       setQuizToDelete(null);
     } catch (err) {
@@ -227,7 +305,51 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleCancelDeletion() {
+    setDeletionActionError(null);
+    setDeletionActionLoading(true);
+    try {
+      const result = await cancelAccountDeletion();
+      setAccountStatus(result.user?.status || "active");
+      setDeletionInfo(result.user?.deletion || null);
+      window.dispatchEvent(new CustomEvent("account-status-changed"));
+    } catch (err) {
+      setDeletionActionError(err.message || "Failed to cancel deletion");
+    } finally {
+      setDeletionActionLoading(false);
+    }
+  }
+
+  async function handleDeleteNow() {
+    setDeletionActionError(null);
+    const confirmed = window.confirm("Delete your account now? This cannot be undone.");
+    if (!confirmed) return;
+    setDeletionActionLoading(true);
+    try {
+      await executeAccountDeletion(deletionInfo?.mode);
+      await signOut(auth);
+      navigate("/login");
+    } catch (err) {
+      setDeletionActionError(err.message || "Failed to delete account");
+    } finally {
+      setDeletionActionLoading(false);
+    }
+  }
+
   const isOwnProfile = myUserId && profile?._id && profile && myUserId === profile._id;
+  const isAccountLocked = isOwnProfile && accountStatus === "pending_deletion";
+  const deletionDeadline = deletionInfo?.scheduled_for ? new Date(deletionInfo.scheduled_for) : null;
+  const remainingMs = deletionDeadline ? Math.max(0, deletionDeadline.getTime() - now) : 0;
+  const remainingDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+  const remainingHours = Math.floor((remainingMs / (1000 * 60 * 60)) % 24);
+  const remainingLabel = deletionDeadline
+    ? remainingMs > 0
+      ? `${remainingDays}d ${remainingHours}h`
+      : "less than 1 hour"
+    : "soon";
+  const deletionModeLabel = deletionInfo?.mode === "preserve_quizzes"
+    ? "Your quizzes will remain, with author shown as deleted user."
+    : "Your quizzes and attempts will be deleted.";
 
   if (loading) {
     return (
@@ -373,16 +495,22 @@ export default function ProfilePage() {
                   <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                     {isOwnProfile && (
                       <>
-                        <a
-                          href={`/settings`}
-                          className="px-6 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
-                        >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Settings
-                        </a>
+                        {isAccountLocked ? (
+                          <span className="px-6 py-2.5 rounded-full bg-white/10 text-white/70 font-semibold border border-white/20">
+                            Settings Locked
+                          </span>
+                        ) : (
+                          <a
+                            href={`/settings`}
+                            className="px-6 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                          >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Settings
+                          </a>
+                        )}
                         <span className="px-2 py-2.5 text-white font-semibold">
                           Your Profile
                         </span>
@@ -440,6 +568,52 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+        {isAccountLocked && (
+          <div className="mb-6 sm:mb-8 bg-amber-500/10 border border-amber-400/40 rounded-3xl p-6 sm:p-8 backdrop-blur-lg">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-amber-100 mb-2">
+                  Account scheduled for deletion
+                </h2>
+                <p className="text-amber-200 mb-2">
+                  Deletion in {remainingLabel}. {deletionModeLabel}
+                </p>
+                {deletionInfo?.scheduled_for && (
+                  <p className="text-amber-200/80 text-sm">
+                    Scheduled for {new Date(deletionInfo.scheduled_for).toLocaleString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    })}
+                  </p>
+                )}
+                {deletionActionError && (
+                  <p className="text-red-200 mt-3">{deletionActionError}</p>
+                )}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleCancelDeletion}
+                  disabled={deletionActionLoading}
+                  className="px-5 py-2.5 rounded-full bg-white/10 text-white font-semibold border border-white/20 hover:bg-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deletionActionLoading ? "Working..." : "Cancel Deletion"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteNow}
+                  disabled={deletionActionLoading}
+                  className="px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-500 to-red-500 text-white font-semibold hover:shadow-lg hover:shadow-rose-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Delete Now
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 text-center">
             <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
@@ -474,6 +648,10 @@ export default function ProfilePage() {
                   const quizTitle = typeof quiz === "string" ? "Quiz" : quiz.title;
                   const quizCategory = typeof quiz === "string" ? null : quiz.category;
                   const creatorName = typeof quiz === "string" ? null : quiz.created_by?.username;
+                  const creatorAuthId = typeof quiz === "string" ? null : quiz.created_by?.authId;
+                  const creatorIsDeleted = creatorAuthId === "deleted-user"
+                    || creatorName === "__deleted__"
+                    || creatorName === "Deleted user";
                   const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
                   const difficulty = difficultyChips[difficultyKey];
                   const questionCount = typeof quiz === "string" ? 0 : quiz?.questions?.length || 0;
@@ -482,13 +660,9 @@ export default function ProfilePage() {
                     ? Math.round((passThreshold / questionCount) * 100)
                     : null;
                   const allowsMultiple = typeof quiz === "string" ? null : quiz?.allow_multiple_correct;
-                  const isLocked = typeof quiz === "string" ? null : quiz?.lock_answers;
-                  return (
-                    <Link
-                      key={quizId}
-                      to={`/quiz/${quizId}`}
-                      className="group relative block bg-white/5 backdrop-blur rounded-2xl border border-white/10 hover:border-white/30 transition-all hover:bg-white/10 overflow-hidden"
-                    >
+                  const isQuizLocked = typeof quiz === "string" ? null : quiz?.lock_answers;
+                  const cardContent = (
+                    <>
                       <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other}`}></div>
                       <div className="p-5 sm:p-6">
                         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -500,9 +674,11 @@ export default function ProfilePage() {
                             onClick={(event) => {
                               event.preventDefault();
                               event.stopPropagation();
+                              if (isAccountLocked) return;
                               handleRemoveFavourite(quizId);
                             }}
-                            className="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-semibold hover:shadow-lg hover:shadow-red-500/50 transition-all transform hover:scale-105 active:scale-95"
+                            disabled={isAccountLocked}
+                            className={`px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-semibold transition-all transform active:scale-95 ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:shadow-lg hover:shadow-red-500/50 hover:scale-105"}`}
                           >
                             Remove
                           </button>
@@ -519,12 +695,23 @@ export default function ProfilePage() {
                               <span>{difficulty.label}</span>
                             </div>
                             {creatorName && (
-                              <Link
-                                to={`/users/${creatorName}`}
-                                className="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 bg-white/10 border border-white/20"
-                              >
-                                Created by {creatorName}
-                              </Link>
+                              creatorIsDeleted || isAccountLocked ? (
+                                <span className="rounded-full px-3 py-1.5 text-xs font-semibold text-white/70 bg-white/10 border border-white/20">
+                                  Created by {creatorIsDeleted ? "deleted user" : creatorName}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    navigate(`/users/${creatorName}`);
+                                  }}
+                                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 hover:text-white bg-white/10 border border-white/20"
+                                >
+                                  Created by {creatorName}
+                                </button>
+                              )
                             )}
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-200">
@@ -545,11 +732,25 @@ export default function ProfilePage() {
                             <span className="text-white">Correct</span>
                           </span>
                           <span className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1">
-                            <span className="font-semibold text-white">{isLocked ? "Locked" : "Editable"}</span>
+                            <span className="font-semibold text-white">{isQuizLocked ? "Locked" : "Editable"}</span>
                             <span className="text-white">Answers</span>
                           </span>
                         </div>
                       </div>
+                    </>
+                  );
+
+                  const cardClass = `group relative block bg-white/5 backdrop-blur rounded-2xl border border-white/10 overflow-hidden ${
+                    isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-white/30 transition-all hover:bg-white/10"
+                  }`;
+
+                  return isAccountLocked ? (
+                    <div key={quizId} className={cardClass}>
+                      {cardContent}
+                    </div>
+                  ) : (
+                    <Link key={quizId} to={`/quiz/${quizId}`} className={cardClass}>
+                      {cardContent}
                     </Link>
                   );
                 })}
@@ -570,6 +771,16 @@ export default function ProfilePage() {
               <p className="text-gray-300">
                 {isOwnProfile ? "Start taking quizzes to see your progress here" : `${profile.username} hasn't taken any quizzes yet`}
               </p>
+              {isOwnProfile && !isAccountLocked && (
+                <div className="mt-6">
+                  <Link
+                    to="/"
+                    className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-purple-500/40 active:scale-95"
+                  >
+                    Take a quiz
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -580,12 +791,11 @@ export default function ProfilePage() {
                                      percentage >= 40 ? "from-amber-500 to-orange-600" :
                                      "from-red-500 to-pink-600";
 
-                return (
-                  <Link
-                    key={quiz._id}
-                    to={`/quiz/${quiz._id}`}
-                    className="group block bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 hover:border-white/30 transition-all hover:bg-white/10"
-                  >
+                const takenClass = `group block bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 ${
+                  isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-white/30 transition-all hover:bg-white/10"
+                }`;
+                const takenContent = (
+                  <>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-white mb-2">{quiz.title}</h3>
@@ -624,6 +834,16 @@ export default function ProfilePage() {
                         style={{ width: `${percentage}%` }}
                       ></div>
                     </div>
+                  </>
+                );
+
+                return isAccountLocked ? (
+                  <div key={quiz._id} className={takenClass}>
+                    {takenContent}
+                  </div>
+                ) : (
+                  <Link key={quiz._id} to={`/quiz/${quiz._id}`} className={takenClass}>
+                    {takenContent}
                   </Link>
                 );
               })}
@@ -648,6 +868,16 @@ export default function ProfilePage() {
               <p className="text-gray-300">
                 {isOwnProfile ? "Create your first quiz to see it here" : `${profile.username} hasn't created any quizzes yet`}
               </p>
+              {isOwnProfile && !isAccountLocked && (
+                <div className="mt-6">
+                  <Link
+                    to="/quizzes/create"
+                    className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-indigo-500/40 active:scale-95"
+                  >
+                    Create a quiz
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -661,49 +891,94 @@ export default function ProfilePage() {
                 const avgScore = totalAttempts > 0
                   ? Math.round((quiz.attempts.reduce((sum, a) => sum + a.correct, 0) / totalAttempts / quiz.questions.length) * 100)
                   : 0;
+                const titleLength = quiz.title?.length || 0;
+                const titleSizeClass = titleLength > 60
+                  ? "text-sm"
+                  : titleLength > 36
+                  ? "text-base"
+                  : "text-lg";
                 return (
                   <div
                     key={quiz._id}
-                    onClick={() => window.location.href = `/quiz/${quiz._id}`}
-                    className="group relative bg-white/5 backdrop-blur rounded-2xl border border-white/10 hover:border-white/30 transition-all hover:bg-white/10 cursor-pointer overflow-hidden hover:scale-[1.02] transform duration-300"
+                    onClick={() => {
+                      if (isAccountLocked) return;
+                      window.location.href = `/quiz/${quiz._id}`;
+                    }}
+                    className={`group relative bg-white/5 backdrop-blur rounded-2xl border border-white/10 overflow-hidden transform duration-300 ${
+                      isAccountLocked
+                        ? "cursor-not-allowed opacity-60"
+                        : "hover:border-white/30 hover:bg-white/10 cursor-pointer hover:scale-[1.02]"
+                    }`}
                   >
-                    <div className={`h-2 bg-gradient-to-r ${categoryColors[quiz.category] || categoryColors.other}`}></div>
-                    <div className="p-6">
+                    <div className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${categoryColors[quiz.category] || categoryColors.other}`}>
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {categoryIcons[quiz.category] || categoryIcons.other}
+                      </svg>
+                      <span className="text-xs font-semibold text-white capitalize">{quiz.category}</span>
+                    </div>
+                    <div className="px-6 pt-4 pb-3">
                       <div className="flex items-center justify-between mb-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${categoryColors[quiz.category] || categoryColors.other} text-white text-xs font-semibold`}>
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              {categoryIcons[quiz.category] || categoryIcons.other}
-                            </svg>
-                            <span className="capitalize">{quiz.category}</span>
+                        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">
+                          <img src={`/${quiz.difficulty || "medium"}.svg`} alt="" aria-hidden="true" className="h-4 w-4" />
+                          <span className="capitalize">{quiz.difficulty || "medium"}</span>
+                        </span>
+                        {isOwnProfile && !isAccountLocked && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const isFavourited = myFavourites.some((item) => {
+                                  const itemId = typeof item === "string" ? item : item._id;
+                                  return itemId === quiz._id;
+                                });
+                                handleToggleFavourite(quiz._id, isFavourited);
+                              }}
+                              className="h-10 w-10 rounded-xl bg-white/10 border border-white/20 backdrop-blur text-white/70 transition-all hover:text-yellow-200 hover:bg-white/20"
+                              aria-label="Toggle favourite"
+                              title="Toggle favourite"
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="h-4 w-4 mx-auto"
+                                fill={myFavourites.some((item) => {
+                                  const itemId = typeof item === "string" ? item : item._id;
+                                  return itemId === quiz._id;
+                                }) ? "currentColor" : "none"}
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setQuizToDelete(quiz);
+                                setShowDeleteConfirm(true);
+                              }}
+                              className="h-10 w-10 rounded-xl bg-white/10 border border-white/20 backdrop-blur text-rose-200 transition-all hover:bg-rose-500/20 hover:text-rose-100"
+                              aria-label="Delete quiz"
+                              title="Delete quiz"
+                            >
+                              <svg className="w-4 h-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
                           </div>
-                          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">
-                            <img src={`/${quiz.difficulty || "medium"}.svg`} alt="" aria-hidden="true" className="h-4 w-4" />
-                            <span className="capitalize">{quiz.difficulty || "medium"}</span>
-                          </span>
-                        </div>
-                        {isOwnProfile && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setQuizToDelete(quiz);
-                              setShowDeleteConfirm(true);
-                            }}
-                            className="rounded-xl p-3 text-rose-200 transition-all hover:bg-rose-500/20 hover:text-rose-100"
-                            aria-label="Delete quiz"
-                            title="Delete quiz"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
                         )}
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-3 group-hover:text-purple-300 transition-colors line-clamp-2 min-h-[3.5rem]">
-                        {quiz.title}
-                      </h3>
-                      <div className="mb-4 text-xs text-white/80 divide-y divide-white/10">
+                      <div className="mb-3 h-16 w-full">
+                        <h3
+                          className={`${titleSizeClass} font-bold text-white ${isAccountLocked ? "" : "group-hover:text-purple-300"} transition-colors line-clamp-2 text-center h-full w-full flex items-center justify-center`}
+                        >
+                          {quiz.title}
+                        </h3>
+                      </div>
+                      <div className="mb-3 text-xs text-white/80 divide-y divide-white/10">
                         <div className="flex items-center justify-between py-2">
                           <span>Questions</span>
                           <span className="font-semibold">{quiz.questions.length}</span>
@@ -722,7 +997,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       <div className={`grid gap-2 ${isOwnProfile ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-                        {isOwnProfile && (
+                        {isOwnProfile && !isAccountLocked && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -741,9 +1016,13 @@ export default function ProfilePage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (isAccountLocked) return;
                             handleViewStats(quiz._id);
                           }}
-                          className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                          disabled={isAccountLocked}
+                          className={`w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                            isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-white/20"
+                          }`}
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -751,7 +1030,7 @@ export default function ProfilePage() {
                           View Stats
                         </button>
                       </div>
-                      <div className="mt-3 flex items-center gap-1 text-xs text-white/80">
+                      <div className="mt-4 flex items-center justify-center gap-1 text-xs text-white/80">
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
