@@ -756,9 +756,9 @@ export default function ProfilePage() {
                           if (isAccountLocked) return;
                           navigate(`/quiz/${quiz._id}`, { state: { returnTo } });
                         }}
-                        className={`group relative bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transform duration-300 ${isAccountLocked
+                        className={`group relative bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transform transition-all duration-150 ${isAccountLocked
                           ? "cursor-not-allowed opacity-60"
-                          : "hover:border-slate-300 hover:bg-white cursor-pointer transition-colors"
+                          : "hover:border-slate-300 hover:bg-white hover:shadow-[0_0_20px_0_rgba(203,213,225,0.6)] hover:scale-[1.01] cursor-pointer"
                           }`}
                       >
                         <div className={`flex items-center justify-between px-4 py-2 ${categoryStripeColors[quiz.category] || categoryStripeColors.other}`}>
@@ -804,7 +804,7 @@ export default function ProfilePage() {
                                     });
                                     handleToggleFavourite(quiz, isFavourited);
                                   }}
-                                  className="h-10 px-3 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-slate-500 transition-colors hover:text-amber-500 hover:bg-white flex items-center gap-2"
+                                  className="h-10 px-3 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-slate-500 transition-all duration-100 ease-out hover:text-amber-500 hover:bg-white hover:scale-105 active:scale-95 flex items-center gap-2"
                                   aria-label="Toggle favourite"
                                   title="Toggle favourite"
                                 >
@@ -833,7 +833,7 @@ export default function ProfilePage() {
                                     setQuizToDelete(quiz);
                                     setShowDeleteConfirm(true);
                                   }}
-                                  className="h-10 w-10 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-rose-500 transition-colors hover:bg-rose-100/70"
+                                  className="h-10 w-10 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-rose-500 transition-all duration-100 ease-out hover:bg-rose-100/70 hover:scale-105 active:scale-95"
                                   aria-label="Delete quiz"
                                   title="Delete quiz"
                                 >
@@ -878,7 +878,7 @@ export default function ProfilePage() {
                                     state: { from: "profile", returnTo: `/users/${routeUsername}` }
                                   });
                                 }}
-                                className="w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-semibold hover:bg-white transition-colors flex items-center justify-center gap-2"
+                                className="w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-bold transition-all duration-100 ease-out hover:bg-slate-100/80 active:scale-95 flex items-center justify-center gap-2"
                               >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487a2 2 0 112.828 2.828L8.828 18.175a4 4 0 01-1.414.944l-3.536 1.178 1.178-3.536a4 4 0 01.944-1.414L16.862 4.487z" />
@@ -893,7 +893,7 @@ export default function ProfilePage() {
                                 handleViewStats(quiz._id);
                               }}
                               disabled={isAccountLocked}
-                              className={`w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-white"
+                              className={`w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-bold transition-all duration-100 ease-out flex items-center justify-center gap-2 ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-100/80 active:scale-95"
                                 }`}
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1008,7 +1008,6 @@ export default function ProfilePage() {
                     const isQuizLocked = typeof quiz === "string" ? null : quiz?.lock_answers;
                     const cardContent = (
                       <>
-                        <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other}`}></div>
                         <div className="p-4">
                           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
@@ -1023,7 +1022,7 @@ export default function ProfilePage() {
                                 handleRemoveFavourite(quizId);
                               }}
                               disabled={isAccountLocked}
-                              className={`px-2.5 py-1 rounded-lg bg-rose-500 text-white text-xs font-semibold transition-colors ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-600"}`}
+                              className={`px-3 py-1.5 rounded-xl bg-rose-50/70 backdrop-blur text-rose-600 text-xs font-bold transition-all duration-100 ease-out ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-100/80 active:scale-95"}`}
                             >
                               Remove
                             </button>
@@ -1035,8 +1034,22 @@ export default function ProfilePage() {
                               </svg>
                               <span className="capitalize">{quizCategory || "other"}</span>
                             </div>
-                            <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${difficulty.className}`}>
-                              <img src={difficulty.icon} alt="" aria-hidden="true" className="h-4 w-4" />
+                            <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${difficulty.className}`}>
+                              <span
+                                aria-hidden="true"
+                                className="h-4 w-4"
+                                style={{
+                                  backgroundColor: "currentColor",
+                                  maskImage: `url(${difficulty.icon})`,
+                                  WebkitMaskImage: `url(${difficulty.icon})`,
+                                  maskRepeat: "no-repeat",
+                                  WebkitMaskRepeat: "no-repeat",
+                                  maskPosition: "center",
+                                  WebkitMaskPosition: "center",
+                                  maskSize: "contain",
+                                  WebkitMaskSize: "contain"
+                                }}
+                              ></span>
                               <span>{difficulty.label}</span>
                             </div>
                             {creatorName && (
@@ -1052,7 +1065,7 @@ export default function ProfilePage() {
                                     event.stopPropagation();
                                     navigate(`/users/${creatorName}`);
                                   }}
-                                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-800 bg-white/70 border border-slate-200/80"
+                                  className="rounded-full px-3 py-1.5 text-xs font-bold text-slate-600 transition-all hover:bg-slate-200/80 hover:text-slate-900 bg-white/70 border border-slate-200/80 active:scale-95"
                                 >
                                   Created by {creatorName}
                                 </button>
@@ -1085,7 +1098,7 @@ export default function ProfilePage() {
                       </>
                     );
 
-                    const cardClass = `group relative block bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 transition-colors hover:bg-white"
+                    const cardClass = `group relative block bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm transition-all duration-150 ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 hover:bg-white hover:shadow-[0_0_20px_0_rgba(203,213,225,0.6)] hover:scale-[1.01]"
                       }`;
 
                     return isAccountLocked ? (
@@ -1141,7 +1154,7 @@ export default function ProfilePage() {
                         percentage >= 40 ? "from-amber-500 to-orange-600" :
                           "from-red-500 to-pink-600";
 
-                    const takenClass = `group block bg-white/80 backdrop-blur rounded-2xl p-5 border border-slate-200/80 shadow-sm ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 transition-colors hover:bg-white"
+                    const takenClass = `group block bg-white/80 backdrop-blur rounded-2xl p-5 border border-slate-200/80 shadow-sm transition-all duration-150 ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 hover:bg-white hover:shadow-[0_0_20px_0_rgba(203,213,225,0.6)] hover:scale-[1.01]"
                       }`;
                     const takenContent = (
                       <>
