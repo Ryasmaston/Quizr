@@ -15,11 +15,11 @@ async function getDeletedUserPlaceholder() {
       {
         $setOnInsert: {
           authId: PLACEHOLDER_AUTH_ID,
-          email: PLACEHOLDER_EMAIL,
-          status: "active"
+          "user_data.email": PLACEHOLDER_EMAIL,
+          "user_data.status": "active"
         },
         $set: {
-          username: PLACEHOLDER_USERNAME
+          "user_data.username": PLACEHOLDER_USERNAME
         }
       },
       { new: true, upsert: true }
@@ -51,8 +51,8 @@ async function removeUserFriends(userId) {
 async function removeQuizzesFromFavourites(quizIds) {
   if (!quizIds.length) return;
   await User.updateMany(
-    { favourites: { $in: quizIds } },
-    { $pull: { favourites: { $in: quizIds } } }
+    { "preferences.favourites": { $in: quizIds } },
+    { $pull: { "preferences.favourites": { $in: quizIds } } }
   );
 }
 
@@ -76,7 +76,7 @@ async function executeUserDeletion(user, modeOverride) {
 
   const userId = user._id;
   const authId = user.authId;
-  const deletionMode = modeOverride || user.deletion?.mode || DEFAULT_MODE;
+  const deletionMode = modeOverride || user.user_data.deletion?.mode || DEFAULT_MODE;
 
   const createdQuizzes = await Quiz.find({ created_by: userId }).select("_id");
   const createdQuizIds = createdQuizzes.map((quiz) => quiz._id);
@@ -103,8 +103,8 @@ async function executeUserDeletion(user, modeOverride) {
 async function runDueDeletions() {
   const now = new Date();
   const dueUsers = await User.find({
-    status: "pending_deletion",
-    "deletion.scheduled_for": { $lte: now },
+    "user_data.status": "pending_deletion",
+    "user_data.deletion.scheduled_for": { $lte: now },
     authId: { $ne: PLACEHOLDER_AUTH_ID }
   });
 

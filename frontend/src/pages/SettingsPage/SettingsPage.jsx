@@ -44,8 +44,8 @@ export default function SettingsPage() {
       const res = await apiFetch("/me");
       const body = await res.json();
       setProfile(body.user);
-      setUsername(body.user.username);
-      setProfilePic(body.user.profile_pic || "");
+      setUsername(body.user.user_data.username);
+      setProfilePic(body.user.user_data.profile_pic || "");
       setNewEmail(loggedInUser.email);
       setLoading(false);
     } catch (err) {
@@ -220,7 +220,7 @@ export default function SettingsPage() {
     try {
       await scheduleAccountDeletion(mode);
       setDeletionMode(mode);
-      navigate(`/users/${profile?.username}`, { replace: true });
+      navigate(`/users/${profile?.user_data?.username}`, { replace: true });
     } catch (err) {
       setDeletionError(err.message || "Failed to schedule deletion");
     } finally {
@@ -231,8 +231,8 @@ export default function SettingsPage() {
   const deletionHeader = isAccountLocked
     ? "Account deletion scheduled"
     : deletionStep === "choose"
-    ? "Delete all quizzes?"
-    : "Delete Account";
+      ? "Delete all quizzes?"
+      : "Delete Account";
 
   if (loading) {
     return (
@@ -283,227 +283,227 @@ export default function SettingsPage() {
           <h1 className="text-4xl font-semibold text-slate-800 mb-8">
             Settings
           </h1>
-        {message && (
-          <div className="mb-6 bg-emerald-100/70 border border-emerald-200/80 rounded-2xl p-4 backdrop-blur">
-            <p className="text-emerald-700">{message}</p>
-          </div>
-        )}
-        {error && (
-          <div className="mb-6 bg-rose-100/80 border border-rose-200/80 rounded-2xl p-4 backdrop-blur">
-            <p className="text-rose-700">{error}</p>
-          </div>
-        )}
-        {isAccountLocked && (
-          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-4">{deletionHeader}</h2>
-            {deletionError && (
-              <div className="mb-4 bg-rose-100/80 border border-rose-200/80 rounded-2xl p-4 backdrop-blur">
-                <p className="text-rose-700">{deletionError}</p>
+          {message && (
+            <div className="mb-6 bg-emerald-100/70 border border-emerald-200/80 rounded-2xl p-4 backdrop-blur">
+              <p className="text-emerald-700">{message}</p>
+            </div>
+          )}
+          {error && (
+            <div className="mb-6 bg-rose-100/80 border border-rose-200/80 rounded-2xl p-4 backdrop-blur">
+              <p className="text-rose-700">{error}</p>
+            </div>
+          )}
+          {isAccountLocked && (
+            <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 shadow-sm">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-4">{deletionHeader}</h2>
+              {deletionError && (
+                <div className="mb-4 bg-rose-100/80 border border-rose-200/80 rounded-2xl p-4 backdrop-blur">
+                  <p className="text-rose-700">{deletionError}</p>
+                </div>
+              )}
+              <p className="text-slate-600 mb-4">
+                Your account is scheduled for deletion. Manage the countdown from your profile.
+              </p>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/users/${profile?.user_data?.username}`)}
+                  className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors"
+                >
+                  Go to My Profile
+                </button>
               </div>
-            )}
-            <p className="text-slate-600 mb-4">
-              Your account is scheduled for deletion. Manage the countdown from your profile.
-            </p>
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={() => navigate(`/users/${profile?.username}`)}
-                className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors"
-              >
-                Go to My Profile
-              </button>
             </div>
-          </div>
-        )}
-        <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-6">Profile Information</h2>
-          <form onSubmit={handleUpdateProfile} className="space-y-4">
-            <div>
-              <label className="block text-slate-600 mb-2">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={isAccountLocked}
-                className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-slate-600 mb-2">Profile Picture URL</label>
-              <input
-                type="url"
-                value={profilePic}
-                onChange={(e) => setProfilePic(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                disabled={isAccountLocked}
-                className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-            {profilePic && (
-              <div className="flex items-center gap-4">
-                <p className="text-slate-600">Preview:</p>
-                <img
-                  src={profilePic}
-                  alt="Profile preview"
-                  className="w-16 h-16 rounded-full object-cover border-2 border-slate-200/80"
-                  onError={(e) => e.target.style.display = 'none'}
+          )}
+          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">Profile Information</h2>
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div>
+                <label className="block text-slate-600 mb-2">Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={isAccountLocked}
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
                 />
               </div>
-            )}
-            <button
-              type="submit"
-              disabled={saving || isAccountLocked}
-              className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? "Saving..." : "Save Profile"}
-            </button>
-          </form>
-        </div>
-        <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-6">Email Address</h2>
-          <form onSubmit={handleUpdateEmail} className="space-y-4">
-            <div>
-              <label className="block text-slate-600 mb-2">New Email</label>
-              <input
-                type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                disabled={isAccountLocked}
-                className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-slate-600 mb-2">Current Password (required for security)</label>
-              <input
-                type="password"
-                value={currentEmailPassword}
-                onChange={(e) => setCurrentEmailPassword(e.target.value)}
-                placeholder="Enter current password"
-                disabled={isAccountLocked}
-                className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={saving || isAccountLocked || newEmail === loggedInUser?.email || !currentEmailPassword}
-              className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? "Updating..." : "Update Email"}
-            </button>
-          </form>
-        </div>
-        <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-6">Change Password</h2>
-          <form onSubmit={handleUpdatePassword} className="space-y-4">
-            <div>
-              <label className="block text-slate-600 mb-2">Current Password</label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter current password"
-                disabled={isAccountLocked}
-                className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-slate-600 mb-2">New Password</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                disabled={isAccountLocked}
-                className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
-                minLength={6}
-              />
-            </div>
-            <div>
-              <label className="block text-slate-600 mb-2">Confirm Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                disabled={isAccountLocked}
-                className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
-                minLength={6}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={saving || isAccountLocked || !currentPassword || !newPassword || !confirmPassword}
-              className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? "Updating..." : "Change Password"}
-            </button>
-          </form>
-        </div>
-        {!isAccountLocked && (
-          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mt-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-4">{deletionHeader}</h2>
-            {deletionStep === "intro" && (
-              <>
-                <p className="text-slate-600 mb-4">
-                  You will then have 7 days to cancel if you change your mind, or delete immediately.
-                </p>
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setDeletionStep("choose")}
-                    className="px-6 py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors"
-                  >
-                    Delete Account
-                  </button>
-                </div>
-              </>
-            )}
-            {deletionError && (
-              <div className="mb-4 bg-rose-100/80 border border-rose-200/80 rounded-2xl p-4 backdrop-blur">
-                <p className="text-rose-700">{deletionError}</p>
+              <div>
+                <label className="block text-slate-600 mb-2">Profile Picture URL</label>
+                <input
+                  type="url"
+                  value={profilePic}
+                  onChange={(e) => setProfilePic(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  disabled={isAccountLocked}
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
               </div>
-            )}
-            {deletionStep === "choose" && (
-              <div className="space-y-4">
-                <p className="text-slate-600">
-                  You can delete all quizzes you created (this removes other users&apos; attempt history
-                  on those quizzes), or preserve your quizzes and anonymise your authorship as
-                  deleted user.
-                </p>
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setDeletionStep("intro")}
-                    disabled={deletionSaving}
-                    className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleChooseDeletion("delete_quizzes")}
-                    disabled={deletionSaving}
-                    className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Delete My Quizzes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleChooseDeletion("preserve_quizzes")}
-                    disabled={deletionSaving}
-                    className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Preserve My Quizzes
-                  </button>
+              {profilePic && (
+                <div className="flex items-center gap-4">
+                  <p className="text-slate-600">Preview:</p>
+                  <img
+                    src={profilePic}
+                    alt="Profile preview"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-slate-200/80"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
                 </div>
-              </div>
-            )}
+              )}
+              <button
+                type="submit"
+                disabled={saving || isAccountLocked}
+                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? "Saving..." : "Save Profile"}
+              </button>
+            </form>
           </div>
-        )}
+          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">Email Address</h2>
+            <form onSubmit={handleUpdateEmail} className="space-y-4">
+              <div>
+                <label className="block text-slate-600 mb-2">New Email</label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  disabled={isAccountLocked}
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-slate-600 mb-2">Current Password (required for security)</label>
+                <input
+                  type="password"
+                  value={currentEmailPassword}
+                  onChange={(e) => setCurrentEmailPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  disabled={isAccountLocked}
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={saving || isAccountLocked || newEmail === loggedInUser?.email || !currentEmailPassword}
+                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? "Updating..." : "Update Email"}
+              </button>
+            </form>
+          </div>
+          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">Change Password</h2>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="block text-slate-600 mb-2">Current Password</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  disabled={isAccountLocked}
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-slate-600 mb-2">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  disabled={isAccountLocked}
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <label className="block text-slate-600 mb-2">Confirm Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  disabled={isAccountLocked}
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  minLength={6}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={saving || isAccountLocked || !currentPassword || !newPassword || !confirmPassword}
+                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? "Updating..." : "Change Password"}
+              </button>
+            </form>
+          </div>
+          {!isAccountLocked && (
+            <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mt-6 shadow-sm">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-4">{deletionHeader}</h2>
+              {deletionStep === "intro" && (
+                <>
+                  <p className="text-slate-600 mb-4">
+                    You will then have 7 days to cancel if you change your mind, or delete immediately.
+                  </p>
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setDeletionStep("choose")}
+                      className="px-6 py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors"
+                    >
+                      Delete Account
+                    </button>
+                  </div>
+                </>
+              )}
+              {deletionError && (
+                <div className="mb-4 bg-rose-100/80 border border-rose-200/80 rounded-2xl p-4 backdrop-blur">
+                  <p className="text-rose-700">{deletionError}</p>
+                </div>
+              )}
+              {deletionStep === "choose" && (
+                <div className="space-y-4">
+                  <p className="text-slate-600">
+                    You can delete all quizzes you created (this removes other users&apos; attempt history
+                    on those quizzes), or preserve your quizzes and anonymise your authorship as
+                    deleted user.
+                  </p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setDeletionStep("intro")}
+                      disabled={deletionSaving}
+                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChooseDeletion("delete_quizzes")}
+                      disabled={deletionSaving}
+                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Delete My Quizzes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChooseDeletion("preserve_quizzes")}
+                      disabled={deletionSaving}
+                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Preserve My Quizzes
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </>

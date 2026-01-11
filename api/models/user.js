@@ -1,59 +1,24 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-  authId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-
-  username: {
-    type: String,
-    required: true,
-    trim: true
-  },
-
-  email: {
-    type: String,
-    required: true,
-    trim: true
-  },
-
-  // pending implementation
-  profile_pic: {
-    type: String
-  },
-
-  created_at: {
-    type: Date,
-    default: Date.now
-  },
-
-  status: {
-    type: String,
-    enum: ["active", "pending_deletion"],
-    default: "active"
-  },
-
-  deletion: {
-    requested_at: {
-      type: Date
+    authId: { type: String, required: true, unique: true },
+    user_data: {
+        username: { type: String, required: true, trim: true },
+        email: { type: String, required: true, trim: true },
+        profile_pic: { type: String },
+        status: { type: String, enum: ["active", "pending_deletion"], default: "active" },
+        deletion: {
+            requested_at: Date,
+            scheduled_for: Date,
+            mode: { type: String, enum: ["delete_quizzes", "preserve_quizzes"] }
+        },
+        created_at: { type: Date, default: Date.now }
     },
-    scheduled_for: {
-      type: Date
-    },
-    mode: {
-      type: String,
-      enum: ["delete_quizzes", "preserve_quizzes"]
+    preferences: {
+        favourites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Quiz" }],
+        theme: { type: String, enum: ["light", "dark", "system"], default: "light" }
     }
-  },
-
-  favourites: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Quiz"
-  }]
 });
 
 const User = mongoose.model("User", UserSchema);
-
 module.exports = User;

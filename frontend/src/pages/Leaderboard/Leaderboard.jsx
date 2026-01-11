@@ -5,11 +5,11 @@ import { getLeaderboard } from "../../services/quizzes";
 const columns = [
   { key: "rank", label: "#", isNumeric: true },
   { key: "username", label: "Player", isNumeric: false },
-  { key: "avgPercent", label: "Average Score", isNumeric: true },
-  // { key: "bestPercent", label: "Best %", isNumeric: true },
   { key: "totalCorrect", label: "Correct Answers", isNumeric: true },
-  { key: "attemptsCount", label: "Total Attempts", isNumeric: true },
+  { key: "avgPercent", label: "Average Score", isNumeric: true },
+  { key: "attemptsCount", label: "Their Attempts", isNumeric: true },
   { key: "quizzesTaken", label: "Quizzes Taken", isNumeric: true },
+  { key: "attemptsOnTheirQuizzes", label: "Attempts On Their Quizzes", isNumeric: true },
   { key: "quizzesCreated", label: "Quizzes Created", isNumeric: true }
 ];
 
@@ -18,7 +18,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({
-    key: "avgPercent",
+    key: "totalCorrect",
     direction: "desc"
   });
   const avatarGradients = [
@@ -79,14 +79,7 @@ export default function LeaderboardPage() {
     });
   }, [entries]);
 
-  const baseRanks = useMemo(() => {
-    const base = [...rows];
-    base.sort((a, b) => {
-      if (a.avgPercent !== b.avgPercent) return b.avgPercent - a.avgPercent;
-      return a.username.localeCompare(b.username);
-    });
-    return new Map(base.map((entry, index) => [entry.user_id, index + 1]));
-  }, [rows]);
+  // baseRanks removed: rank will reflect current sorted row order (index + 1)
 
   const sortedRows = useMemo(() => {
     const sorted = [...rows];
@@ -94,19 +87,13 @@ export default function LeaderboardPage() {
     const order = direction === "asc" ? 1 : -1;
 
     sorted.sort((a, b) => {
-      if (key === "rank") {
-        const aRank = baseRanks.get(a.user_id) || 0;
-        const bRank = baseRanks.get(b.user_id) || 0;
-        if (aRank !== bRank) return (aRank - bRank) * order;
-        return a.username.localeCompare(b.username);
-      }
       if (key === "username") {
-        return a.username.localeCompare(b.username) * order;
+        return a.user_data.username.localeCompare(b.user_data.username) * order;
       }
       const aVal = Number.isFinite(a[key]) ? a[key] : 0;
       const bVal = Number.isFinite(b[key]) ? b[key] : 0;
       if (aVal !== bVal) return (aVal - bVal) * order;
-      return a.username.localeCompare(b.username);
+      return a.user_data.username.localeCompare(b.user_data.username);
     });
 
     return sorted;
@@ -114,11 +101,12 @@ export default function LeaderboardPage() {
 
   function handleSort(key) {
     setSortConfig((prev) => {
+      // clicking the rank column should just toggle order (asc/desc) without changing the sort key
+      if (key === "rank") {
+        return { key: prev.key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
       if (prev.key === key) {
-        return {
-          key,
-          direction: prev.direction === "asc" ? "desc" : "asc"
-        };
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
       }
       const defaultDirection = key === "username" ? "asc" : "desc";
       return { key, direction: defaultDirection };
@@ -215,9 +203,8 @@ export default function LeaderboardPage() {
                       {columns.map((column) => (
                         <th
                           key={column.key}
-                          className={`px-3 sm:px-4 py-3 ${
-                            column.key === "username" ? "text-left w-[220px] max-w-[220px]" : ""
-                          }`}
+                          className={`px-3 sm:px-4 py-3 ${column.key === "username" ? "text-left w-[220px] max-w-[220px]" : ""
+                            }`}
                         >
                           <button
                             type="button"
@@ -242,25 +229,26 @@ export default function LeaderboardPage() {
                       sortedRows.map((entry, index) => (
                         <tr key={entry.user_id}>
                           <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left">
-                            {baseRanks.get(entry.user_id) || index + 1}
+                            {sortConfig.direction === "desc" ? index + 1 : sortedRows.length - index}
                           </td>
                           <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left w-[220px] max-w-[220px]">
                             <Link
-                              to={`/users/${entry.username}`}
+                              to={`/users/${entry.user_data?.username}`}
                               className="flex items-center gap-3 min-w-0 cursor-pointer text-slate-800 hover:text-slate-800 hover:font-semibold"
                             >
                               <div
-                                className={`h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br ${getAvatarGradient(entry.user_id)} flex items-center justify-center text-white font-semibold text-sm`}
+                                className={`h-9 w-9 shrink-0 rounded-[30%] bg-gradient-to-br ${getAvatarGradient(entry.user_id)} flex items-center justify-center text-white font-semibold text-sm`}
                               >
-                                {(entry.username || "?").charAt(0).toUpperCase()}
+                                {(entry.user_data?.username || "?").charAt(0).toUpperCase()}
                               </div>
-                              <span className="truncate">{entry.username}</span>
+                              <span className="truncate">{entry.user_data?.username}</span>
                             </Link>
                           </td>
-                          <td className="px-3 sm:px-4 py-3 text-left">{Math.round(entry.avgPercent)}%</td>
                           <td className="px-3 sm:px-4 py-3 text-left">{entry.totalCorrect}</td>
+                          <td className="px-3 sm:px-4 py-3 text-left">{Math.round(entry.avgPercent)}%</td>
                           <td className="px-3 sm:px-4 py-3 text-left">{entry.attemptsCount}</td>
                           <td className="px-3 sm:px-4 py-3 text-left">{entry.quizzesTaken}</td>
+                          <td className="px-3 sm:px-4 py-3 text-left">{entry.attemptsOnTheirQuizzes || 0}</td>
                           <td className="px-3 sm:px-4 py-3 text-left">{entry.quizzesCreated}</td>
                         </tr>
                       ))

@@ -14,14 +14,17 @@ async function createUser(req, res) {
   const authId = req.user.uid;
   const email = req.user.email;
   try {
-    const user = new User({ username, email, authId });
+    const user = new User({
+      authId,
+      user_data: { username, email }
+    });
     await user.save();
     res.status(201).json({
       message: "User created",
       user: {
         id: user._id,
-        username: user.username,
-        email: user.email
+        username: user.user_data.username,
+        email: user.user_data.email
       }
     });
   } catch (error) {
@@ -42,9 +45,12 @@ async function updateUser(req, res) {
     }
     const user = await User.findByIdAndUpdate(
       req.params.userId,
-      { username, profile_pic },
+      {
+        "user_data.username": username,
+        "user_data.profile_pic": profile_pic
+      },
       { new: true }
-    ).select("username profile_pic quizzes created_at");
+    ).select("user_data.username user_data.profile_pic quizzes user_data.created_at");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -65,7 +71,7 @@ async function checkUsernameAvailability(req, res) {
   }
 
   try {
-    const exists = await User.exists({ username });
+    const exists = await User.exists({ "user_data.username": username });
     return res.status(200).json({ available: !exists });
   } catch (error) {
     console.error(error);
@@ -79,11 +85,11 @@ async function checkUsernameAvailability(req, res) {
 async function showUser(req, res) {
   try {
     const user = await User.findOne({ authId: req.user.uid })
-      .select("username profile_pic favourites status deletion")
+      .select("user_data preferences")
       .populate({
-        path: "favourites",
+        path: "preferences.favourites",
         select: "title category created_by questions req_to_pass allow_multiple_correct require_all_correct lock_answers difficulty",
-        populate: {path: "created_by", select: "username authId"}
+        populate: { path: "created_by", select: "user_data.username authId" }
       })
 
     if (!user) {
@@ -108,15 +114,18 @@ async function searchUsers(req, res) {
 
     const regex = new RegExp(escapeRegex(q), "i");
 
-    const users = await User.find({ username: regex, authId: { $ne: PLACEHOLDER_AUTH_ID } })
-      .select("username profile_pic")
+    const users = await User.find({
+      "user_data.username": regex,
+      authId: { $ne: PLACEHOLDER_AUTH_ID }
+    })
+      .select("user_data.username user_data.profile_pic")
       .limit(8);
 
     return res.status(200).json({
       users: users.map((u) => ({
         id: u._id,
-        username: u.username,
-        profile_pic: u.profile_pic || null,
+        username: u.user_data.username,
+        profile_pic: u.user_data.profile_pic || null,
       })),
     });
   } catch (error) {
@@ -133,7 +142,7 @@ async function getUserById(req, res) {
     const user = await User.findOne({
       _id: req.params.userId,
       authId: { $ne: PLACEHOLDER_AUTH_ID }
-    }).select("username profile_pic created_at");
+    }).select("user_data.username user_data.profile_pic user_data.created_at");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -150,7 +159,7 @@ async function getUserIdByUsername(req, res) {
   try {
     const { username } = req.params;
     const user = await User.findOne({
-      username,
+      "user_data.username": username,
       authId: { $ne: PLACEHOLDER_AUTH_ID }
     }).select("_id");
     if (!user) {
@@ -164,7 +173,7 @@ async function getUserIdByUsername(req, res) {
 }
 
 async function deleteUser(req, res) {
-  try{
+  try {
     const currentUser = await User.findOne({ authId: req.user.uid });
     if (!currentUser) {
       return res.status(404).json({ message: "User not found" });
@@ -177,7 +186,7 @@ async function deleteUser(req, res) {
     res.status(200).json({ message: "User deleted" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error deleting user", error: error.message})
+    res.status(500).json({ message: "Error deleting user", error: error.message })
   }
 }
 
@@ -200,8 +209,8 @@ async function scheduleDeletion(req, res) {
     const requestedAt = new Date();
     const scheduledFor = new Date(requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    user.status = "pending_deletion";
-    user.deletion = {
+    user.user_data.status = "pending_deletion";
+    user.user_data.deletion = {
       requested_at: requestedAt,
       scheduled_for: scheduledFor,
       mode
@@ -212,8 +221,8 @@ async function scheduleDeletion(req, res) {
     res.status(200).json({
       message: "Deletion scheduled",
       user: {
-        status: user.status,
-        deletion: user.deletion
+        status: user.user_data.status,
+        deletion: user.user_data.deletion
       }
     });
   } catch (error) {
@@ -225,8 +234,8 @@ async function scheduleDeletion(req, res) {
 async function cancelDeletion(req, res) {
   try {
     const user = await User.findOneAndUpdate(
-      { authId: req.user.uid, status: "pending_deletion" },
-      { $set: { status: "active" }, $unset: { deletion: "" } },
+      { authId: req.user.uid, "user_data.status": "pending_deletion" },
+      { $set: { "user_data.status": "active" }, $unset: { "user_data.deletion": "" } },
       { new: true }
     );
     if (!user) {
@@ -240,8 +249,8 @@ async function cancelDeletion(req, res) {
     res.status(200).json({
       message: "Deletion cancelled",
       user: {
-        status: user.status,
-        deletion: user.deletion
+        status: user.user_data.status,
+        deletion: user.user_data.deletion
       }
     });
   } catch (error) {
@@ -261,51 +270,51 @@ async function executeDeletion(req, res) {
     res.status(200).json({ message: "User deleted" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error deleting user", error: error.message})
+    res.status(500).json({ message: "Error deleting user", error: error.message })
   }
 }
 
 // Favourites
 
 async function addFavourite(req, res) {
-  try{
+  try {
     const quiz = await Quiz.findById(req.params.quizId);
-    if(!quiz) {
-      return res.status(404).json({message: "Quiz not found"})
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" })
     }
     const user = await User.findOneAndUpdate(
-      {authId: req.user.uid},
-      {$addToSet: {favourites: quiz._id}},
-      {new: true}
+      { authId: req.user.uid },
+      { $addToSet: { "preferences.favourites": quiz._id } },
+      { new: true }
     );
     if (!user) {
-      return res.status(404).json({message: "User not found"})
+      return res.status(404).json({ message: "User not found" })
     }
-    res.status(200).json({message: "Quiz added to favourites"})
+    res.status(200).json({ message: "Quiz added to favourites" })
   } catch (error) {
     console.error(error);
-    res.status(500).json({message: "Could not add to favourites", error: error.message})
+    res.status(500).json({ message: "Could not add to favourites", error: error.message })
   }
 }
 
 async function removeFavourite(req, res) {
   try {
     const quiz = await Quiz.findById(req.params.quizId);
-    if(!quiz) {
-      return res.status(404).json({message: "Quiz not found"})
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" })
     }
     const user = await User.findOneAndUpdate(
-      {authId: req.user.uid},
-      {$pull: {favourites: quiz._id}},
-      {new: true}
+      { authId: req.user.uid },
+      { $pull: { "preferences.favourites": quiz._id } },
+      { new: true }
     );
     if (!user) {
-      return res.status(404).json({message: "User not found"})
+      return res.status(404).json({ message: "User not found" })
     }
-    res.status(200).json({message: "Quiz removed from favourites"})
+    res.status(200).json({ message: "Quiz removed from favourites" })
   } catch (error) {
     console.error(error);
-    res.status(500).json({message: "Could not remove from favourites", error: error.message})
+    res.status(500).json({ message: "Could not remove from favourites", error: error.message })
   }
 }
 

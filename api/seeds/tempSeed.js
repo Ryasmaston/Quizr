@@ -85,14 +85,31 @@ async function tempSeed() {
     await connectToDatabase();
     console.log("Connected to MongoDB successfully");
 
-    const users = parseExtendedJson(loadJson("project_creative.users.json"));
+    const usersRaw = parseExtendedJson(loadJson("project_creative.users.json"));
+    const users = usersRaw.map((u) => ({
+      _id: u._id,
+      authId: u.authId,
+      user_data: {
+        username: u.username,
+        email: u.email,
+        profile_pic: u.profile_pic,
+        status: u.status || "active",
+        deletion: u.deletion,
+        created_at: u.created_at || new Date()
+      },
+      preferences: {
+        favourites: u.favourites || [],
+        theme: u.theme || "light"
+      }
+    }));
+
     const friends = parseExtendedJson(loadJson("project_creative.friends.json"));
     const quizzesRaw = parseExtendedJson(loadJson("project_creative.quizzes.json"));
     const quizzes = quizzesRaw.map(normalizeQuiz);
 
     if (users.length) {
       await User.collection.bulkWrite(buildReplaceOps(users));
-      console.log(`Upserted ${users.length} users`);
+      console.log(`Upserted ${users.length} users (transformed to nested structure)`);
     }
 
     if (friends.length) {

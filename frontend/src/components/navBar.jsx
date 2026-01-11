@@ -18,8 +18,8 @@ function NavBar() {
     username && username.length > 16
       ? "text-xs"
       : username && username.length > 12
-      ? "text-sm"
-      : "text-sm";
+        ? "text-sm"
+        : "text-sm";
 
   useEffect(() => {
     // redirect to login when we know there's no user
@@ -34,7 +34,7 @@ function NavBar() {
         try {
           const res = await apiFetch("/me"); // Changed from /users/me to /me
           const body = await res.json();
-          setUsername(body.user?.username);
+          setUsername(body.user?.user_data?.username);
           setAccountStatus(body.user?.status || "active");
         } catch (err) {
           console.error("Could not fetch username", err);
@@ -70,10 +70,9 @@ function NavBar() {
                     }
                   }}
                   className={({ isActive }) =>
-                    `text-sm transition-colors h-16 px-5 inline-flex items-center ${
-                      isActive
-                        ? "text-slate-900 font-semibold hover:text-slate-800"
-                        : "text-slate-700 hover:text-slate-500"
+                    `text-sm transition-colors h-16 px-5 inline-flex items-center ${isActive
+                      ? "text-slate-900 font-semibold hover:text-slate-800"
+                      : "text-slate-700 hover:text-slate-500"
                     }`
                   }
                 >
@@ -88,10 +87,9 @@ function NavBar() {
                   to="/quizzes/create"
                   state={{ returnTo: location.pathname }}
                   className={({ isActive }) =>
-                    `text-sm transition-colors h-16 px-5 inline-flex items-center ${
-                      isActive
-                        ? "text-slate-900 font-semibold hover:text-slate-800"
-                        : "text-slate-700 hover:text-slate-500"
+                    `text-sm transition-colors h-16 px-5 inline-flex items-center ${isActive
+                      ? "text-slate-900 font-semibold hover:text-slate-800"
+                      : "text-slate-700 hover:text-slate-500"
                     }`
                   }
                 >
@@ -106,10 +104,9 @@ function NavBar() {
                   <NavLink
                     to="/friends"
                     className={({ isActive }) =>
-                      `text-sm transition-colors h-16 px-5 inline-flex items-center ${
-                        isActive
-                          ? "text-slate-900 font-semibold hover:text-slate-800"
-                          : "text-slate-700 hover:text-slate-500"
+                      `text-sm transition-colors h-16 px-5 inline-flex items-center ${isActive
+                        ? "text-slate-900 font-semibold hover:text-slate-800"
+                        : "text-slate-700 hover:text-slate-500"
                       }`
                     }
                   >
@@ -125,10 +122,9 @@ function NavBar() {
                   <NavLink
                     to="/leaderboard"
                     className={({ isActive }) =>
-                      `text-sm transition-colors h-16 px-5 inline-flex items-center ${
-                        isActive
-                          ? "text-slate-900 font-semibold hover:text-slate-800"
-                          : "text-slate-700 hover:text-slate-500"
+                      `text-sm transition-colors h-16 px-5 inline-flex items-center ${isActive
+                        ? "text-slate-900 font-semibold hover:text-slate-800"
+                        : "text-slate-700 hover:text-slate-500"
                       }`
                     }
                   >
@@ -154,10 +150,9 @@ function NavBar() {
               <NavLink
                 to={`/users/${username}`}
                 className={({ isActive }) =>
-                  `${profileSizeClass} transition-colors h-16 px-5 inline-flex items-center ${
-                    isActive
-                      ? "text-slate-900 font-semibold hover:text-slate-800"
-                      : "text-slate-700 hover:text-slate-500"
+                  `${profileSizeClass} transition-colors h-16 px-5 inline-flex items-center ${isActive
+                    ? "text-slate-900 font-semibold hover:text-slate-800"
+                    : "text-slate-700 hover:text-slate-500"
                   }`
                 }
               >

@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const [selectedQuizForStats, setSelectedQuizForStats] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState(null);
+  const [sortBy, setSortBy] = useState("newest");
   const returnTo = location.pathname;
 
   useEffect(() => {
@@ -59,10 +60,10 @@ export default function ProfilePage() {
         if (!mounted) return;
         const body = await res.json();
         setMyUserId(body.user?._id || null);
-        setMyUsername(body.user?.username || null);
-        setAccountStatus(body.user?.status || "active");
-        setDeletionInfo(body.user?.deletion || null);
-        const favs = Array.isArray(body.user?.favourites) ? body.user.favourites : [];
+        setMyUsername(body.user?.user_data?.username || null);
+        setAccountStatus(body.user?.user_data?.status || "active");
+        setDeletionInfo(body.user?.user_data?.deletion || null);
+        const favs = Array.isArray(body.user?.preferences?.favourites) ? body.user.preferences.favourites : [];
         setMyFavourites(favs);
       } catch (err) {
         setMyUserId(null);
@@ -245,15 +246,34 @@ export default function ProfilePage() {
         return itemId !== quizId;
       })
     );
+    setCreatedQuizzes((prev) =>
+      prev.map((q) => {
+        if (q._id === quizId) {
+          const currentCount = q.favourited_count ?? (Array.isArray(q.favourites) ? q.favourites.length : (q.favouritesCount ?? 0));
+          return { ...q, favourited_count: Math.max(0, currentCount - 1) };
+        }
+        return q;
+      })
+    );
     try {
       await removeFavourite(quizId);
     } catch (err) {
       console.error("Could not remove favourite", err);
       setMyFavourites(previous);
+      setCreatedQuizzes((prev) =>
+        prev.map((q) => {
+          if (q._id === quizId) {
+            const currentCount = q.favourited_count ?? (Array.isArray(q.favourites) ? q.favourites.length : (q.favouritesCount ?? 0));
+            return { ...q, favourited_count: currentCount + 1 };
+          }
+          return q;
+        })
+      );
     }
   }
 
-  async function handleToggleFavourite(quizId, isFavourited) {
+  async function handleToggleFavourite(quiz, isFavourited) {
+    const quizId = quiz._id;
     const previous = myFavourites;
     setMyFavourites((prev) => {
       if (isFavourited) {
@@ -262,13 +282,33 @@ export default function ProfilePage() {
           return itemId !== quizId;
         });
       }
-      return [...prev, quizId];
+      return [...prev, quiz];
     });
+
+    setCreatedQuizzes((prev) =>
+      prev.map((q) => {
+        if (q._id === quizId) {
+          const currentCount = q.favourited_count ?? (Array.isArray(q.favourites) ? q.favourites.length : (q.favouritesCount ?? 0));
+          return { ...q, favourited_count: isFavourited ? Math.max(0, currentCount - 1) : currentCount + 1 };
+        }
+        return q;
+      })
+    );
+
     try {
       await toggleFavourite(quizId, isFavourited);
     } catch (err) {
       console.error("Could not toggle favourite", err);
       setMyFavourites(previous);
+      setCreatedQuizzes((prev) =>
+        prev.map((q) => {
+          if (q._id === quizId) {
+            const currentCount = q.favourited_count ?? (Array.isArray(q.favourites) ? q.favourites.length : (q.favouritesCount ?? 0));
+            return { ...q, favourited_count: isFavourited ? currentCount + 1 : Math.max(0, currentCount - 1) };
+          }
+          return q;
+        })
+      );
     }
   }
 
@@ -397,9 +437,9 @@ export default function ProfilePage() {
           <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 border border-slate-200/80 max-w-md text-center shadow-sm">
             <div className="w-16 h-16 bg-rose-500/15 rounded-full mx-auto mb-4 flex items-center justify-center">
               <svg className="w-8 h-8 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
             <h3 className="text-2xl font-semibold text-slate-800 mb-3">Error</h3>
             <p className="text-slate-600">{error}</p>
           </div>
@@ -427,9 +467,9 @@ export default function ProfilePage() {
           <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 border border-slate-200/80 max-w-md text-center shadow-sm">
             <div className="w-16 h-16 bg-slate-200 rounded-full mx-auto mb-4 flex items-center justify-center">
               <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </div>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
             <h3 className="text-2xl font-semibold text-slate-800 mb-3">User Not Found</h3>
             <p className="text-slate-600">The user you&apos;re looking for doesn&apos;t exist.</p>
           </div>
@@ -491,6 +531,12 @@ export default function ProfilePage() {
   const totalQuestions = takenQuizzes.reduce((sum, quiz) => sum + quiz.totalQuestions, 0);
   const totalCorrect = takenQuizzes.reduce((sum, quiz) => sum + quiz.correct, 0);
   const averageScore = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+  const stats = [
+    { label: "Quizzes Taken", value: takenQuizzes.length },
+    { label: "Avg Score", value: `${averageScore}%` },
+    { label: "Created", value: createdQuizzes.length },
+    ...(isOwnProfile ? [{ label: "Favourites", value: myFavourites.length }] : []),
+  ];
 
   return (
     <>
@@ -513,242 +559,474 @@ export default function ProfilePage() {
       </div>
       <div className="relative min-h-screen pt-16 sm:pt-20">
         <main className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
-        <div className="mb-6 sm:mb-8">
-          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 relative overflow-hidden shadow-sm">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-200 via-rose-200 to-sky-200"></div>
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <div className="relative">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-slate-200/80 bg-amber-200/70 flex items-center justify-center">
-                  {profile.profile_pic ? (
-                    <img src={profile.profile_pic} alt={profile.username} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-slate-700 text-4xl sm:text-5xl font-semibold">
-                      {profile.username.charAt(0).toUpperCase()}
-                    </span>
-                  )}
+          <div className="mb-6 sm:mb-8">
+            <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 relative overflow-hidden shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start gap-6">
+                <div className="relative">
+                  <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-[30%] overflow-hidden border-2 border-slate-200/80 bg-amber-200/70 flex items-center justify-center">
+                    {profile.user_data?.profile_pic ? (
+                      <img src={profile.user_data.profile_pic} alt={profile.user_data.username} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-slate-700 text-3xl sm:text-4xl font-semibold">
+                        {profile.user_data?.username?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                {isOwnProfile && (
-                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 rounded-full p-2">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 text-center sm:text-left">
-                <h1 className="text-3xl sm:text-4xl font-semibold text-slate-800 mb-2">
-                  {profile.username}
-                </h1>
-                {isOwnProfile && loggedInUser && (
-                  <p className="text-slate-500 mb-4">{loggedInUser.email}</p>
-                )}
-                {profile.created_at && (
-                  <div className="flex items-center justify-center sm:justify-start gap-2 text-slate-500 text-sm mb-4">
-                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>
-                      Joined {new Date(profile.created_at).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric"
-                      })}
-                    </span>
-                  </div>
-                )}
-                {loggedInUser && (
-                  <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
-                    {isOwnProfile && (
-                      <>
-                        {isAccountLocked ? (
-                          <span className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-500 font-semibold border border-slate-200/80">
-                            Settings Locked
-                          </span>
+
+                <div className="flex-1 text-center sm:text-left">
+                  <h1 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-2">{profile.user_data?.username}</h1>
+                  {profile.user_data?.created_at && (
+                    <div className="flex items-center justify-center sm:justify-start gap-2 text-slate-500 text-sm mb-4">
+                      <span className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                        <svg className="w-3.5 h-3.5 text-amber-700" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.45a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.45a1 1 0 00-1.175 0l-3.37 2.45c-.784.57-1.84-.197-1.54-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.963 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.05 2.927z" />
+                        </svg>
+                        You
+                      </span>
+                      <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Joined {new Date(profile.user_data.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                    </div>
+                  )}
+
+                  {loggedInUser && (
+                    <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                      {isOwnProfile ? (
+                        isAccountLocked ? (
+                          <span className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-500 font-semibold border border-slate-200/80">Settings Locked</span>
                         ) : (
-                          <a
-                            href={`/settings`}
-                            className="px-6 py-2.5 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors flex items-center gap-2"
-                          >
+                          <a href="/settings" className="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors hover:bg-slate-700 hover:text-white visited:text-white focus:text-white active:text-white flex items-center gap-2">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             Settings
                           </a>
-                        )}
-                        <span className="px-2 py-2.5 text-slate-700 font-semibold">
-                          Your Profile
-                        </span>
-                      </>
-                    )}
-                    {!isOwnProfile && friendsLoading && (
-                      <button disabled className="px-6 py-2.5 rounded-xl bg-white/70 text-slate-600 font-semibold border border-slate-200/80">
-                        Loading...
-                      </button>
-                    )}
-                    {!isOwnProfile && !friendsLoading && isFriend && (
-                      <button
-                        onClick={handleRemove}
-                        className="px-6 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors"
-                      >
-                        Remove Friend
-                      </button>
-                    )}
-                    {!isOwnProfile && !friendsLoading && !isFriend && pendingSent && (
-                      <button
-                        onClick={handleRemove}
-                        className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-semibold border border-slate-200/80 hover:bg-slate-200/70 transition-colors"
-                      >
-                        Cancel Request
-                      </button>
-                    )}
-                    {!isOwnProfile && !friendsLoading && !isFriend && incomingRequest && (
-                      <>
-                        <button
-                          onClick={handleAccept}
-                          className="px-6 py-2.5 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors"
+                        )
+                      ) : friendsLoading ? (
+                        <button disabled className="px-6 py-2.5 rounded-xl bg-white/70 text-slate-600 font-semibold border border-slate-200/80">Loading...</button>
+                      ) : isFriend ? (
+                        <button onClick={handleRemove} className="px-6 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors">Remove Friend</button>
+                      ) : pendingSent ? (
+                        <button onClick={handleRemove} className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-semibold border border-slate-200/80 hover:bg-slate-200/70 transition-colors">Cancel Request</button>
+                      ) : incomingRequest ? (
+                        <>
+                          <button onClick={handleAccept} className="px-6 py-2.5 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors">Accept Request</button>
+                          <button onClick={handleRemove} className="px-6 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors">Decline</button>
+                        </>
+                      ) : (
+                        <button onClick={handleSendRequest} disabled={sendingRequest} className="px-6 py-2.5 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">{sendingRequest ? "Sending..." : "Add Friend"}</button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-full sm:w-[32rem] mt-4 sm:mt-0 sm:ml-6">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 p-4">
+                    {(() => {
+                      const favsReceived = createdQuizzes.reduce((sum, q) => {
+                        const v = q.favourited_count ?? (Array.isArray(q.favourites) ? q.favourites.length : (q.favouritesCount ?? 0));
+                        return sum + (v || 0);
+                      }, 0);
+                      const attemptsOnTheirQuizzes = createdQuizzes.reduce((sum, q) => {
+                        const v = Array.isArray(q.attempts) ? q.attempts.length : (q.attemptsCount ?? 0);
+                        return sum + (v || 0);
+                      }, 0);
+                      const myTotalAttempts = takenQuizzes.length;
+                      const myAvgScore = averageScore;
+                      const quizzesTakenCount = takenQuizzes.length;
+                      const quizzesCreatedCount = createdQuizzes.length;
+                      // Column-major order: first column top->bottom, then second column
+                      const statsList = [
+                        { label: "Stars on my quizzes", value: favsReceived },
+                        { label: "My attempts", value: myTotalAttempts },
+                        { label: "Attempts on my quizzes", value: attemptsOnTheirQuizzes },
+                        { label: "Quizzes taken", value: quizzesTakenCount },
+                        { label: "Quizzes created", value: quizzesCreatedCount },
+                        { label: "My average score", value: `${myAvgScore}%` }
+                      ];
+                      const total = statsList.length;
+                      return statsList.map((s, idx) => (
+                        <div
+                          key={s.label + s.value}
+                          className={`flex items-end justify-between py-1 px-1 text-sm ${idx < total - 2 ? 'border-b border-slate-200/60' : ''}`}
                         >
-                          Accept Request
-                        </button>
-                        <button
-                          onClick={handleRemove}
-                          className="px-6 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors"
-                        >
-                          Decline
-                        </button>
-                      </>
-                    )}
-                    {!isOwnProfile && !friendsLoading && !isFriend && !pendingSent && !incomingRequest && (
-                      <button
-                        onClick={handleSendRequest}
-                        disabled={sendingRequest}
-                        className="px-6 py-2.5 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {sendingRequest ? "Sending..." : "Add Friend"}
-                      </button>
-                    )}
+                          <div className="text-sm text-slate-500 flex-1 pr-1 text-left">{s.label}</div>
+                          <div className="text-sm font-semibold text-slate-800 w-14 text-right">{s.value}</div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Quizzes created</h2>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/80 h-[38px]">
+                  {['newest', 'oldest', 'stars'].map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => setSortBy(option)}
+                      className={`w-20 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none ${sortBy === option
+                        ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50'
+                        : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px]">
+                  <span className="text-slate-700 font-semibold text-xs whitespace-nowrap leading-none">
+                    {createdQuizzes.length} Quiz{createdQuizzes.length !== 1 ? 'zes' : ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {createdQuizzes.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">No Quizzes Created</h3>
+                <p className="text-slate-600">
+                  {isOwnProfile ? "Create your first quiz to see it here" : `${profile.user_data.username} hasn't created any quizzes yet`}
+                </p>
+                {isOwnProfile && !isAccountLocked && (
+                  <div className="mt-6">
+                    <Link
+                      to="/quizzes/create"
+                      state={{ returnTo: location.pathname }}
+                      className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+                    >
+                      Create a quiz
+                    </Link>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-        </div>
-        {isAccountLocked && (
-          <div className="mb-6 sm:mb-8 bg-amber-100/70 border border-amber-200/80 rounded-3xl p-6 sm:p-8 backdrop-blur-lg shadow-sm">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-amber-800 mb-2">
-                  Account scheduled for deletion
-                </h2>
-                <p className="text-amber-700 mb-2">
-                  Deletion in {remainingLabel}. {deletionModeLabel}
-                </p>
-                {deletionInfo?.scheduled_for && (
-                  <p className="text-amber-700/80 text-sm">
-                    Scheduled for {new Date(deletionInfo.scheduled_for).toLocaleString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
-                  </p>
-                )}
-                {deletionActionError && (
-                  <p className="text-rose-700 mt-3">{deletionActionError}</p>
-                )}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  type="button"
-                  onClick={handleCancelDeletion}
-                  disabled={deletionActionLoading}
-                  className="px-5 py-2.5 rounded-xl bg-white/80 text-slate-700 font-semibold border border-amber-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {deletionActionLoading ? "Working..." : "Cancel Deletion"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteNow}
-                  disabled={deletionActionLoading}
-                  className="px-5 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Delete Now
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white/70 backdrop-blur-lg rounded-2xl p-6 border border-slate-200/80 text-center shadow-sm">
-            <div className="text-4xl font-semibold text-slate-800 mb-2">
-              {takenQuizzes.length}
-            </div>
-            <div className="text-slate-600 text-sm">Quizzes Taken</div>
-          </div>
-          <div className="bg-white/70 backdrop-blur-lg rounded-2xl p-6 border border-slate-200/80 text-center shadow-sm">
-            <div className="text-4xl font-semibold text-slate-800 mb-2">
-              {averageScore}%
-            </div>
-            <div className="text-slate-600 text-sm">Average Score</div>
-          </div>
-        </div>
-        {isOwnProfile && (
-          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-6">Favourites</h2>
-            {myFavourites.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-20 h-20 bg-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <svg className="w-10 h-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-slate-800 mb-2">No Favourites Yet</h3>
-                <p className="text-slate-600">Star a quiz to save it here</p>
-              </div>
             ) : (
-              <div className="space-y-4">
-                {myFavourites.map((quiz) => {
-                  const quizId = typeof quiz === "string" ? quiz : quiz._id;
-                  const quizTitle = typeof quiz === "string" ? "Quiz" : quiz.title;
-                  const quizCategory = typeof quiz === "string" ? null : quiz.category;
-                  const creatorName = typeof quiz === "string" ? null : quiz.created_by?.username;
-                  const creatorAuthId = typeof quiz === "string" ? null : quiz.created_by?.authId;
-                  const creatorIsDeleted = creatorAuthId === "deleted-user"
-                    || creatorName === "__deleted__"
-                    || creatorName === "Deleted user";
-                  const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
-                  const difficulty = difficultyChips[difficultyKey];
-                  const questionCount = typeof quiz === "string" ? 0 : quiz?.questions?.length || 0;
-                  const passThreshold = typeof quiz === "string" ? null : quiz?.req_to_pass;
-                  const passPercent = questionCount > 0 && typeof passThreshold === "number"
-                    ? Math.round((passThreshold / questionCount) * 100)
-                    : null;
-                  const allowsMultiple = typeof quiz === "string" ? null : quiz?.allow_multiple_correct;
-                  const isQuizLocked = typeof quiz === "string" ? null : quiz?.lock_answers;
-                  const cardContent = (
-                    <>
-                      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other}`}></div>
-                      <div className="p-5 sm:p-6">
-                        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
-                            <h3 className="text-lg sm:text-xl font-semibold text-slate-800 truncate">{quizTitle}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...createdQuizzes]
+                  .sort((a, b) => {
+                    if (sortBy === "stars") {
+                      const getCount = (q) =>
+                        q.favourited_count ??
+                        (Array.isArray(q.favourites) ? q.favourites.length : q.favouritesCount ?? 0);
+                      return getCount(b) - getCount(a);
+                    }
+                    if (sortBy === "newest") return new Date(b.created_at) - new Date(a.created_at);
+                    if (sortBy === "oldest") return new Date(a.created_at) - new Date(b.created_at);
+                    return 0;
+                  })
+                  .map((quiz) => {
+                    const totalAttempts = quiz.attempts?.length || 0;
+                    const passes = quiz.attempts?.filter(attempt => {
+                      const percentage = (attempt.correct / quiz.questions.length) * 100;
+                      return percentage >= 60;
+                    }).length || 0;
+                    const passRate = totalAttempts > 0 ? Math.round((passes / totalAttempts) * 100) : 0;
+                    const avgScore = totalAttempts > 0
+                      ? Math.round((quiz.attempts.reduce((sum, a) => sum + a.correct, 0) / totalAttempts / quiz.questions.length) * 100)
+                      : 0;
+                    const titleLength = quiz.title?.length || 0;
+                    const titleSizeClass = titleLength > 60
+                      ? "text-sm"
+                      : titleLength > 36
+                        ? "text-base"
+                        : "text-lg";
+
+                    const totalAnswers = quiz.questions?.reduce((sum, q) => sum + (q.answers?.length || 0), 0) || 0;
+                    const answersPerQuestion = quiz.questions?.length > 0
+                      ? (totalAnswers / quiz.questions.length).toFixed(1).replace(/\.0$/, '')
+                      : 0;
+                    return (
+                      <div
+                        key={quiz._id}
+                        onClick={() => {
+                          if (isAccountLocked) return;
+                          navigate(`/quiz/${quiz._id}`, { state: { returnTo } });
+                        }}
+                        className={`group relative bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transform duration-300 ${isAccountLocked
+                          ? "cursor-not-allowed opacity-60"
+                          : "hover:border-slate-300 hover:bg-white cursor-pointer transition-colors"
+                          }`}
+                      >
+                        <div className={`flex items-center justify-between px-4 py-2 ${categoryStripeColors[quiz.category] || categoryStripeColors.other}`}>
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              {categoryIcons[quiz.category] || categoryIcons.other}
+                            </svg>
+                            <span className="text-xs font-semibold capitalize">{quiz.category}</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              if (isAccountLocked) return;
-                              handleRemoveFavourite(quizId);
-                            }}
-                            disabled={isAccountLocked}
-                            className={`px-3 py-1.5 rounded-xl bg-rose-500 text-white text-xs font-semibold transition-colors ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-600"}`}
-                          >
-                            Remove
-                          </button>
+                          <span className="text-xs font-semibold">
+                            {quiz.questions.length} Question{quiz.questions.length !== 1 ? 's' : ''}
+                          </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <div className="px-6 pt-4 pb-3">
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                              <span
+                                aria-hidden="true"
+                                className="h-4 w-4 text-slate-700"
+                                style={{
+                                  backgroundColor: "currentColor",
+                                  maskImage: `url(/${quiz.difficulty || "medium"}.svg)`,
+                                  WebkitMaskImage: `url(/${quiz.difficulty || "medium"}.svg)`,
+                                  maskRepeat: "no-repeat",
+                                  WebkitMaskRepeat: "no-repeat",
+                                  maskPosition: "center",
+                                  WebkitMaskPosition: "center",
+                                  maskSize: "contain",
+                                  WebkitMaskSize: "contain"
+                                }}
+                              ></span>
+                              <span className="capitalize">{quiz.difficulty || "medium"}</span>
+                            </span>
+                            {isOwnProfile && !isAccountLocked && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const isFavourited = myFavourites.some((item) => {
+                                      const itemId = typeof item === "string" ? item : item._id;
+                                      return itemId === quiz._id;
+                                    });
+                                    handleToggleFavourite(quiz, isFavourited);
+                                  }}
+                                  className="h-10 px-3 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-slate-500 transition-colors hover:text-amber-500 hover:bg-white flex items-center gap-2"
+                                  aria-label="Toggle favourite"
+                                  title="Toggle favourite"
+                                >
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    className="h-4 w-4"
+                                    fill={myFavourites.some((item) => {
+                                      const itemId = typeof item === "string" ? item : item._id;
+                                      return itemId === quiz._id;
+                                    }) ? "currentColor" : "none"}
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
+                                  </svg>
+                                  <span className="text-sm font-semibold">
+                                    {quiz.favourited_count ?? (Array.isArray(quiz.favourites) ? quiz.favourites.length : (quiz.favouritesCount ?? 0))}
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setQuizToDelete(quiz);
+                                    setShowDeleteConfirm(true);
+                                  }}
+                                  className="h-10 w-10 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-rose-500 transition-colors hover:bg-rose-100/70"
+                                  aria-label="Delete quiz"
+                                  title="Delete quiz"
+                                >
+                                  <svg className="w-4 h-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <div className="mb-3 h-16 w-full">
+                            <h3
+                              className={`${titleSizeClass} font-semibold text-slate-800 ${isAccountLocked ? "" : "group-hover:text-slate-900"} transition-colors line-clamp-2 text-center h-full w-full flex items-center justify-center`}
+                            >
+                              {quiz.title}
+                            </h3>
+                          </div>
+                          <div className="mb-3 text-xs text-slate-600 divide-y divide-slate-200/80">
+                            <div className="flex items-center justify-between py-2">
+                              <span>Answers per question</span>
+                              <span className="font-semibold text-slate-800">{answersPerQuestion}</span>
+                            </div>
+                            <div className="flex items-center justify-between py-2">
+                              <span>Attempts</span>
+                              <span className="font-semibold text-slate-800">{totalAttempts}</span>
+                            </div>
+                            <div className="flex items-center justify-between py-2">
+                              <span>Pass Rate</span>
+                              <span className="font-semibold text-slate-800">{passRate}%</span>
+                            </div>
+                            <div className="flex items-center justify-between py-2">
+                              <span>Avg Score</span>
+                              <span className="font-semibold text-slate-800">{avgScore}%</span>
+                            </div>
+                          </div>
+                          <div className={`grid gap-2 ${isOwnProfile ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                            {isOwnProfile && !isAccountLocked && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/quiz/${quiz._id}/edit`, {
+                                    state: { from: "profile", returnTo: `/users/${routeUsername}` }
+                                  });
+                                }}
+                                className="w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-semibold hover:bg-white transition-colors flex items-center justify-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487a2 2 0 112.828 2.828L8.828 18.175a4 4 0 01-1.414.944l-3.536 1.178 1.178-3.536a4 4 0 01.944-1.414L16.862 4.487z" />
+                                </svg>
+                                Edit Quiz
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isAccountLocked) return;
+                                handleViewStats(quiz._id);
+                              }}
+                              disabled={isAccountLocked}
+                              className={`w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-white"
+                                }`}
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              </svg>
+                              View Stats
+                            </button>
+                          </div>
+                          <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-500">
+                            <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>
+                              Created {new Date(quiz.created_at).toLocaleDateString("en-GB", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric"
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+
+          {isAccountLocked && (
+            <div className="mb-6 sm:mb-8 bg-amber-100/70 border border-amber-200/80 rounded-3xl p-6 sm:p-8 backdrop-blur-lg shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-amber-800 mb-2">
+                    Account scheduled for deletion
+                  </h2>
+                  <p className="text-amber-700 mb-2">
+                    Deletion in {remainingLabel}. {deletionModeLabel}
+                  </p>
+                  {deletionInfo?.scheduled_for && (
+                    <p className="text-amber-700/80 text-sm">
+                      Scheduled for {new Date(deletionInfo.scheduled_for).toLocaleString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </p>
+                  )}
+                  {deletionActionError && (
+                    <p className="text-rose-700 mt-3">{deletionActionError}</p>
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCancelDeletion}
+                    disabled={deletionActionLoading}
+                    className="px-5 py-2.5 rounded-xl bg-white/80 text-slate-700 font-semibold border border-amber-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deletionActionLoading ? "Working..." : "Cancel Deletion"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteNow}
+                    disabled={deletionActionLoading}
+                    className="px-5 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Delete Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {isOwnProfile && (
+            <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-5 sm:p-6 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">Favourites</h2>
+                <span className="rounded-full bg-slate-100/80 border border-slate-200/80 px-3 py-1 text-xs font-semibold text-slate-600">
+                  {myFavourites.length} total
+                </span>
+              </div>
+              {myFavourites.length === 0 ? (
+                <div className="text-center py-10">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2">No Favourites Yet</h3>
+                  <p className="text-slate-600 text-sm">Star a quiz to save it here</p>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {myFavourites.map((quiz) => {
+                    const quizId = typeof quiz === "string" ? quiz : quiz._id;
+                    const quizTitle = typeof quiz === "string" ? "Quiz" : quiz.title;
+                    const quizCategory = typeof quiz === "string" ? null : quiz.category;
+                    const creatorName = typeof quiz === "string" ? null : quiz.created_by?.user_data?.username;
+                    const creatorAuthId = typeof quiz === "string" ? null : quiz.created_by?.authId;
+                    const creatorIsDeleted = creatorAuthId === "deleted-user"
+                      || creatorName === "__deleted__"
+                      || creatorName === "Deleted user";
+                    const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
+                    const difficulty = difficultyChips[difficultyKey];
+                    const questionCount = typeof quiz === "string" ? 0 : quiz?.questions?.length || 0;
+                    const passThreshold = typeof quiz === "string" ? null : quiz?.req_to_pass;
+                    const passPercent = questionCount > 0 && typeof passThreshold === "number"
+                      ? Math.round((passThreshold / questionCount) * 100)
+                      : null;
+                    const allowsMultiple = typeof quiz === "string" ? null : quiz?.allow_multiple_correct;
+                    const isQuizLocked = typeof quiz === "string" ? null : quiz?.lock_answers;
+                    const cardContent = (
+                      <>
+                        <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other}`}></div>
+                        <div className="p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+                              <h3 className="text-base font-semibold text-slate-800 truncate">{quizTitle}</h3>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                if (isAccountLocked) return;
+                                handleRemoveFavourite(quizId);
+                              }}
+                              disabled={isAccountLocked}
+                              className={`px-2.5 py-1 rounded-lg bg-rose-500 text-white text-xs font-semibold transition-colors ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-600"}`}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
                             <div className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other} px-3 py-1.5 text-xs font-semibold text-white`}>
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 {categoryIcons[quizCategory] || categoryIcons.other}
@@ -778,425 +1056,213 @@ export default function ProfilePage() {
                                 </button>
                               )
                             )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                          <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
-                            <span className="font-semibold text-slate-800">{questionCount}</span>
-                            <span className="text-slate-500">Questions</span>
-                          </span>
-                          <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
-                            <span className="font-semibold text-slate-800">
-                              {passThreshold ?? 0}/{questionCount || 0}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
+                              <span className="font-semibold text-slate-800">{questionCount}</span>
+                              <span className="text-slate-500">Questions</span>
                             </span>
-                            <span className="text-slate-500">
-                              Pass {passPercent !== null ? `${passPercent}%` : "--"}
+                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
+                              <span className="font-semibold text-slate-800">
+                                {passThreshold ?? 0}/{questionCount || 0}
+                              </span>
+                              <span className="text-slate-500">
+                                Pass {passPercent !== null ? `${passPercent}%` : "--"}
+                              </span>
                             </span>
-                          </span>
-                          <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
-                            <span className="font-semibold text-slate-800">{allowsMultiple ? "Multi" : "Single"}</span>
-                            <span className="text-slate-600">Correct</span>
-                          </span>
-                          <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
-                            <span className="font-semibold text-slate-800">{isQuizLocked ? "Locked" : "Editable"}</span>
-                            <span className="text-slate-600">Answers</span>
-                          </span>
+                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
+                              <span className="font-semibold text-slate-800">{allowsMultiple ? "Multi" : "Single"}</span>
+                              <span className="text-slate-600">Correct</span>
+                            </span>
+                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
+                              <span className="font-semibold text-slate-800">{isQuizLocked ? "Locked" : "Editable"}</span>
+                              <span className="text-slate-600">Answers</span>
+                            </span>
+                          </div>
                         </div>
+                      </>
+                    );
+
+                    const cardClass = `group relative block bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 transition-colors hover:bg-white"
+                      }`;
+
+                    return isAccountLocked ? (
+                      <div key={quizId} className={cardClass}>
+                        {cardContent}
                       </div>
-                    </>
-                  );
-
-                  const cardClass = `group relative block bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm ${
-                    isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 transition-colors hover:bg-white"
-                  }`;
-
-                  return isAccountLocked ? (
-                    <div key={quizId} className={cardClass}>
-                      {cardContent}
+                    ) : (
+                      <Link
+                        key={quizId}
+                        to={`/quiz/${quizId}`}
+                        state={{ returnTo }}
+                        className={cardClass}
+                      >
+                        {cardContent}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-6">Quizzes Taken</h2>
+              {takenQuizzes.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-slate-800 mb-2">No Quizzes Yet</h3>
+                  <p className="text-slate-600">
+                    {isOwnProfile ? "Start taking quizzes to see your progress here" : `${profile.user_data.username} hasn't taken any quizzes yet`}
+                  </p>
+                  {isOwnProfile && !isAccountLocked && (
+                    <div className="mt-6">
+                      <Link
+                        to="/"
+                        className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+                      >
+                        Take a quiz
+                      </Link>
                     </div>
-                  ) : (
-                    <Link
-                      key={quizId}
-                      to={`/quiz/${quizId}`}
-                      state={{ returnTo }}
-                      className={cardClass}
-                    >
-                      {cardContent}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {takenQuizzes.map((quiz) => {
+                    const percentage = Math.round((quiz.correct / quiz.totalQuestions) * 100);
+                    const gradientClass = percentage >= 80 ? "from-green-500 to-emerald-600" :
+                      percentage >= 60 ? "from-blue-500 to-cyan-600" :
+                        percentage >= 40 ? "from-amber-500 to-orange-600" :
+                          "from-red-500 to-pink-600";
+
+                    const takenClass = `group block bg-white/80 backdrop-blur rounded-2xl p-5 border border-slate-200/80 shadow-sm ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 transition-colors hover:bg-white"
+                      }`;
+                    const takenContent = (
+                      <>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-slate-800 mb-2">{quiz.title}</h3>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                              <div className="flex items-center gap-1">
+                                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>
+                                  {new Date(quiz.attempted_at).toLocaleDateString("en-GB", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric"
+                                  })}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <span>{quiz.correct}/{quiz.totalQuestions} correct</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <div className={`text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r ${gradientClass}`}>
+                                {percentage}%
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-4 h-2 bg-slate-200/80 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full bg-gradient-to-r ${gradientClass} transition-all duration-500`}
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                      </>
+                    );
+
+                    return isAccountLocked ? (
+                      <div key={quiz._id} className={takenClass}>
+                        {takenContent}
+                      </div>
+                    ) : (
+                      <Link
+                        key={quiz._id}
+                        to={`/quiz/${quiz._id}`}
+                        state={{ returnTo }}
+                        className={takenClass}
+                      >
+                        {takenContent}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
+        </main>
+        {selectedQuizForStats && (
+          <QuizStats
+            quiz={selectedQuizForStats}
+            onClose={() => setSelectedQuizForStats(null)}
+          />
         )}
-        <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
-          <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-6">Quizzes Taken</h2>
-          {takenQuizzes.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">No Quizzes Yet</h3>
-              <p className="text-slate-600">
-                {isOwnProfile ? "Start taking quizzes to see your progress here" : `${profile.username} hasn't taken any quizzes yet`}
-              </p>
-              {isOwnProfile && !isAccountLocked && (
-                <div className="mt-6">
-                  <Link
-                    to="/"
-                    className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
-                  >
-                    Take a quiz
-                  </Link>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {takenQuizzes.map((quiz) => {
-                const percentage = Math.round((quiz.correct / quiz.totalQuestions) * 100);
-                const gradientClass = percentage >= 80 ? "from-green-500 to-emerald-600" :
-                                     percentage >= 60 ? "from-blue-500 to-cyan-600" :
-                                     percentage >= 40 ? "from-amber-500 to-orange-600" :
-                                     "from-red-500 to-pink-600";
-
-                const takenClass = `group block bg-white/80 backdrop-blur rounded-2xl p-5 border border-slate-200/80 shadow-sm ${
-                  isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 transition-colors hover:bg-white"
-                }`;
-                const takenContent = (
-                  <>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-slate-800 mb-2">{quiz.title}</h3>
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                          <div className="flex items-center gap-1">
-                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>
-                              {new Date(quiz.attempted_at).toLocaleDateString("en-GB", {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric"
-                              })}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            <span>{quiz.correct}/{quiz.totalQuestions} correct</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-center">
-                          <div className={`text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r ${gradientClass}`}>
-                            {percentage}%
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4 h-2 bg-slate-200/80 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full bg-gradient-to-r ${gradientClass} transition-all duration-500`}
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
-                  </>
-                );
-
-                return isAccountLocked ? (
-                  <div key={quiz._id} className={takenClass}>
-                    {takenContent}
+        {
+          showDeleteConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm">
+              <div className="bg-white/90 rounded-2xl border border-slate-200/80 p-6 max-w-md w-full shadow-2xl">
+                <div className="flex items-center gap-3 mb-4 text-left">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100">
+                    <svg
+                      className="h-6 w-6 text-rose-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
                   </div>
-                ) : (
-                  <Link
-                    key={quiz._id}
-                    to={`/quiz/${quiz._id}`}
-                    state={{ returnTo }}
-                    className={takenClass}
-                  >
-                    {takenContent}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-        <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Quizzes Created</h2>
-            <div className="px-4 py-2 bg-slate-100/80 rounded-full border border-slate-200/80">
-              <span className="text-slate-700 font-semibold">{createdQuizzes.length} Quiz{createdQuizzes.length !== 1 ? 'zes' : ''}</span>
-            </div>
-          </div>
-          {createdQuizzes.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">No Quizzes Created</h3>
-              <p className="text-slate-600">
-                {isOwnProfile ? "Create your first quiz to see it here" : `${profile.username} hasn't created any quizzes yet`}
-              </p>
-              {isOwnProfile && !isAccountLocked && (
-                <div className="mt-6">
-                  <Link
-                    to="/quizzes/create"
-                    state={{ returnTo: location.pathname }}
-                    className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
-                  >
-                    Create a quiz
-                  </Link>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800">Delete Quiz</h3>
+                    <p className="text-sm text-slate-500">This action cannot be undone</p>
+                  </div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {createdQuizzes.map((quiz) => {
-                const totalAttempts = quiz.attempts?.length || 0;
-                const passes = quiz.attempts?.filter(attempt => {
-                  const percentage = (attempt.correct / quiz.questions.length) * 100;
-                  return percentage >= 60;
-                }).length || 0;
-                const passRate = totalAttempts > 0 ? Math.round((passes / totalAttempts) * 100) : 0;
-                const avgScore = totalAttempts > 0
-                  ? Math.round((quiz.attempts.reduce((sum, a) => sum + a.correct, 0) / totalAttempts / quiz.questions.length) * 100)
-                  : 0;
-                const titleLength = quiz.title?.length || 0;
-                const titleSizeClass = titleLength > 60
-                  ? "text-sm"
-                  : titleLength > 36
-                  ? "text-base"
-                  : "text-lg";
-                return (
-                  <div
-                    key={quiz._id}
+                <p className="text-slate-600 mb-6">
+                  Are you sure you want to delete &apos;{quizToDelete?.title}&apos;? All quiz data,
+                  attempts, and leaderboard entries will be permanently removed.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors"
+                    type="button"
+                    onClick={handleDeleteQuiz}
+                  >
+                    Delete Quiz
+                  </button>
+                  <button
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-white transition-colors"
+                    type="button"
                     onClick={() => {
-                      if (isAccountLocked) return;
-                      navigate(`/quiz/${quiz._id}`, { state: { returnTo } });
+                      setShowDeleteConfirm(false);
+                      setQuizToDelete(null);
                     }}
-                    className={`group relative bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transform duration-300 ${
-                      isAccountLocked
-                        ? "cursor-not-allowed opacity-60"
-                        : "hover:border-slate-300 hover:bg-white cursor-pointer transition-colors"
-                    }`}
                   >
-                    <div className={`flex items-center gap-2 px-4 py-2 ${categoryStripeColors[quiz.category] || categoryStripeColors.other}`}>
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        {categoryIcons[quiz.category] || categoryIcons.other}
-                      </svg>
-                      <span className="text-xs font-semibold capitalize">{quiz.category}</span>
-                    </div>
-                    <div className="px-6 pt-4 pb-3">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                          <span
-                            aria-hidden="true"
-                            className="h-4 w-4 text-slate-700"
-                            style={{
-                              backgroundColor: "currentColor",
-                              maskImage: `url(/${quiz.difficulty || "medium"}.svg)`,
-                              WebkitMaskImage: `url(/${quiz.difficulty || "medium"}.svg)`,
-                              maskRepeat: "no-repeat",
-                              WebkitMaskRepeat: "no-repeat",
-                              maskPosition: "center",
-                              WebkitMaskPosition: "center",
-                              maskSize: "contain",
-                              WebkitMaskSize: "contain"
-                            }}
-                          ></span>
-                          <span className="capitalize">{quiz.difficulty || "medium"}</span>
-                        </span>
-                        {isOwnProfile && !isAccountLocked && (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const isFavourited = myFavourites.some((item) => {
-                                  const itemId = typeof item === "string" ? item : item._id;
-                                  return itemId === quiz._id;
-                                });
-                                handleToggleFavourite(quiz._id, isFavourited);
-                              }}
-                              className="h-10 w-10 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-slate-500 transition-colors hover:text-amber-500 hover:bg-white"
-                              aria-label="Toggle favourite"
-                              title="Toggle favourite"
-                            >
-                              <svg
-                                viewBox="0 0 24 24"
-                                className="h-4 w-4 mx-auto"
-                                fill={myFavourites.some((item) => {
-                                  const itemId = typeof item === "string" ? item : item._id;
-                                  return itemId === quiz._id;
-                                }) ? "currentColor" : "none"}
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
-                              </svg>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setQuizToDelete(quiz);
-                                setShowDeleteConfirm(true);
-                              }}
-                              className="h-10 w-10 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-rose-500 transition-colors hover:bg-rose-100/70"
-                              aria-label="Delete quiz"
-                              title="Delete quiz"
-                            >
-                              <svg className="w-4 h-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div className="mb-3 h-16 w-full">
-                        <h3
-                          className={`${titleSizeClass} font-semibold text-slate-800 ${isAccountLocked ? "" : "group-hover:text-slate-900"} transition-colors line-clamp-2 text-center h-full w-full flex items-center justify-center`}
-                        >
-                          {quiz.title}
-                        </h3>
-                      </div>
-                      <div className="mb-3 text-xs text-slate-600 divide-y divide-slate-200/80">
-                        <div className="flex items-center justify-between py-2">
-                          <span>Questions</span>
-                          <span className="font-semibold text-slate-800">{quiz.questions.length}</span>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <span>Attempts</span>
-                          <span className="font-semibold text-slate-800">{totalAttempts}</span>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <span>Pass Rate</span>
-                          <span className="font-semibold text-slate-800">{passRate}%</span>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <span>Avg Score</span>
-                          <span className="font-semibold text-slate-800">{avgScore}%</span>
-                        </div>
-                      </div>
-                      <div className={`grid gap-2 ${isOwnProfile ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-                        {isOwnProfile && !isAccountLocked && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/quiz/${quiz._id}/edit`, {
-                                state: { from: "profile", returnTo: `/users/${routeUsername}` }
-                              });
-                            }}
-                            className="w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-semibold hover:bg-white transition-colors flex items-center justify-center gap-2"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487a2 2 0 112.828 2.828L8.828 18.175a4 4 0 01-1.414.944l-3.536 1.178 1.178-3.536a4 4 0 01.944-1.414L16.862 4.487z" />
-                            </svg>
-                            Edit Quiz
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (isAccountLocked) return;
-                            handleViewStats(quiz._id);
-                          }}
-                          disabled={isAccountLocked}
-                          className={`w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
-                            isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-white"
-                          }`}
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                          </svg>
-                          View Stats
-                        </button>
-                      </div>
-                      <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-500">
-                        <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>
-                          Created {new Date(quiz.created_at).toLocaleDateString("en-GB", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric"
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </main>
-      {selectedQuizForStats && (
-        <QuizStats
-          quiz={selectedQuizForStats}
-          onClose={() => setSelectedQuizForStats(null)}
-        />
-      )}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm">
-          <div className="bg-white/90 rounded-2xl border border-slate-200/80 p-6 max-w-md w-full shadow-2xl">
-            <div className="flex items-center gap-3 mb-4 text-left">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100">
-                <svg
-                  className="h-6 w-6 text-rose-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800">Delete Quiz</h3>
-                <p className="text-sm text-slate-500">This action cannot be undone</p>
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
-            <p className="text-slate-600 mb-6">
-              Are you sure you want to delete &apos;{quizToDelete?.title}&apos;? All quiz data,
-              attempts, and leaderboard entries will be permanently removed.
-            </p>
-            <div className="flex gap-3">
-              <button
-                className="flex-1 px-4 py-2.5 rounded-lg bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors"
-                type="button"
-                onClick={handleDeleteQuiz}
-              >
-                Delete Quiz
-              </button>
-              <button
-                className="flex-1 px-4 py-2.5 rounded-lg bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-white transition-colors"
-                type="button"
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setQuizToDelete(null);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      </div>
+          )
+        }
+      </div >
     </>
   );
 }

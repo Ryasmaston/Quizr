@@ -5,7 +5,7 @@ import { Outlet } from "react-router-dom";
 import { useAuth } from "./Auth";
 import { apiFetch } from "../services/api";
 
-function Layout () {
+function Layout() {
     const location = useLocation();
     const navigate = useNavigate();
     const user = useAuth();
@@ -29,7 +29,7 @@ function Layout () {
                 const body = await res.json();
                 if (!mounted) return;
                 setAccountStatus(body.user?.status || "active");
-                setAccountUsername(body.user?.username || null);
+                setAccountUsername(body.user?.user_data?.username || null);
             } catch (error) {
                 if (!mounted) return;
                 setAccountStatus(null);
@@ -58,9 +58,9 @@ function Layout () {
 
     return (
         <>
-        {!hideNavbar && <NavBar />}
-        <main><Outlet /></main>
+            {!hideNavbar && <NavBar />}
+            <main><Outlet /></main>
         </>
-);
+    );
 }
 export default Layout;

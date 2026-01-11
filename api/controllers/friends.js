@@ -4,7 +4,7 @@ const User = require("../models/user");
 async function getMongoUserId(req) {
   const firebaseUid = req.user.uid;
   const user = await User.findOne({ authId: firebaseUid });
-  if(!user) throw new Error("User not found in database")
+  if (!user) throw new Error("User not found in database")
   return user._id
 }
 
@@ -85,7 +85,7 @@ async function listFriends(req, res) {
     const friends = await Friend.find({
       accepted: true,
       $or: [{ user1: userId }, { user2: userId }],
-    }).populate("user1 user2", "username profile_pic created_at");
+    }).populate("user1 user2", "user_data.username user_data.profile_pic user_data.created_at");
     res.status(200).json({ friends });
   } catch (err) {
     console.error(err);
@@ -100,7 +100,7 @@ async function pendingRequests(req, res) {
     const requests = await Friend.find({
       accepted: false,
       $or: [{ user1: userId }, { user2: userId }],
-    }).populate("user1 user2", "username profile_pic created_at");
+    }).populate("user1 user2", "user_data.username user_data.profile_pic user_data.created_at");
     res.status(200).json({ requests });
   } catch (err) {
     console.error(err);

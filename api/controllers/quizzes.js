@@ -58,22 +58,90 @@ function shouldResetAttempts(originalQuiz, updatedData) {
 }
 
 async function getAllQuizzes(req, res) {
-  try{
+  try {
     const { created_by } = req.query;
-    let filter = {};
+    let matchStage = {};
     if (created_by) {
-      filter.created_by = created_by;
+      // Convert string to ObjectId for aggregation
+      const mongoose = require('mongoose');
+      matchStage.created_by = new mongoose.Types.ObjectId(created_by);
     }
-    const quizzes = await Quiz.find(filter).populate("created_by", "username authId");
+
+    // Use aggregation to compute favorite counts from User collection
+    const quizzes = await Quiz.aggregate([
+      ...(Object.keys(matchStage).length > 0 ? [{ $match: matchStage }] : []),
+      {
+        $lookup: {
+          from: "users",
+          let: { quizId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$$quizId", { $ifNull: ["$preferences.favourites", []] }]
+                }
+              }
+            },
+            { $count: "count" }
+          ],
+          as: "favoriteInfo"
+        }
+      },
+      {
+        $addFields: {
+          favourited_count: {
+            $ifNull: [{ $arrayElemAt: ["$favoriteInfo.count", 0] }, 0]
+          }
+        }
+      },
+      {
+        $project: {
+          favoriteInfo: 0
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "created_by",
+          foreignField: "_id",
+          as: "created_by"
+        }
+      },
+      {
+        $unwind: {
+          path: "$created_by",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          "created_by.user_data.username": 1,
+          "created_by.authId": 1,
+          "created_by._id": 1,
+          title: 1,
+          questions: 1,
+          category: 1,
+          difficulty: 1,
+          attempts: 1,
+          allow_multiple_correct: 1,
+          require_all_correct: 1,
+          lock_answers: 1,
+          req_to_pass: 1,
+          favourited_count: 1,
+          created_at: 1
+        }
+      }
+    ]);
+
     res.status(200).json({ quizzes: quizzes })
   } catch (error) {
-    console.error("Error in getAllQuizzes:", error);  // Add this to see the error
-    res.status(500).json({ message: "Error fetching quizzes", error: error.message})
+    console.error("Error in getAllQuizzes:", error);
+    res.status(500).json({ message: "Error fetching quizzes", error: error.message })
   }
 }
 
 async function createQuiz(req, res) {
-  try{
+  try {
     const user = await User.findOne({ authId: req.user.uid });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -82,7 +150,7 @@ async function createQuiz(req, res) {
     await quiz.save();
     res.status(200).json({ message: "Quiz created", quiz: quiz })
   } catch (error) {
-    res.status(500).json({ message: "Error creating quiz", error: error.message})
+    res.status(500).json({ message: "Error creating quiz", error: error.message })
   }
 }
 
@@ -131,16 +199,16 @@ async function updateQuiz(req, res) {
 }
 
 async function getQuizById(req, res) {
-  try{
+  try {
     const quiz = await Quiz.findById(req.params.id)
-      .populate("created_by", "username authId")
-      .populate("attempts.user_id", "username");
-    if(!quiz){
+      .populate("created_by", "user_data.username authId")
+      .populate("attempts.user_id", "user_data.username");
+    if (!quiz) {
       return res.status(404).json({ message: "Quiz not found" });
     }
     res.status(200).json({ quiz: quiz })
   } catch (error) {
-    res.status(500).json({ message: "Error fetching quiz", error: error.message})
+    res.status(500).json({ message: "Error fetching quiz", error: error.message })
   }
 }
 
@@ -212,15 +280,30 @@ async function getLeaderboard(req, res) {
         }
       },
       {
+        $lookup: {
+          from: "quizzes",
+          let: { userId: "$user_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$created_by", "$$userId"] } } },
+            { $project: { attemptsCount: { $size: { $ifNull: ["$attempts", []] } } } },
+            { $group: { _id: null, attemptsOnTheirQuizzes: { $sum: "$attemptsCount" } } }
+          ],
+          as: "createdQuizzesAttempts"
+        }
+      },
+      {
         $project: {
           user_id: 1,
-          username: "$user.username",
+          "user_data.username": "$user.user_data.username",
           totalCorrect: 1,
           totalQuestions: 1,
           attemptsCount: 1,
           quizzesTaken: 1,
           quizzesCreated: {
             $ifNull: [{ $arrayElemAt: ["$createdQuizzes.count", 0] }, 0]
+          },
+          attemptsOnTheirQuizzes: {
+            $ifNull: [{ $arrayElemAt: ["$createdQuizzesAttempts.attemptsOnTheirQuizzes", 0] }, 0]
           },
           bestPercent: 1,
           avgPercent: 1
@@ -235,18 +318,18 @@ async function getLeaderboard(req, res) {
 }
 
 async function deleteQuiz(req, res) {
-  try{
+  try {
     const quiz = await Quiz.findByIdAndDelete(req.params.id);
-    if(!quiz) {
+    if (!quiz) {
       return res.status(200).json({ message: "Quiz not found" });
     }
     await User.updateMany(
-      { favourites: quiz._id },
-      { $pull: { favourites: quiz._id } }
+      { "preferences.favourites": quiz._id },
+      { $pull: { "preferences.favourites": quiz._id } }
     );
     res.status(200).json({ message: "Quiz deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting quiz", error: error.message})
+    res.status(500).json({ message: "Error deleting quiz", error: error.message })
   }
 }
 // In this method the frontend sends an array of answer selections per question.
@@ -274,8 +357,8 @@ async function submitQuiz(req, res) {
       const selectedIds = Array.isArray(selection)
         ? selection
         : selection
-        ? [selection]
-        : [];
+          ? [selection]
+          : [];
       const selectedSet = new Set(selectedIds.map((id) => id?.toString()).filter(Boolean));
 
       if (selectedSet.size === 0) return;

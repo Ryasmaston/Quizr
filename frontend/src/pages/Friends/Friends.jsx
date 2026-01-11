@@ -15,27 +15,27 @@ export default function FriendsPage() {
   const [friendsSort, setFriendsSort] = useState("newest");
   const [pendingSort, setPendingSort] = useState("newest");
 
-const loadData = useCallback(async () => {
-  try {
-    const profileRes = await apiFetch("/users/me");
-    const profileBody = await profileRes.json();
-    setProfile(profileBody.user)
-    const friendsData = await getFriends();
-    setFriends(friendsData.friends || []);
-    const pendingData = await getPendingRequests()
-    setPending(pendingData.requests || [])
-  } catch (err) {
-    console.error("Failed to load friend data", err)
-  } finally {
-    setLoading(false)
-  }
-}, [])
+  const loadData = useCallback(async () => {
+    try {
+      const profileRes = await apiFetch("/users/me");
+      const profileBody = await profileRes.json();
+      setProfile(profileBody.user)
+      const friendsData = await getFriends();
+      setFriends(friendsData.friends || []);
+      const pendingData = await getPendingRequests()
+      setPending(pendingData.requests || [])
+    } catch (err) {
+      console.error("Failed to load friend data", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
-const getOtherUser = (friendDoc) => {
-  return friendDoc.user1._id.toString() === profile._id.toString()
-    ? friendDoc.user2 : friendDoc.user1;
-}
-const isIncoming = (request) => profile && request.user2?._id === profile._id
+  const getOtherUser = (friendDoc) => {
+    return friendDoc.user1._id.toString() === profile._id.toString()
+      ? friendDoc.user2 : friendDoc.user1;
+  }
+  const isIncoming = (request) => profile && request.user2?._id === profile._id
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       // setUser(currentUser);
@@ -188,26 +188,26 @@ const isIncoming = (request) => profile && request.user2?._id === profile._id
                           >
                             <div className="flex items-center justify-between gap-3">
                               <Link
-                                to={`/users/${other.username}`}
+                                to={`/users/${other.user_data?.username}`}
                                 className="flex items-center gap-3 min-w-0 text-left hover:opacity-80 transition-opacity"
                               >
-                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg border border-white/40`}>
-                                  {other.profile_pic ? (
+                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg border border-white/40`}>
+                                  {other.user_data?.profile_pic ? (
                                     <img
-                                      src={other.profile_pic}
-                                      alt={other.username}
+                                      src={other.user_data.profile_pic}
+                                      alt={other.user_data.username}
                                       className="w-full h-full object-cover"
                                       onError={(e) => {
                                         e.target.style.display = "none";
-                                        e.target.parentElement.innerHTML = `<span class="text-white font-semibold text-lg">${other.username.charAt(0).toUpperCase()}</span>`;
+                                        e.target.parentElement.innerHTML = `<span class="text-white font-semibold text-lg">${other.user_data.username.charAt(0).toUpperCase()}</span>`;
                                       }}
                                     />
                                   ) : (
-                                    <span>{other.username.charAt(0).toUpperCase()}</span>
+                                    <span>{other.user_data?.username?.charAt(0).toUpperCase()}</span>
                                   )}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.username}</p>
+                                  <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.user_data?.username}</p>
                                   <p className="text-xs sm:text-sm text-slate-500">Sent you a request</p>
                                 </div>
                               </Link>
@@ -258,26 +258,26 @@ const isIncoming = (request) => profile && request.user2?._id === profile._id
                           >
                             <div className="flex items-center justify-between gap-3">
                               <Link
-                                to={`/users/${other.username}`}
+                                to={`/users/${other.user_data?.username}`}
                                 className="flex items-center gap-3 min-w-0 text-left hover:opacity-80 transition-opacity"
                               >
-                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg border border-white/40`}>
-                                  {other.profile_pic ? (
+                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg border border-white/40`}>
+                                  {other.user_data?.profile_pic ? (
                                     <img
-                                      src={other.profile_pic}
-                                      alt={other.username}
+                                      src={other.user_data.profile_pic}
+                                      alt={other.user_data.username}
                                       className="w-full h-full object-cover"
                                       onError={(e) => {
                                         e.target.style.display = "none";
-                                        e.target.parentElement.innerHTML = `<span class="text-white font-semibold text-lg">${other.username.charAt(0).toUpperCase()}</span>`;
+                                        e.target.parentElement.innerHTML = `<span class="text-white font-semibold text-lg">${other.user_data.username.charAt(0).toUpperCase()}</span>`;
                                       }}
                                     />
                                   ) : (
-                                    <span>{other.username.charAt(0).toUpperCase()}</span>
+                                    <span>{other.user_data?.username?.charAt(0).toUpperCase()}</span>
                                   )}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.username}</p>
+                                  <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.user_data?.username}</p>
                                   <p className="text-xs sm:text-sm text-slate-500">Request sent</p>
                                 </div>
                               </Link>
@@ -348,7 +348,7 @@ const isIncoming = (request) => profile && request.user2?._id === profile._id
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="min-w-0 text-left">
                               <p className="font-semibold text-slate-800 text-base sm:text-lg">
-                                Remove {other.username}?
+                                Remove {other.user_data?.username}?
                               </p>
                               <p className="text-xs sm:text-sm text-slate-500">
                                 This will remove them from your friends list.
@@ -381,26 +381,26 @@ const isIncoming = (request) => profile && request.user2?._id === profile._id
                               to={`/users/${other.username}`}
                               className="flex items-center gap-3 min-w-0 text-left hover:opacity-80 transition-opacity"
                             >
-                            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg border border-white/40`}>
-                                {other.profile_pic ? (
+                              <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg border border-white/40`}>
+                                {other.user_data?.profile_pic ? (
                                   <img
-                                    src={other.profile_pic}
-                                    alt={other.username}
+                                    src={other.user_data.profile_pic}
+                                    alt={other.user_data.username}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       e.target.style.display = "none";
-                                      e.target.parentElement.innerHTML = `<span class="text-white font-semibold text-lg">${other.username.charAt(0).toUpperCase()}</span>`;
+                                      e.target.parentElement.innerHTML = `<span class="text-white font-semibold text-lg">${other.user_data.username.charAt(0).toUpperCase()}</span>`;
                                     }}
                                   />
                                 ) : (
-                                  <span>{other.username.charAt(0).toUpperCase()}</span>
+                                  <span>{other.user_data?.username?.charAt(0).toUpperCase()}</span>
                                 )}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.username}</p>
-                                {other.created_at && (
+                                <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.user_data?.username}</p>
+                                {other.user_data?.created_at && (
                                   <p className="text-xs sm:text-sm text-slate-500">
-                                    Since {new Date(other.created_at).toLocaleDateString("en-GB", {
+                                    Since {new Date(other.user_data.created_at).toLocaleDateString("en-GB", {
                                       day: "numeric",
                                       month: "short",
                                       year: "numeric"
