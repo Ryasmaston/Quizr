@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { getUserByUsername, cancelAccountDeletion, executeAccountDeletion } from '../../services/users';
@@ -11,6 +11,7 @@ import { QuizStats } from '../../components/quizStats'
 export default function ProfilePage() {
   const { username: routeUsername } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [takenQuizzes, setTakenQuizzes] = useState([]);
@@ -872,6 +873,7 @@ export default function ProfilePage() {
                 <div className="mt-6">
                   <Link
                     to="/quizzes/create"
+                    state={{ returnTo: location.pathname }}
                     className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-indigo-500/40 active:scale-95"
                   >
                     Create a quiz

@@ -80,6 +80,7 @@ function NavBar() {
                 </NavLink>
                 <NavLink
                   to="/quizzes/create"
+                  state={{ returnTo: location.pathname }}
                   className={({ isActive }) =>
                     `text-sm transition-colors h-16 px-5 inline-flex items-center ${
                       isActive
