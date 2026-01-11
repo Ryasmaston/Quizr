@@ -231,7 +231,7 @@ export default function LeaderboardPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200/70 text-slate-700">
+                  <tbody className="divide-y divide-slate-200/70 text-slate-700 text-left">
                     {sortedRows.length === 0 ? (
                       <tr>
                         <td className="px-3 sm:px-4 py-4 text-center text-slate-500" colSpan={columns.length}>
@@ -241,7 +241,7 @@ export default function LeaderboardPage() {
                     ) : (
                       sortedRows.map((entry, index) => (
                         <tr key={entry.user_id}>
-                          <td className="px-3 sm:px-4 py-3 font-medium text-slate-800">
+                          <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left">
                             {baseRanks.get(entry.user_id) || index + 1}
                           </td>
                           <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left w-[220px] max-w-[220px]">
@@ -257,11 +257,11 @@ export default function LeaderboardPage() {
                               <span className="truncate">{entry.username}</span>
                             </Link>
                           </td>
-                          <td className="px-3 sm:px-4 py-3">{Math.round(entry.avgPercent)}%</td>
-                          <td className="px-3 sm:px-4 py-3">{entry.totalCorrect}</td>
-                          <td className="px-3 sm:px-4 py-3">{entry.attemptsCount}</td>
-                          <td className="px-3 sm:px-4 py-3">{entry.quizzesTaken}</td>
-                          <td className="px-3 sm:px-4 py-3">{entry.quizzesCreated}</td>
+                          <td className="px-3 sm:px-4 py-3 text-left">{Math.round(entry.avgPercent)}%</td>
+                          <td className="px-3 sm:px-4 py-3 text-left">{entry.totalCorrect}</td>
+                          <td className="px-3 sm:px-4 py-3 text-left">{entry.attemptsCount}</td>
+                          <td className="px-3 sm:px-4 py-3 text-left">{entry.quizzesTaken}</td>
+                          <td className="px-3 sm:px-4 py-3 text-left">{entry.quizzesCreated}</td>
                         </tr>
                       ))
                     )}

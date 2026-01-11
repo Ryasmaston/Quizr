@@ -36,6 +36,19 @@ function TakeQuizPage() {
     const [currentUserId, setCurrentUserId] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [summaryFilter, setSummaryFilter] = useState("all");
+    const [quizSortConfig, setQuizSortConfig] = useState({
+      key: "scorePercentValue",
+      direction: "desc"
+    });
+    const opalBackdropStyle = {
+      backgroundColor: "#f7f5f1",
+      backgroundImage: `
+        radial-gradient(1200px 800px at 5% 0%, rgba(255, 227, 170, 0.28), transparent 60%),
+        radial-gradient(900px 700px at 85% 10%, rgba(255, 190, 220, 0.24), transparent 55%),
+        radial-gradient(1000px 800px at 15% 90%, rgba(180, 220, 255, 0.24), transparent 60%),
+        radial-gradient(900px 800px at 85% 85%, rgba(190, 235, 210, 0.24), transparent 60%)
+      `
+    };
 
     const loadQuiz = useCallback(async () => {
     const res = await apiFetch(`/quizzes/${id}`);
@@ -89,7 +102,7 @@ const authorName = authorIsDeleted
   ? "deleted user"
   : authorUsername || "Unknown";
 const canNavigateToAuthor = !authorIsDeleted && Boolean(authorUsername);
-const leaderboard = useMemo(() => {
+const baseQuizLeaderboard = useMemo(() => {
     const attempts = Array.isArray(quiz?.attempts) ? quiz.attempts : [];
     const questionsCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0;
     if (questionsCount === 0 || attempts.length === 0) return [];
@@ -142,12 +155,111 @@ const leaderboard = useMemo(() => {
     return a.username.localeCompare(b.username, undefined, { sensitivity: "base" });
     });
 
-    return entries.slice(0, 10).map((entry) => ({
-    ...entry,
-    scorePercent: `${Math.round((entry.bestCorrect / questionsCount) * 100)}%`,
-    isPassing: entry.bestCorrect >= passThreshold
-    }));
+    return entries.slice(0, 10).map((entry) => {
+    const roundedPercent = Math.round((entry.bestCorrect / questionsCount) * 100);
+    return {
+        ...entry,
+        scorePercent: `${roundedPercent}%`,
+        scorePercentValue: roundedPercent,
+        isPassing: entry.bestCorrect >= passThreshold
+    };
+    });
 }, [quiz]);
+
+const quizRankMap = useMemo(() => {
+    const map = new Map();
+    baseQuizLeaderboard.forEach((entry, index) => {
+    map.set(entry.userId, index + 1);
+    });
+    return map;
+}, [baseQuizLeaderboard]);
+
+const sortedQuizLeaderboard = useMemo(() => {
+    const sorted = [...baseQuizLeaderboard];
+    const { key, direction } = quizSortConfig;
+    const order = direction === "asc" ? 1 : -1;
+
+    sorted.sort((a, b) => {
+    if (key === "rank") {
+        const aRank = quizRankMap.get(a.userId) || 0;
+        const bRank = quizRankMap.get(b.userId) || 0;
+        if (aRank !== bRank) return (aRank - bRank) * order;
+        return a.username.localeCompare(b.username);
+    }
+    if (key === "username") {
+        return a.username.localeCompare(b.username) * order;
+    }
+    const aVal = Number.isFinite(a[key]) ? a[key] : 0;
+    const bVal = Number.isFinite(b[key]) ? b[key] : 0;
+    if (aVal !== bVal) return (aVal - bVal) * order;
+    return a.username.localeCompare(b.username);
+    });
+
+    return sorted;
+}, [baseQuizLeaderboard, quizRankMap, quizSortConfig]);
+
+const quizColumns = [
+    { key: "rank", label: "#" },
+    { key: "username", label: "Player" },
+    {
+    key: "scorePercentValue",
+    label: "Top score",
+    render: (entry) => (
+        <span
+        className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold ${
+            entry.isPassing
+            ? "border-emerald-200/80 bg-emerald-100/80 text-emerald-700"
+            : "border-rose-200/80 bg-rose-100/80 text-rose-700"
+        }`}
+        >
+        {entry.scorePercent}
+        </span>
+    )
+    },
+    { key: "bestCorrect", label: "Correct" },
+    { key: "attemptsCount", label: "Attempts" }
+];
+
+function handleQuizSort(key) {
+    setQuizSortConfig((prev) => {
+    if (prev.key === key) {
+        return {
+        key,
+        direction: prev.direction === "asc" ? "desc" : "asc"
+        };
+    }
+    const defaultDirection = key === "username" ? "asc" : "desc";
+    return { key, direction: defaultDirection };
+    });
+}
+
+function renderQuizSortIcon(key) {
+    const isActive = quizSortConfig.key === key;
+    const isAsc = quizSortConfig.direction === "asc";
+    return (
+    <span className="inline-flex w-4 justify-center text-slate-400">
+        {isAsc ? (
+        <svg
+            className={`h-3 w-3 ${isActive ? "opacity-100" : "opacity-0"}`}
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+        >
+            <path d="M10 5l4 6H6l4-6z" />
+        </svg>
+        ) : (
+        <svg
+            className={`h-3 w-3 ${isActive ? "opacity-100" : "opacity-0"}`}
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+        >
+            <path d="M10 15l-4-6h8l-4 6z" />
+        </svg>
+        )}
+    </span>
+    );
+}
 
 const summaryItems = useMemo(() => {
     if (!quiz || !Array.isArray(quiz.questions)) return [];
@@ -194,12 +306,27 @@ const filteredSummaryItems = useMemo(() => {
     return summaryItems;
 }, [summaryItems, summaryFilter]);
 
-const categoryColors = {
-    art: "from-pink-500 to-rose-500",
-    history: "from-amber-500 to-orange-500",
-    music: "from-purple-500 to-indigo-500",
-    science: "from-blue-500 to-cyan-500",
-    other: "from-gray-500 to-slate-500"
+const categoryStyles = {
+    art: {
+        header: "bg-gradient-to-r from-pink-50/90 via-rose-50/80 to-pink-50/90",
+        badge: "bg-white/50 border border-pink-200 text-pink-700"
+    },
+    history: {
+        header: "bg-gradient-to-r from-amber-50/90 via-orange-50/80 to-amber-50/90",
+        badge: "bg-white/50 border border-amber-200 text-amber-700"
+    },
+    music: {
+        header: "bg-gradient-to-r from-purple-50/90 via-indigo-50/80 to-purple-50/90",
+        badge: "bg-white/50 border border-purple-200 text-purple-700"
+    },
+    science: {
+        header: "bg-gradient-to-r from-sky-50/90 via-cyan-50/80 to-blue-50/90",
+        badge: "bg-white/50 border border-sky-200 text-sky-700"
+    },
+    other: {
+        header: "bg-slate-100/90",
+        badge: "bg-white/50 border border-slate-200 text-slate-600"
+    }
 };
 
 const categoryIcons = {
@@ -223,31 +350,41 @@ const categoryIcons = {
 const difficultyMeta = {
     easy: {
     label: "Easy",
-    gradient: "from-emerald-500 to-lime-500",
-    chip: "border-emerald-400/40 bg-emerald-500/20 text-emerald-100",
-    icon: "/easy.svg"
+    icon: (
+        <>
+        <path d="M5 18c0-6 4.5-11 12-12 1 8-4 13-10 13-1.2 0-2-.3-2-.9z" />
+        <path d="M8 16c1-3 4-5 8-6" />
+        <path d="M8 12c1.5 0 3 .5 4.5 1.5" />
+        </>
+    )
     },
     medium: {
     label: "Medium",
-    gradient: "from-amber-500 to-yellow-500",
-    chip: "border-amber-400/40 bg-amber-500/20 text-amber-100",
-    icon: "/medium.svg"
+    icon: (
+        <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9 15l6-6" />
+        <path d="M9.5 14.5l1.5-4.5 4.5-1.5-1.5 4.5-4.5 1.5z" />
+        </>
+    )
     },
     hard: {
     label: "Hard",
-    gradient: "from-rose-500 to-red-600",
-    chip: "border-rose-400/40 bg-rose-500/20 text-rose-100",
-    icon: "/hard.svg"
+    icon: (
+        <>
+        <path d="M13 2L4 14h6l-1 8 9-12h-6z" />
+        </>
+    )
     }
 };
 
 //While quiz is being loaded or the user is logged out we return a message on the screen
 if (!quiz)
     return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="fixed inset-0 flex items-center justify-center" style={opalBackdropStyle}>
         <div className="relative flex flex-col items-center">
-        <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-        <p className="mt-4 text-white font-medium">Loading quiz...</p>
+        <div className="w-16 h-16 border-4 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
+        <p className="mt-4 text-slate-600 font-medium">Loading quiz...</p>
         </div>
     </div>
     );
@@ -268,6 +405,7 @@ const optionsPerQuestion = Math.max(
     ...quiz.questions.map((item) => item.answers.length)
 );
 const isLocked = lockAnswers && currentIndex <= lockedUntil;
+const activeCategoryStyle = categoryStyles[quiz.category] || categoryStyles.other;
 
 function handleSelect(answerId) {
     if (result || isLocked) return;
@@ -377,34 +515,46 @@ async function submitQuiz() {
 }
 
 return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-16 sm:pt-20">
+    <>
+    <div className="fixed inset-0" style={opalBackdropStyle}></div>
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-1/4 left-1/4 w-[28rem] h-[28rem] bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] bg-rose-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-1/2 left-1/2 w-[30rem] h-[30rem] -translate-x-1/2 -translate-y-1/2 bg-sky-200/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
     </div>
-    <main className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
+    <div className="relative min-h-screen pt-16 sm:pt-20">
+    <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
         <div className="mb-6 sm:mb-8 text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 mb-3 sm:mb-4">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-800 mb-3 sm:mb-4 select-none">
             {quiz.title}
         </h1>
-        <p className="text-gray-300 text-base sm:text-lg">Ready to take on this quiz?</p>
+        <p className="text-slate-600 text-base sm:text-lg select-none">Ready to take on this quiz?</p>
         </div>
 
         {phase === "intro" && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 overflow-hidden">
-            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 sm:px-8 bg-gradient-to-r ${
-            categoryColors[quiz.category] || categoryColors.other
-            }`}>
-            <div className="inline-flex items-center gap-2 text-white font-semibold text-sm uppercase tracking-wide">
-                <span className="inline-flex items-center gap-2 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-semibold">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="bg-white/70 backdrop-blur-lg rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 sm:px-8 ${activeCategoryStyle.header}`}>
+            <div className="inline-flex items-center gap-2 text-slate-700 font-semibold text-sm uppercase tracking-wide">
+                <span className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold ${activeCategoryStyle.badge}`}>
+                <svg className="w-4 h-4 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {categoryIcons[quiz.category] || categoryIcons.other}
                 </svg>
                 <span className="capitalize">{quiz.category}</span>
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white/90">
-                <img src={difficulty.icon} alt="" aria-hidden="true" className="h-4 w-4" />
-                <span>{difficulty.label}</span>
+                <span className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold normal-case border border-slate-200/80 bg-white/40 text-slate-700">
+                <svg
+                    className="h-4 w-4 text-current"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                >
+                    {difficulty.icon}
+                </svg>
+                <span className="normal-case">{difficulty.label}</span>
                 </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -414,19 +564,19 @@ return (
                   onClick={() => {
                     navigate(`/users/${authorName}`);
                   }}
-                  className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
+                  className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-white/70"
                 >
                   Created by {isQuizOwner ? "you" : authorName}
                 </button>
               ) : (
-                <span className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-white/60 cursor-default">
+                <span className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-slate-500 cursor-default">
                   Created by {authorName}
                 </span>
               )}
               {isQuizOwner && (
                 <>
                   <button
-                    className="rounded-xl bg-white/10 border border-white/20 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 flex items-center justify-center gap-2"
+                    className="rounded-xl border border-slate-200/80 bg-white/40 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-white/80 hover:border-slate-200/80 flex items-center justify-center gap-2"
                     type="button"
                     onClick={() => navigate(`/quiz/${id}/edit`, { state: { from: "quiz", returnTo: `/quiz/${id}` } })}
                   >
@@ -446,7 +596,7 @@ return (
                     <span>Edit</span>
                   </button>
                   <button
-                    className="rounded-xl bg-white/10 border border-white/20 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 flex items-center justify-center gap-2"
+                    className="rounded-xl border border-slate-200/80 bg-white/40 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-white/80 hover:border-slate-200/80 flex items-center justify-center gap-2"
                     type="button"
                     onClick={() => setShowDeleteConfirm(true)}
                   >
@@ -470,72 +620,72 @@ return (
             </div>
             </div>
             <div className="p-6 sm:p-8">
-            <div className="grid gap-4 sm:grid-cols-2 text-gray-200 text-sm sm:text-base">
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="grid gap-4 sm:grid-cols-2 text-slate-700 text-sm sm:text-base">
+                <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 border border-slate-200/80">
+                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                 </span>
                 <div className="text-left pl-1">
-                    <div className="text-xs uppercase tracking-wide text-white/60">Questions</div>
-                    <div className="text-lg font-semibold text-white">{quiz.questions.length}</div>
+                    <div className="text-xs uppercase tracking-wide text-slate-500">Questions</div>
+                    <div className="text-lg font-semibold text-slate-800">{quiz.questions.length}</div>
                 </div>
                 </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 border border-slate-200/80">
+                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h10M7 12h10M7 17h10" />
                     </svg>
                 </span>
                 <div className="text-left pl-1">
-                    <div className="text-xs uppercase tracking-wide text-white/60">Options per question</div>
-                    <div className="text-lg font-semibold text-white">{optionsPerQuestion}</div>
+                    <div className="text-xs uppercase tracking-wide text-slate-500">Options per question</div>
+                    <div className="text-lg font-semibold text-slate-800">{optionsPerQuestion}</div>
                 </div>
                 </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 border border-slate-200/80">
+                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                 </span>
                 <div className="text-left pl-1">
-                    <div className="text-xs uppercase tracking-wide text-white/60">Pass threshold</div>
-                    <div className="text-lg font-semibold text-white">
+                    <div className="text-xs uppercase tracking-wide text-slate-500">Pass threshold</div>
+                    <div className="text-lg font-semibold text-slate-800">
                     {quiz.req_to_pass}/{quiz.questions.length} (
                     {Math.round((quiz.req_to_pass / quiz.questions.length) * 100)}%)
                     </div>
                 </div>
                 </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 border border-slate-200/80">
+                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h7l-1.5-1.5m0 0L10 6m-1.5 2.5H21M21 14h-7l1.5 1.5m0 0L14 18m1.5-2.5H3" />
                     </svg>
                 </span>
                 <div className="text-left pl-1">
-                    <div className="text-xs uppercase tracking-wide text-white/60">Multiple correct</div>
-                    <div className="text-lg font-semibold text-white">
+                    <div className="text-xs uppercase tracking-wide text-slate-500">Multiple correct</div>
+                    <div className="text-lg font-semibold text-slate-800">
                     {quiz.allow_multiple_correct ? "Allowed" : "Single answer"}
                     </div>
                 </div>
                 </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 border border-slate-200/80">
+                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
                     </svg>
                 </span>
                 <div className="text-left pl-1">
-                    <div className="text-xs uppercase tracking-wide text-white/60">Select all correct</div>
-                    <div className="text-lg font-semibold text-white">
+                    <div className="text-xs uppercase tracking-wide text-slate-500">Select all correct</div>
+                    <div className="text-lg font-semibold text-slate-800">
                     {quiz.require_all_correct ? "Required" : "Not required"}
                     </div>
                 </div>
                 </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 px-4 py-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 border border-slate-200/80">
+                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {lockAnswers ? (
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 10V8a4 4 0 00-8 0v2m-1 0h10a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5a2 2 0 012-2z" />
                     ) : (
@@ -544,22 +694,22 @@ return (
                     </svg>
                 </span>
                 <div className="text-left pl-1">
-                    <div className="text-xs uppercase tracking-wide text-white/60">Answer lock</div>
-                    <div className="text-lg font-semibold text-white">
+                    <div className="text-xs uppercase tracking-wide text-slate-500">Answer lock</div>
+                    <div className="text-lg font-semibold text-slate-800">
                     {lockAnswers ? "Locked after Next" : "Can change answers"}
                     </div>
                 </div>
                 </div>
             </div>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 w-full items-stretch">
             <button
-                className="w-full sm:flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95"
+                className="w-full h-full rounded-2xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors flex items-center justify-center px-6 py-5 text-xl leading-tight"
                 onClick={startQuiz}
             >
                 Take the quiz
             </button>
             <button
-                className="w-full sm:flex-1 px-6 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                className="w-full h-full rounded-2xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 px-6 py-5 text-lg leading-tight"
                 type="button"
                 onClick={handleToggleFavourite}
             >
@@ -578,12 +728,18 @@ return (
             {isQuizOwner && (
             <>
                 {showDeleteConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 rounded-2xl border border-white/20 p-6 max-w-md w-full shadow-2xl">
+                <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 shadow-xl"
+                style={{
+                    backdropFilter: "blur(6px)",
+                    WebkitBackdropFilter: "blur(6px)"
+                }}
+                >
+                    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 max-w-md w-full shadow-xl">
                     <div className="flex items-center gap-3 mb-4 text-left">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/20">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100">
                         <svg
-                            className="h-6 w-6 text-rose-400"
+                            className="h-6 w-6 text-rose-600"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -597,23 +753,23 @@ return (
                         </svg>
                         </div>
                         <div>
-                        <h3 className="text-lg font-semibold text-white">Delete Quiz</h3>
-                        <p className="text-sm text-gray-400">This action cannot be undone</p>
+                        <h3 className="text-lg font-semibold text-slate-800">Delete Quiz</h3>
+                        <p className="text-sm text-slate-500">This action cannot be undone</p>
                         </div>
                     </div>
-                    <p className="text-gray-300 mb-6">
+                    <p className="text-slate-600 mb-6">
                         Are you sure you want to delete &apos;{quiz.title}&apos;? All quiz data, attempts, and leaderboard entries will be permanently removed.
                     </p>
                     <div className="flex gap-3">
                         <button
-                        className="flex-1 px-4 py-2.5 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-700 transition-all"
+                        className="flex-1 px-4 py-2.5 rounded-lg bg-rose-100 text-rose-700 font-semibold hover:bg-rose-200 transition-colors"
                         type="button"
                         onClick={handleDeleteQuiz}
                         >
                         Delete Quiz
                         </button>
                         <button
-                        className="flex-1 px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
+                        className="flex-1 px-4 py-2.5 rounded-lg bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors"
                         type="button"
                         onClick={() => setShowDeleteConfirm(false)}
                         >
@@ -627,43 +783,60 @@ return (
             )}
             </div>
             <div className="mt-8">
-            <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Leaderboard</h3>
-            <div className="overflow-hidden rounded-2xl border border-white/20 bg-white/5">
+            <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-3">Leaderboard</h3>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/60">
                 <table className="w-full text-sm sm:text-base">
-                <thead className="bg-white/10 text-left text-gray-200">
+                <thead className="bg-slate-100/70 text-left text-slate-600">
                     <tr>
-                    <th className="px-4 py-3">#</th>
-                    <th className="px-4 py-3">Player</th>
-                    <th className="px-4 py-3">Top score</th>
-                    <th className="px-4 py-3">Correct</th>
-                    <th className="px-4 py-3">Attempts</th>
+                    {quizColumns.map((column) => (
+                        <th
+                        key={column.key}
+                        className={`px-4 py-3 text-left ${
+                            column.key === "username" ? "w-[220px] max-w-[220px]" : ""
+                        }`}
+                        >
+                        <button
+                            type="button"
+                            onClick={() => handleQuizSort(column.key)}
+                            className="inline-flex items-center gap-2 text-left font-semibold text-slate-700 hover:text-slate-900"
+                        >
+                            <span>{column.label}</span>
+                            <span className="text-xs text-slate-400">{renderQuizSortIcon(column.key)}</span>
+                        </button>
+                        </th>
+                    ))}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10 text-gray-100">
-                    {leaderboard.length === 0 ? (
+                <tbody className="divide-y divide-slate-200/70 text-slate-700">
+                    {sortedQuizLeaderboard.length === 0 ? (
                     <tr>
-                        <td className="px-4 py-4 text-center text-gray-300" colSpan={5}>
+                        <td className="px-4 py-4 text-center text-slate-500" colSpan={quizColumns.length}>
                         No attempts yet.
                         </td>
                     </tr>
                     ) : (
-                    leaderboard.map((entry, index) => (
+                    sortedQuizLeaderboard.map((entry, index) => (
                         <tr key={entry.userId}>
-                        <td className="px-4 py-3 font-medium text-white">{index + 1}</td>
-                        <td className="px-4 py-3 font-medium text-white">{entry.username}</td>
-                        <td className="px-4 py-3">
-                        <span
-                            className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold ${
-                              entry.isPassing
-                                ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200"
-                                : "border-rose-400/40 bg-rose-500/20 text-rose-200"
-                            }`}
-                          >
-                            {entry.scorePercent}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">{entry.bestCorrect}</td>
-                        <td className="px-4 py-3">{entry.attemptsCount}</td>
+                        {quizColumns.map((column) => {
+                            let cellContent;
+                            let cellClass = "px-4 py-3 text-left text-slate-700";
+                            if (column.key === "rank") {
+                            cellContent = quizRankMap.get(entry.userId) || index + 1;
+                            cellClass = "px-4 py-3 text-left font-medium text-slate-800";
+                            } else if (column.key === "username") {
+                            cellContent = entry.username;
+                            cellClass = "px-4 py-3 text-left font-medium text-slate-800";
+                            } else if (column.render) {
+                            cellContent = column.render(entry);
+                            } else {
+                            cellContent = entry[column.key];
+                            }
+                            return (
+                            <td key={`${entry.userId}-${column.key}`} className={cellClass}>
+                                {cellContent}
+                            </td>
+                            );
+                        })}
                         </tr>
                     ))
                     )}
@@ -676,29 +849,38 @@ return (
         )}
 
         {phase === "inProgress" && (
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-gray-300 mb-4">
+        <div className="bg-white/70 backdrop-blur-lg rounded-3xl border border-slate-200/80 shadow-sm pt-4 sm:pt-5 pb-6 sm:pb-8 px-6 sm:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500 mb-4 pb-2">
             <span>Question {currentIndex + 1} of {quiz.questions.length}</span>
             <div className="flex flex-wrap items-center gap-2">
                 <span
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${
-                    categoryColors[quiz.category] || categoryColors.other
-                } text-white text-xs font-semibold`}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${activeCategoryStyle.badge}`}
                 >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {categoryIcons[quiz.category] || categoryIcons.other}
                 </svg>
                 <span className="capitalize">{quiz.category}</span>
                 </span>
                 <span
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-white/90 text-xs font-semibold"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200/80 bg-white/40 text-slate-700 text-xs font-semibold normal-case"
                 >
-                <img src={difficulty.icon} alt="" aria-hidden="true" className="h-4 w-4" />
-                <span>{difficulty.label}</span>
+                <svg
+                    className="h-4 w-4 text-current"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                >
+                    {difficulty.icon}
+                </svg>
+                <span className="normal-case">{difficulty.label}</span>
                 </span>
             </div>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-5">{question.text}</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-6 pb-2">{question.text}</h2>
 
             <div className="grid gap-3 sm:grid-cols-2">
             {question.answers.map((answer) => {
@@ -706,11 +888,11 @@ return (
                 return (
                 <button
                     key={answer._id}
-                    className={`text-left px-4 py-3 rounded-xl border transition-all ${
+                    className={`text-left px-4 py-3 rounded-xl border transition-colors ${
                     isSelected
-                        ? "bg-white/20 border-purple-400 ring-2 ring-purple-400/70 text-white"
-                        : "bg-white/10 border-white/20 text-gray-100"
-                    } ${isLocked ? "cursor-not-allowed opacity-60" : "hover:bg-white/20"}`}
+                        ? "bg-slate-100/80 border-slate-300 text-slate-900"
+                        : "bg-white/60 border-slate-200/80 text-slate-700"
+                    } ${isLocked ? "cursor-not-allowed opacity-60" : "hover:bg-white/80"}`}
                     onClick={() => handleSelect(answer._id)}
                     type="button"
                     disabled={isLocked}
@@ -721,9 +903,9 @@ return (
             })}
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex gap-3 flex-wrap">
             <button
-                className="px-5 py-2.5 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all disabled:opacity-50"
+                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-white/90 transition-colors disabled:opacity-50"
                 onClick={goBack}
                 disabled={currentIndex === 0}
                 type="button"
@@ -732,7 +914,7 @@ return (
             </button>
             {!isLastQuestion && (
                 <button
-                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
                 onClick={goNext}
                 disabled={currentSelections.length === 0}
                 type="button"
@@ -742,7 +924,7 @@ return (
             )}
             {isLastQuestion && (
                 <button
-                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold hover:shadow-lg hover:shadow-emerald-500/50 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
                 onClick={submitQuiz}
                 disabled={currentSelections.length === 0}
                 type="button"
@@ -755,46 +937,68 @@ return (
         )}
 
         {phase === "done" && result && (
-        <div className="relative bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 text-center">
+        <div className="relative bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm text-center">
+            <div className="absolute left-4 top-4 flex flex-wrap gap-3">
+            <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold text-slate-700 ${activeCategoryStyle.badge}`}>
+                <svg className="w-5 h-5 text-current" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                {categoryIcons[quiz.category] || categoryIcons.other}
+                </svg>
+                <span className="capitalize">{quiz.category || "Other"}</span>
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700">
+                <svg
+                className="w-5 h-5 text-current"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                >
+                {difficulty.icon}
+                </svg>
+                <span className="normal-case">{difficulty.label}</span>
+            </span>
+            </div>
             <button
-            className={`absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border transition-all ${
+            className={`absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${
                 isFavourited
-                ? "border-amber-300/60 bg-amber-400/20 text-amber-200"
-                : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+                ? "border-amber-200/80 bg-amber-100/80 text-amber-700"
+                : "border-slate-200/80 bg-white/70 text-slate-700 hover:bg-white/90"
             }`}
             type="button"
             onClick={handleToggleFavourite}
             aria-label={isFavourited ? "Remove from favourites" : "Add to favourites"}
             title={isFavourited ? "Remove from favourites" : "Add to favourites"}
             >
-            <svg
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                fill={isFavourited ? "currentColor" : "none"}
-                strokeWidth={2}
-                aria-hidden="true"
-            >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" stroke="currentColor" fill={isFavourited ? "currentColor" : "none"} strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
             </svg>
             </button>
-            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-20 h-20 bg-emerald-100 rounded-full mx-auto mb-4 flex items-center justify-center border border-emerald-200/80">
+            <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Quiz Complete</h2>
-            <p className="text-gray-300 text-lg">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-2">Quiz Complete</h2>
+            <p className="text-slate-600 text-lg">
             Correct answers {result.correctAnswers}, ({formatScorePercentage(result.scorePercentage)})
             </p>
             {difficultyKey !== "hard" && (
             <div className="mt-6 text-left">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                  <h3 className="text-lg font-semibold text-white">Answer summary</h3>
+                  <h3 className="text-lg font-semibold text-slate-800">Answer summary</h3>
                   <select
                     value={summaryFilter}
                     onChange={(event) => setSummaryFilter(event.target.value)}
-                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20 focus:outline-none"
+                    className="rounded-full border border-slate-200/80 bg-white/60 px-3 pr-7 py-1 text-xs sm:text-sm font-semibold text-slate-600 focus:outline-none focus:ring-0 appearance-none"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgb(148,163,184)' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 0.6rem center",
+                      backgroundSize: "0.9rem"
+                    }}
                   >
                     <option value="all" className="text-black">All</option>
                     <option value="correct" className="text-black">Correct</option>
@@ -803,25 +1007,25 @@ return (
                 </div>
                 <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
                 {filteredSummaryItems.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-white/70">
+                  <div className="rounded-2xl border border-slate-200/80 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
                     No answers match this filter.
                   </div>
                 ) : (
                 filteredSummaryItems.map((item, index) => {
                     const statusClasses = item.isCorrect
-                    ? "border-emerald-400/40 bg-emerald-500/10"
-                    : "border-rose-400/40 bg-rose-500/10";
+                    ? "border-emerald-300/90 bg-emerald-100/90"
+                    : "border-rose-300/90 bg-rose-100/90";
                     const statusBadge = item.isCorrect
-                    ? "bg-emerald-500/20 text-emerald-200 border-emerald-400/40"
-                    : "bg-rose-500/20 text-rose-200 border-rose-400/40";
+                    ? "bg-emerald-200/90 text-emerald-800 border-emerald-300/90"
+                    : "bg-rose-200/90 text-rose-800 border-rose-300/90";
                     return (
                     <div
                         key={item.question._id || index}
                         className={`rounded-2xl border ${statusClasses} px-4 py-3`}
                     >
                         <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-2 text-sm font-semibold text-white">
-                            <span className="inline-flex items-center justify-center rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold tracking-wide text-white/80 whitespace-nowrap">
+                        <div className="flex items-start gap-2 text-sm font-semibold text-slate-800">
+                            <span className="inline-flex items-center justify-center rounded-full bg-white/70 px-2 py-0.5 text-xs font-bold tracking-wide text-slate-600 whitespace-nowrap border border-slate-200/80">
                               Q{item.questionIndex + 1}
                             </span>
                             <span>{item.question.text}</span>
@@ -839,15 +1043,15 @@ return (
                             const isSelected = item.selectedSet.has(answerId);
                             const isCorrectAnswer = item.correctSet.has(answerId);
                             const showMissing = difficultyKey === "easy" && isCorrectAnswer && !isSelected;
-                            let toneClasses = "border-white/20 bg-white/5 text-gray-200";
+                            let toneClasses = "border-slate-300/90 bg-white text-slate-800 shadow-sm";
                             if (isSelected && isCorrectAnswer) {
-                            toneClasses = "border-emerald-400/40 bg-emerald-500/20 text-emerald-100";
+                            toneClasses = "border-emerald-700 bg-emerald-700 text-white shadow-lg";
                             } else if (isSelected && !isCorrectAnswer) {
-                            toneClasses = "border-rose-400/40 bg-rose-500/20 text-rose-100";
+                            toneClasses = "border-rose-700 bg-rose-700 text-white shadow-lg";
                             } else if (showMissing) {
                             toneClasses = quiz.allow_multiple_correct
-                                ? "border-amber-400/40 bg-amber-500/20 text-amber-100"
-                                : "border-emerald-400/40 bg-emerald-500/20 text-emerald-100";
+                                ? "border-amber-500 bg-amber-500 text-white"
+                                : "border-emerald-700 bg-emerald-700 text-white";
                             }
                             return (
                             <span
@@ -860,7 +1064,7 @@ return (
                         })}
                         </div>
                         {item.selectedSet.size === 0 && (
-                        <p className="mt-2 text-xs text-gray-300">No answer selected.</p>
+                        <p className="mt-2 text-xs text-slate-500">No answer selected.</p>
                         )}
                     </div>
                     );
@@ -869,23 +1073,23 @@ return (
                 </div>
             </div>
             )}
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="mt-6 flex gap-3 flex-wrap">
             <button
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
+                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-white/90 transition-colors"
                 onClick={() => navigate("/")}
                 type="button"
             >
                 Homepage
             </button>
             <button
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-105 active:scale-95"
+                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors"
                 onClick={retakeQuiz}
                 type="button"
             >
                 Retake quiz
             </button>
             <button
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
+                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-white/90 transition-colors"
                 onClick={returnToQuiz}
                 type="button"
             >
@@ -896,6 +1100,7 @@ return (
         )}
     </main>
     </div>
+    </>
 );
 }
 
