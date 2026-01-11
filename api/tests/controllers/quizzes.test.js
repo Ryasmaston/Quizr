@@ -19,8 +19,10 @@ describe("/quizzes", () => {
     await Quiz.deleteMany({});
     await User.deleteMany({});
     testUser = new User({
-      username: "testuser",
-      email: "test@email.com",
+      user_data: {
+        username: "testuser",
+        email: "test@email.com"
+      },
       authId: "test-auth-id"
     });
     await testUser.save();
@@ -52,12 +54,14 @@ describe("/quizzes", () => {
       const response = await request(app).get("/api/quizzes");
       expect(response.status).toEqual(200);
       expect(response.body.quizzes).toHaveLength(2);
-      expect(response.body.quizzes[0].created_by.username).toEqual("testuser");
+      expect(response.body.quizzes[0].created_by.user_data.username).toEqual("testuser");
     });
     test("filters quizzes by created_by query parameter", async () => {
       const otherUser = new User({
-        username: "otheruser",
-        email: "other@email.com",
+        user_data: {
+          username: "otheruser",
+          email: "other@email.com"
+        },
         authId: "other-auth-id"
       });
       await otherUser.save();
@@ -191,7 +195,7 @@ describe("/quizzes", () => {
       const response = await request(app).get(`/api/quizzes/${quiz._id}`);
       expect(response.status).toEqual(200);
       expect(response.body.quiz.title).toEqual("Test quiz");
-      expect(response.body.quiz.created_by.username).toEqual("testuser");
+      expect(response.body.quiz.created_by.user_data.username).toEqual("testuser");
     });
     test("returns quiz with populated attempts", async () => {
       const quiz = new Quiz({
@@ -210,7 +214,7 @@ describe("/quizzes", () => {
       const response = await request(app).get(`/api/quizzes/${quiz._id}`);
       expect(response.status).toEqual(200);
       expect(response.body.quiz.attempts).toHaveLength(1);
-      expect(response.body.quiz.attempts[0].user_id.username).toEqual("testuser");
+      expect(response.body.quiz.attempts[0].user_id.user_data.username).toEqual("testuser");
     });
     test("returns 404 when quiz does not exist", async () => {
       const response = await request(app).get("/api/quizzes/507f1f77bcf86cd799439011");
@@ -253,7 +257,7 @@ describe("/quizzes", () => {
       const response = await request(app).get("/api/quizzes/leaderboard");
       expect(response.status).toEqual(200);
       expect(response.body.leaderboard).toHaveLength(1);
-      expect(response.body.leaderboard[0].username).toEqual("testuser");
+      expect(response.body.leaderboard[0].user_data.username).toEqual("testuser");
       expect(response.body.leaderboard[0].totalCorrect).toEqual(2);
       expect(response.body.leaderboard[0].attemptsCount).toEqual(1);
       expect(response.body.leaderboard[0].quizzesTaken).toEqual(1);

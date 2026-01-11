@@ -2,7 +2,7 @@ const User = require("../models/user")
 const mongoose = require('mongoose');
 const Quiz = require("../models/quiz");
 const Friend = require("../models/friend")
-const {connectToDatabase} = require("../db/db")
+const { connectToDatabase } = require("../db/db")
 const admin = require("../lib/firebaseAdmin")
 require("dotenv").config();
 
@@ -13,8 +13,10 @@ async function createSeedUser({ username, email, password }) {
   });
   const user = new User({
     authId: firebaseUser.uid,
-    username,
-    email
+    user_data: {
+      username,
+      email
+    }
   });
   await user.save();
   return user;
@@ -37,13 +39,13 @@ async function deleteAllFirebaseUsers(nextPageToken) {
 }
 
 const seed = async () => {
-  try{
+  try {
     await connectToDatabase();
     console.log("Connected to MongoDB successfully")
 
-    await Quiz.deleteMany({});
-    await User.deleteMany({});
-    await deleteAllFirebaseUsers();
+    // await Quiz.deleteMany({});
+    // await User.deleteMany({});
+    // await deleteAllFirebaseUsers();
 
     const jane = await createSeedUser({
       username: "JaneDoe",
@@ -78,7 +80,7 @@ const seed = async () => {
     const emilia = await createSeedUser({
       username: "Emilia",
       email: "emilia@email.com",
-      password: "Password123"  
+      password: "Password123"
     });
     console.log("Seed users created");
 

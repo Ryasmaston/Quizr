@@ -116,7 +116,7 @@ function TakeQuizPage() {
             const user = attempt.user_id;
             const userId = typeof user === "string" ? user : user?._id;
             if (!userId) return;
-            const username = typeof user === "object" && user?.username ? user.username : "Unknown";
+            const username = (typeof user === "object" && user?.user_data?.username) ? user.user_data.username : "Unknown";
             const attemptedAt = attempt.attempted_at ? new Date(attempt.attempted_at) : null;
             const correct = Number.isFinite(attempt.correct) ? attempt.correct : 0;
 
@@ -209,8 +209,8 @@ function TakeQuizPage() {
             render: (entry) => (
                 <span
                     className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold ${entry.isPassing
-                            ? "border-emerald-200/80 bg-emerald-100/80 text-emerald-700"
-                            : "border-rose-200/80 bg-rose-100/80 text-rose-700"
+                        ? "border-emerald-200/80 bg-emerald-100/80 text-emerald-700"
+                        : "border-rose-200/80 bg-rose-100/80 text-rose-700"
                         }`}
                 >
                     {entry.scorePercent}
@@ -658,8 +658,7 @@ function TakeQuizPage() {
                                         <div className="text-left pl-1">
                                             <div className="text-xs uppercase tracking-wide text-slate-500">Pass threshold</div>
                                             <div className="text-lg font-semibold text-slate-800">
-                                                {quiz.req_to_pass}/{quiz.questions.length} (
-                                                {Math.round((quiz.req_to_pass / quiz.questions.length) * 100)}%)
+                                                {Math.round((quiz.req_to_pass / quiz.questions.length) * 100)}% to pass
                                             </div>
                                         </div>
                                     </div>
@@ -915,8 +914,8 @@ function TakeQuizPage() {
                                         <button
                                             key={answer._id}
                                             className={`text-left px-4 py-3 rounded-xl border transition-colors ${isSelected
-                                                    ? "bg-slate-100/80 border-slate-300 text-slate-900"
-                                                    : "bg-white/60 border-slate-200/80 text-slate-700"
+                                                ? "bg-slate-100/80 border-slate-300 text-slate-900"
+                                                : "bg-white/60 border-slate-200/80 text-slate-700"
                                                 } ${isLocked ? "cursor-not-allowed opacity-60" : "hover:bg-slate-100"}`}
                                             onClick={() => handleSelect(answer._id)}
                                             type="button"
@@ -1011,8 +1010,8 @@ function TakeQuizPage() {
                             </div>
                             <button
                                 className={`absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${isFavourited
-                                        ? "border-amber-200/80 bg-amber-100/80 text-amber-700"
-                                        : "border-slate-200/80 bg-white/70 text-slate-700 hover:bg-white/90"
+                                    ? "border-amber-200/80 bg-amber-100/80 text-amber-700"
+                                    : "border-slate-200/80 bg-white/70 text-slate-700 hover:bg-white/90"
                                     }`}
                                 type="button"
                                 onClick={handleToggleFavourite}

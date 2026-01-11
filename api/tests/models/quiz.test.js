@@ -12,8 +12,10 @@ describe("Quiz model", () => {
 
     testUser = await User.create({
       authId: "test-auth-id-123",
-      username: "testuser",
-      email: "test@test.com",
+      user_data: {
+        username: "testuser",
+        email: "test@test.com",
+      }
     });
   });
 
@@ -87,7 +89,7 @@ describe("Quiz model", () => {
     expect(quiz.questions[0].answers[1].is_correct).toEqual(true);
   });
 
-  it("auto-generates question_id and answer_id", () => {
+  it("auto-generates IDs for questions and answers", () => {
     const quiz = new Quiz({
       title: "Test quiz",
       created_by: testUser._id,
@@ -100,8 +102,8 @@ describe("Quiz model", () => {
         },
       ],
     });
-    expect(quiz.questions[0].question_id).toBeInstanceOf(mongoose.Types.ObjectId);
-    expect(quiz.questions[0].answers[0].answer_id).toBeInstanceOf(
+    expect(quiz.questions[0]._id).toBeInstanceOf(mongoose.Types.ObjectId);
+    expect(quiz.questions[0].answers[0]._id).toBeInstanceOf(
       mongoose.Types.ObjectId
     );
   });
@@ -187,8 +189,8 @@ describe("Quiz model", () => {
 
     await quiz.save();
     const savedQuiz = await Quiz.findById(quiz._id).populate("created_by");
-    expect(savedQuiz.created_by.username).toEqual("testuser");
-    expect(savedQuiz.created_by.email).toEqual("test@test.com");
+    expect(savedQuiz.created_by.user_data.username).toEqual("testuser");
+    expect(savedQuiz.created_by.user_data.email).toEqual("test@test.com");
   });
 
   it("can store quiz attempts", async () => {

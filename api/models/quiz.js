@@ -6,9 +6,11 @@ const QuizSchema = new mongoose.Schema({
     category: { type: String, enum: ["art", "history", "music", "science", "other"], default: "other" },
     difficulty: { type: String, enum: ["easy", "medium", "hard"], default: "medium" },
     questions: [{
-        question_text: { type: String, required: true },
-        options: [{ type: String, required: true }],
-        correct_answers: [{ type: Number, required: true }]
+        text: { type: String, required: true },
+        answers: [{
+            text: { type: String, required: true },
+            is_correct: { type: Boolean, default: false }
+        }]
     }],
     created_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     attempts: [{

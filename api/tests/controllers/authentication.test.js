@@ -35,22 +35,24 @@ describe("Authentication with Firebase", () => {
         });
         await User.deleteMany({
           $or: [
-            { email: "test@test.com" },
-            { username: "testuser" },
+            { "user_data.email": "test@test.com" },
+            { "user_data.username": "testuser" },
             { authId: "test-firebase-uid-123" }
           ]
         });
         await User.create({
           authId: "test-firebase-uid-123",
-          username: "testuser",
-          email: "test@test.com",
+          user_data: {
+            username: "testuser",
+            email: "test@test.com",
+          }
         });
       });
       afterEach(async () => {
         await User.deleteMany({
           $or: [
-            { email: "test@test.com" },
-            { username: "testuser" },
+            { "user_data.email": "test@test.com" },
+            { "user_data.username": "testuser" },
             { authId: "test-firebase-uid-123" }
           ]
         });
@@ -175,10 +177,10 @@ describe("Authentication with Firebase", () => {
       });
       await User.deleteMany({
         $or: [
-          { email: "newuser@test.com" },
-          { username: "brandnewuser" },
-          { username: "existinguser" },
-          { username: "anotheruser" },
+          { "user_data.email": "newuser@test.com" },
+          { "user_data.username": "brandnewuser" },
+          { "user_data.username": "existinguser" },
+          { "user_data.username": "anotheruser" },
           { authId: "new-firebase-uid-789" }
         ]
       });
@@ -186,10 +188,10 @@ describe("Authentication with Firebase", () => {
     afterEach(async () => {
       await User.deleteMany({
         $or: [
-          { email: "newuser@test.com" },
-          { username: "brandnewuser" },
-          { username: "existinguser" },
-          { username: "anotheruser" },
+          { "user_data.email": "newuser@test.com" },
+          { "user_data.username": "brandnewuser" },
+          { "user_data.username": "existinguser" },
+          { "user_data.username": "anotheruser" },
           { authId: "new-firebase-uid-789" }
         ]
       });
@@ -199,19 +201,19 @@ describe("Authentication with Firebase", () => {
         .post("/api/users")
         .set("Authorization", "Bearer valid-token")
         .send({ username: "brandnewuser" });
-      console.log("Response status:", response.status);
-      console.log("Response body:", response.body);
       expect(response.status).toEqual(201);
-      const user = await User.findOne({ email: "newuser@test.com" });
+      const user = await User.findOne({ "user_data.email": "newuser@test.com" });
       expect(user).not.toBeNull();
       expect(user.authId).toEqual("new-firebase-uid-789");
-      expect(user.username).toEqual("brandnewuser");
+      expect(user.user_data.username).toEqual("brandnewuser");
     });
     test("prevents duplicate user creation with same authId", async () => {
       await User.create({
         authId: "new-firebase-uid-789",
-        username: "existinguser",
-        email: "newuser@test.com",
+        user_data: {
+          username: "existinguser",
+          email: "newuser@test.com",
+        }
       });
       const response = await testApp
         .post("/api/users")

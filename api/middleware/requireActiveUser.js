@@ -3,7 +3,7 @@ const User = require("../models/user");
 async function requireActiveUser(req, res, next) {
   try {
     const user = await User.findOne({ authId: req.user.uid }).select(
-      "username status authId"
+      "user_data.username user_data.status authId"
     );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -11,12 +11,12 @@ async function requireActiveUser(req, res, next) {
     if (user.authId === "deleted-user") {
       return res.status(403).json({ message: "Unauthorized" });
     }
-    if (user.status === "pending_deletion") {
+    if (user.user_data.status === "pending_deletion") {
       const isReadRequest = req.method === "GET";
       if (!isReadRequest) {
         return res.status(423).json({
           message: "Account pending deletion",
-          username: user.username
+          username: user.user_data.username
         });
       }
     }

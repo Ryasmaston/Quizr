@@ -579,7 +579,7 @@ export default function ProfilePage() {
                   {profile.user_data?.created_at && (
                     <div className="flex items-center justify-center sm:justify-start gap-2 text-slate-500 text-sm mb-4">
                       {isOwnProfile && (
-                        <span className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
                           <svg className="w-3.5 h-3.5 text-amber-700" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.45a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.45a1 1 0 00-1.175 0l-3.37 2.45c-.784.57-1.84-.197-1.54-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.963 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.05 2.927z" />
                           </svg>
@@ -665,7 +665,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
               <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Quizzes created</h2>
               <div className="flex items-center gap-3">
@@ -774,7 +774,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="px-6 pt-4 pb-3">
                           <div className="flex items-center justify-between mb-4">
-                            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-700">
                               <span
                                 aria-hidden="true"
                                 className="h-4 w-4 text-slate-700"
@@ -1029,13 +1029,13 @@ export default function ProfilePage() {
                             </button>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 mb-3">
-                            <div className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other} px-3 py-1.5 text-xs font-semibold text-white`}>
+                            <div className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other} px-3 py-1.5 text-xs font-semibold text-white`}>
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 {categoryIcons[quizCategory] || categoryIcons.other}
                               </svg>
                               <span className="capitalize">{quizCategory || "other"}</span>
                             </div>
-                            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${difficulty.className}`}>
+                            <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${difficulty.className}`}>
                               <img src={difficulty.icon} alt="" aria-hidden="true" className="h-4 w-4" />
                               <span>{difficulty.label}</span>
                             </div>
@@ -1060,24 +1060,24 @@ export default function ProfilePage() {
                             )}
                           </div>
                           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
                               <span className="font-semibold text-slate-800">{questionCount}</span>
                               <span className="text-slate-500">Questions</span>
                             </span>
-                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
                               <span className="font-semibold text-slate-800">
-                                {passThreshold ?? 0}/{questionCount || 0}
+                                {passPercent !== null ? `${passPercent}%` : "--"}
                               </span>
                               <span className="text-slate-500">
-                                Pass {passPercent !== null ? `${passPercent}%` : "--"}
+                                to pass
                               </span>
                             </span>
-                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
                               <span className="font-semibold text-slate-800">{allowsMultiple ? "Multi" : "Single"}</span>
                               <span className="text-slate-600">Correct</span>
                             </span>
-                            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
-                              <span className="font-semibold text-slate-800">{isQuizLocked ? "Locked" : "Editable"}</span>
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2.5 py-1">
+                              <span className="font-semibold text-slate-800">{isQuizLocked ? "Locked" : "Changeable"}</span>
                               <span className="text-slate-600">Answers</span>
                             </span>
                           </div>
