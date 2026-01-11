@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { getLeaderboard } from "../../services/quizzes";
 
 const columns = [
@@ -20,6 +21,29 @@ export default function LeaderboardPage() {
     key: "avgPercent",
     direction: "desc"
   });
+  const avatarGradients = [
+    "from-rose-300 to-pink-400",
+    "from-sky-300 to-blue-400",
+    "from-emerald-300 to-green-400",
+    "from-orange-300 to-amber-400"
+  ];
+  const getAvatarGradient = (userId) => {
+    const value = String(userId || "");
+    let hash = 0;
+    for (let i = 0; i < value.length; i += 1) {
+      hash = (hash * 31 + value.charCodeAt(i)) % avatarGradients.length;
+    }
+    return avatarGradients[hash];
+  };
+  const opalBackdropStyle = {
+    backgroundColor: "#f7f5f1",
+    backgroundImage: `
+      radial-gradient(1200px 800px at 5% 0%, rgba(255, 227, 170, 0.28), transparent 60%),
+      radial-gradient(900px 700px at 85% 10%, rgba(255, 190, 220, 0.24), transparent 55%),
+      radial-gradient(1000px 800px at 15% 90%, rgba(180, 220, 255, 0.24), transparent 60%),
+      radial-gradient(900px 800px at 85% 85%, rgba(190, 235, 210, 0.24), transparent 60%)
+    `
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -105,7 +129,7 @@ export default function LeaderboardPage() {
     const isActive = sortConfig.key === key;
     const isAsc = sortConfig.direction === "asc";
     return (
-      <span className="inline-flex w-4 justify-center text-gray-300">
+      <span className="inline-flex w-4 justify-center text-slate-400">
         {isAsc ? (
           <svg
             className={`h-3 w-3 ${isActive ? "opacity-100" : "opacity-0"}`}
@@ -131,10 +155,13 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div
+        className="fixed inset-0 flex items-center justify-center"
+        style={opalBackdropStyle}
+      >
         <div className="relative flex flex-col items-center">
-          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-          <p className="mt-4 text-white font-medium">Loading leaderboard...</p>
+          <div className="w-16 h-16 border-4 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
+          <p className="mt-4 text-slate-600 font-medium">Loading leaderboard...</p>
         </div>
       </div>
     );
@@ -142,82 +169,109 @@ export default function LeaderboardPage() {
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 max-w-md text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+      <div className="fixed inset-0 flex items-center justify-center p-4" style={opalBackdropStyle}>
+        <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-8 border border-slate-200/80 max-w-md text-center shadow-sm">
+          <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-amber-400 rounded-full mx-auto mb-4 flex items-center justify-center">
             <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-3">Error</h3>
-          <p className="text-gray-300">{error}</p>
+          <h3 className="text-2xl font-bold text-slate-800 mb-3">Error</h3>
+          <p className="text-slate-600">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-16 sm:pt-20">
+    <>
+      <div className="fixed inset-0" style={opalBackdropStyle}></div>
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-1/4 left-1/4 w-[28rem] h-[28rem] bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] bg-rose-200/30 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 w-[30rem] h-[30rem] -translate-x-1/2 -translate-y-1/2 bg-sky-200/25 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
-      <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
-        <div className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 mb-3 sm:mb-4">
-            Leaderboard
-          </h1>
-          <p className="text-gray-300 text-base sm:text-lg">All quizzes combined</p>
-        </div>
+      <div className="relative min-h-screen pt-16 sm:pt-20">
+        <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
+          <div className="mb-9 sm:mb-12 text-center mt-0">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-800 mb-3 sm:mb-4 select-none">
+              Leaderboard
+            </h1>
+            <p className="text-slate-600 text-base sm:text-lg select-none">All quizzes combined</p>
+          </div>
 
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20">
-          <div className="rounded-2xl border border-white/20 bg-white/5 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm sm:text-base">
-              <thead className="bg-white/10 text-left text-gray-200">
-                <tr>
-                  {columns.map((column) => (
-                    <th key={column.key} className="px-3 sm:px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => handleSort(column.key)}
-                        className="inline-flex items-center gap-2 text-left font-semibold text-gray-100 hover:text-white"
-                      >
-                        <span>{column.label}</span>
-                        <span className="text-xs text-gray-300">{renderSortIcon(column.key)}</span>
-                      </button>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10 text-gray-100">
-                {sortedRows.length === 0 ? (
-                  <tr>
-                    <td className="px-3 sm:px-4 py-4 text-center text-gray-300" colSpan={columns.length}>
-                      No leaderboard data yet.
-                    </td>
-                  </tr>
-                ) : (
-                  sortedRows.map((entry, index) => (
-                    <tr key={entry.user_id}>
-                      <td className="px-3 sm:px-4 py-3 font-medium text-white">
-                        {baseRanks.get(entry.user_id) || index + 1}
-                      </td>
-                      <td className="px-3 sm:px-4 py-3 font-medium text-white">{entry.username}</td>
-                      <td className="px-3 sm:px-4 py-3">{Math.round(entry.avgPercent)}%</td>
-                      <td className="px-3 sm:px-4 py-3">{entry.totalCorrect}</td>
-                      <td className="px-3 sm:px-4 py-3">{entry.attemptsCount}</td>
-                      <td className="px-3 sm:px-4 py-3">{entry.quizzesTaken}</td>
-                      <td className="px-3 sm:px-4 py-3">{entry.quizzesCreated}</td>
+          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/60 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] text-sm sm:text-base">
+                  <thead className="bg-slate-100/70 text-left text-slate-600">
+                    <tr>
+                      {columns.map((column) => (
+                        <th
+                          key={column.key}
+                          className={`px-3 sm:px-4 py-3 ${
+                            column.key === "username" ? "text-left w-[220px] max-w-[220px]" : ""
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleSort(column.key)}
+                            className="inline-flex items-center gap-2 text-left font-semibold text-slate-700 hover:text-slate-900"
+                          >
+                            <span>{column.label}</span>
+                            <span className="text-xs text-slate-400">{renderSortIcon(column.key)}</span>
+                          </button>
+                        </th>
+                      ))}
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200/70 text-slate-700">
+                    {sortedRows.length === 0 ? (
+                      <tr>
+                        <td className="px-3 sm:px-4 py-4 text-center text-slate-500" colSpan={columns.length}>
+                          No leaderboard data yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      sortedRows.map((entry, index) => (
+                        <tr key={entry.user_id}>
+                          <td className="px-3 sm:px-4 py-3 font-medium text-slate-800">
+                            {baseRanks.get(entry.user_id) || index + 1}
+                          </td>
+                          <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left w-[220px] max-w-[220px]">
+                            <Link
+                              to={`/users/${entry.username}`}
+                              className="flex items-center gap-3 min-w-0 cursor-pointer text-slate-800 hover:text-slate-800 hover:font-semibold"
+                            >
+                              <div
+                                className={`h-9 w-9 shrink-0 rounded-full bg-gradient-to-br ${getAvatarGradient(entry.user_id)} flex items-center justify-center text-white font-semibold text-sm`}
+                              >
+                                {(entry.username || "?").charAt(0).toUpperCase()}
+                              </div>
+                              <span className="truncate">{entry.username}</span>
+                            </Link>
+                          </td>
+                          <td className="px-3 sm:px-4 py-3">{Math.round(entry.avgPercent)}%</td>
+                          <td className="px-3 sm:px-4 py-3">{entry.totalCorrect}</td>
+                          <td className="px-3 sm:px-4 py-3">{entry.attemptsCount}</td>
+                          <td className="px-3 sm:px-4 py-3">{entry.quizzesTaken}</td>
+                          <td className="px-3 sm:px-4 py-3">{entry.quizzesCreated}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }

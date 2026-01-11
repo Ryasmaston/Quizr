@@ -85,7 +85,7 @@ async function listFriends(req, res) {
     const friends = await Friend.find({
       accepted: true,
       $or: [{ user1: userId }, { user2: userId }],
-    }).populate("user1 user2", "username profile_pic");
+    }).populate("user1 user2", "username profile_pic created_at");
     res.status(200).json({ friends });
   } catch (err) {
     console.error(err);
@@ -100,7 +100,7 @@ async function pendingRequests(req, res) {
     const requests = await Friend.find({
       accepted: false,
       $or: [{ user1: userId }, { user2: userId }],
-    }).populate("user1 user2", "username profile_pic");
+    }).populate("user1 user2", "username profile_pic created_at");
     res.status(200).json({ requests });
   } catch (err) {
     console.error(err);
