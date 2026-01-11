@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../services/firebase";
@@ -34,8 +34,10 @@ export default function ProfilePage() {
   const [selectedQuizForStats, setSelectedQuizForStats] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState(null);
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("date");
+  const [sortDirection, setSortDirection] = useState("desc");
   const [takenSortBy, setTakenSortBy] = useState("highest_score");
+  const [takenSortDirection, setTakenSortDirection] = useState("desc");
   const returnTo = location.pathname;
 
   useEffect(() => {
@@ -78,31 +80,28 @@ export default function ProfilePage() {
     return () => { mounted = false };
   }, [loggedInUser]);
 
-  function getOtherUser(friend, myId) {
-    return friend.user1?._id?.toString() === myId?.toString() ? friend.user2 : friend.user1;
-  }
-
-  async function loadFriendState() {
-    if (accountStatus === "pending_deletion") return;
-    if (!loggedInUser || !profile?._id || !myUserId) return;
+  const loadFriendState = useCallback(async () => {
+    if (!loggedInUser || !profile || !myUserId || accountStatus === "loading") {
+      setIsFriend(false);
+      setPendingSent(false);
+      setIncomingRequest(null);
+      setFriendsLoading(false);
+      return;
+    }
     setFriendsLoading(true);
     try {
-      const [friendsRes, pendingRes] = await Promise.all([
+      const [friends, requests] = await Promise.all([
         getFriends(),
         getPendingRequests()
       ]);
-      const friends = friendsRes.friends || [];
-      const requests = pendingRes.requests || [];
-      const isAlreadyFriend = friends.some((f) => {
-        const other = getOtherUser(f, myUserId);
+      const isAlreadyFriend = friends.some((other) => {
         return other?._id === profile._id;
       });
       setIsFriend(isAlreadyFriend);
       setPendingSent(false);
       setIncomingRequest(null);
-      if (isAlreadyFriend) return;
       const relevantRequest = requests.find((r) => {
-        const other = getOtherUser(r, myUserId);
+        const other = r.user1._id === myUserId ? r.user2 : r.user1;
         return other?._id === profile._id;
       });
       if (!relevantRequest) return;
@@ -116,11 +115,11 @@ export default function ProfilePage() {
     } finally {
       setFriendsLoading(false);
     }
-  }
+  }, [loggedInUser, profile, myUserId, accountStatus]);
 
   useEffect(() => {
     loadFriendState();
-  }, [loggedInUser, profile, myUserId, accountStatus]);
+  }, [loadFriendState]);
 
   useEffect(() => {
     if (accountStatus !== "pending_deletion") return;
@@ -489,6 +488,28 @@ export default function ProfilePage() {
     science: "from-blue-500 to-cyan-500",
     other: "from-gray-500 to-slate-500"
   };
+  const categoryGradients = {
+    art: {
+      className: "from-pink-500 to-rose-500",
+      hover: { primary: "236 72 153", secondary: "244 63 94" }
+    },
+    history: {
+      className: "from-amber-500 to-orange-500",
+      hover: { primary: "245 158 11", secondary: "249 115 22" }
+    },
+    music: {
+      className: "from-purple-500 to-indigo-500",
+      hover: { primary: "168 85 247", secondary: "99 102 241" }
+    },
+    science: {
+      className: "from-blue-500 to-cyan-500",
+      hover: { primary: "59 130 246", secondary: "6 182 212" }
+    },
+    other: {
+      className: "from-gray-500 to-slate-500",
+      hover: { primary: "107 114 128", secondary: "100 116 139" }
+    }
+  };
   const categoryStripeColors = {
     art: "bg-rose-200/80 text-rose-700",
     history: "bg-amber-200/80 text-amber-700",
@@ -530,6 +551,19 @@ export default function ProfilePage() {
       className: "border-rose-400/40 bg-rose-500/20 text-rose-700 hover:border-rose-200/80 hover:bg-rose-100/70 hover:text-rose-700",
       icon: "/hard.svg"
     }
+  };
+
+  const handleCardMouseMove = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    event.currentTarget.style.setProperty("--hover-x", `${x}%`);
+    event.currentTarget.style.setProperty("--hover-y", `${y}%`);
+  };
+
+  const handleCardMouseLeave = (event) => {
+    event.currentTarget.style.setProperty("--hover-x", "50%");
+    event.currentTarget.style.setProperty("--hover-y", "50%");
   };
 
   const totalQuestions = takenQuizzes.reduce((sum, quiz) => sum + quiz.totalQuestions, 0);
@@ -668,23 +702,47 @@ export default function ProfilePage() {
               <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Quizzes created</h2>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/80 h-[38px]">
-                  {['newest', 'oldest', 'stars'].map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => setSortBy(option)}
-                      className={`w-20 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none ${sortBy === option
-                        ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50'
-                        : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                      style={{ WebkitTapHighlightColor: 'transparent' }}
-                    >
-                      {option}
-                    </button>
-                  ))}
+                  {['date', 'stars'].map((option) => {
+                      const isActive = sortBy === option;
+                      const isAsc = isActive && sortDirection === "asc";
+                      return (
+                        <button
+                          key={option}
+                          onClick={() => {
+                            if (isActive) {
+                              setSortDirection(prev => prev === "desc" ? "asc" : "desc");
+                            } else {
+                              setSortBy(option);
+                              setSortDirection("desc");
+                            }
+                          }}
+                          className={`w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isActive
+                            ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50'
+                            : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                          style={{ WebkitTapHighlightColor: 'transparent' }}
+                        >
+                          {option === 'date' ? (isAsc ? 'Oldest' : 'Newest') : 'Stars'}
+                          {isActive && (
+                            <span className="inline-flex w-3 justify-center">
+                              {isAsc ? (
+                                <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 5l4 6H6l4-6z" />
+                                </svg>
+                              ) : (
+                                <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 15l-4-6h8l-4 6z" />
+                                </svg>
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                 </div>
-                <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px]">
+                <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px] cursor-default">
                   <span className="text-slate-700 font-semibold text-xs whitespace-nowrap leading-none">
-                    {createdQuizzes.length} Quiz{createdQuizzes.length !== 1 ? 'zes' : ''}
+                    {createdQuizzes.length} quiz{createdQuizzes.length !== 1 ? 'zes' : ''}
                   </span>
                 </div>
               </div>
@@ -720,10 +778,11 @@ export default function ProfilePage() {
                       const getCount = (q) =>
                         q.favourited_count ??
                         (Array.isArray(q.favourites) ? q.favourites.length : q.favouritesCount ?? 0);
-                      return getCount(b) - getCount(a);
+                      return sortDirection === "desc" ? getCount(b) - getCount(a) : getCount(a) - getCount(b);
                     }
-                    if (sortBy === "newest") return new Date(b.created_at) - new Date(a.created_at);
-                    if (sortBy === "oldest") return new Date(a.created_at) - new Date(b.created_at);
+                    if (sortBy === "date") {
+                      return sortDirection === "desc" ? new Date(b.created_at) - new Date(a.created_at) : new Date(a.created_at) - new Date(b.created_at);
+                    }
                     return 0;
                   })
                   .map((quiz) => {
@@ -754,11 +813,25 @@ export default function ProfilePage() {
                           if (isAccountLocked) return;
                           navigate(`/quiz/${quiz._id}`, { state: { returnTo } });
                         }}
+                        onMouseMove={handleCardMouseMove}
+                        onMouseLeave={handleCardMouseLeave}
                         className={`group relative bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transform transition-all duration-300 ease-out ${isAccountLocked
                           ? "cursor-not-allowed opacity-60"
-                          : "hover:border-slate-300 hover:bg-white hover:shadow-[0_0_20px_0_rgba(203,213,225,0.6)] hover:scale-[1.01] cursor-pointer"
+                          : "hover:border-slate-300 hover:bg-white hover:scale-[1.012] cursor-pointer"
                           }`}
+                        style={{ "--shadow-color": (categoryGradients[quiz.category] || categoryGradients.other).hover.primary }}
                       >
+                        <div
+                          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-45 transition-opacity blur-2xl"
+                          style={{
+                            background: `
+                            radial-gradient(300px 220px at var(--hover-x, 50%) 110%, rgb(${(categoryGradients[quiz.category] || categoryGradients.other).hover.primary} / 0.4), transparent 70%),
+                            radial-gradient(260px 200px at -6% var(--hover-y, 50%), rgb(${(categoryGradients[quiz.category] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%),
+                            radial-gradient(260px 200px at 106% var(--hover-y, 50%), rgb(${(categoryGradients[quiz.category] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%)
+                          `
+                          }}
+                        ></div>
+                        <div className="relative z-10">
                         <div className={`flex items-center justify-between px-4 py-2 ${categoryStripeColors[quiz.category] || categoryStripeColors.other}`}>
                           <div className="flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -913,6 +986,7 @@ export default function ProfilePage() {
                             </span>
                           </div>
                         </div>
+                        </div>
                       </div>
                     );
                   })}
@@ -967,12 +1041,14 @@ export default function ProfilePage() {
             </div>
           )}
           {isOwnProfile && (
-            <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-5 sm:p-6 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">Favourites</h2>
-                <span className="rounded-full bg-slate-100/80 border border-slate-200/80 px-3 py-1 text-xs font-semibold text-slate-600">
-                  {myFavourites.length} total
-                </span>
+            <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+                <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Favourites</h2>
+                <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px] cursor-default">
+                  <span className="text-slate-700 font-semibold text-xs whitespace-nowrap leading-none">
+                    {myFavourites.length} quiz{myFavourites.length !== 1 ? 'zes' : ''}
+                  </span>
+                </div>
               </div>
               {myFavourites.length === 0 ? (
                 <div className="text-center py-10">
@@ -1098,12 +1174,30 @@ export default function ProfilePage() {
                       </>
                     );
 
-                    const cardClass = `group relative block bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm transition-all duration-300 ease-out ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 hover:bg-white hover:shadow-[0_0_20px_0_rgba(203,213,225,0.6)] hover:scale-[1.01]"
+                    const cardClass = `group relative block bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm transition-all duration-300 ease-out ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 hover:bg-white hover:scale-[1.012]"
                       }`;
 
                     return isAccountLocked ? (
-                      <div key={quizId} className={cardClass}>
-                        {cardContent}
+                      <div 
+                        key={quizId} 
+                        className={cardClass}
+                        onMouseMove={handleCardMouseMove}
+                        onMouseLeave={handleCardMouseLeave}
+                        style={{ "--shadow-color": (categoryGradients[quizCategory] || categoryGradients.other).hover.primary }}
+                      >
+                        <div
+                          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-45 transition-opacity blur-2xl"
+                          style={{
+                            background: `
+                            radial-gradient(300px 220px at var(--hover-x, 50%) 110%, rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.primary} / 0.4), transparent 70%),
+                            radial-gradient(260px 200px at -6% var(--hover-y, 50%), rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%),
+                            radial-gradient(260px 200px at 106% var(--hover-y, 50%), rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%)
+                          `
+                          }}
+                        ></div>
+                        <div className="relative z-10">
+                          {cardContent}
+                        </div>
                       </div>
                     ) : (
                       <Link
@@ -1111,8 +1205,23 @@ export default function ProfilePage() {
                         to={`/quiz/${quizId}`}
                         state={{ returnTo }}
                         className={cardClass}
+                        onMouseMove={handleCardMouseMove}
+                        onMouseLeave={handleCardMouseLeave}
+                        style={{ "--shadow-color": (categoryGradients[quizCategory] || categoryGradients.other).hover.primary }}
                       >
-                        {cardContent}
+                        <div
+                          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-45 transition-opacity blur-2xl"
+                          style={{
+                            background: `
+                            radial-gradient(300px 220px at var(--hover-x, 50%) 110%, rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.primary} / 0.4), transparent 70%),
+                            radial-gradient(260px 200px at -6% var(--hover-y, 50%), rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%),
+                            radial-gradient(260px 200px at 106% var(--hover-y, 50%), rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%)
+                          `
+                          }}
+                        ></div>
+                        <div className="relative z-10">
+                          {cardContent}
+                        </div>
                       </Link>
                     );
                   })}
@@ -1126,23 +1235,47 @@ export default function ProfilePage() {
                 <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Quizzes Taken</h2>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/80 h-[38px]">
-                    {['highest_score', 'category', 'difficulty', 'questions'].map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => setTakenSortBy(option)}
-                        className={`w-20 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none ${takenSortBy === option
-                          ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50'
-                          : 'text-slate-500 hover:text-slate-700'
-                          }`}
-                        style={{ WebkitTapHighlightColor: 'transparent' }}
-                      >
-                        {option === 'highest_score' ? 'Score' : option === 'questions' ? 'Questions' : option}
-                      </button>
-                    ))}
+                    {['highest_score', 'category', 'difficulty', 'questions', 'taken_on'].map((option) => {
+                      const isActive = takenSortBy === option;
+                      const isAsc = isActive && takenSortDirection === "asc";
+                      return (
+                        <button
+                          key={option}
+                          onClick={() => {
+                            if (isActive) {
+                              setTakenSortDirection(prev => prev === "desc" ? "asc" : "desc");
+                            } else {
+                              setTakenSortBy(option);
+                              setTakenSortDirection("desc");
+                            }
+                          }}
+                          className={`w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isActive
+                            ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50'
+                            : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                          style={{ WebkitTapHighlightColor: 'transparent' }}
+                        >
+                          {option === 'highest_score' ? 'Score' : option === 'questions' ? 'Questions' : option === 'taken_on' ? 'Taken on' : option === 'category' ? 'Category' : option === 'difficulty' ? 'Difficulty' : option}
+                          {isActive && (
+                            <span className="inline-flex w-3 justify-center">
+                              {isAsc ? (
+                                <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 5l4 6H6l4-6z" />
+                                </svg>
+                              ) : (
+                                <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 15l-4-6h8l-4 6z" />
+                                </svg>
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px]">
+                  <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px] cursor-default">
                     <span className="text-slate-700 font-semibold text-xs whitespace-nowrap leading-none">
-                      {takenQuizzes.length} Quiz{takenQuizzes.length !== 1 ? 'zes' : ''}
+                      {takenQuizzes.length} quiz{takenQuizzes.length !== 1 ? 'zes' : ''}
                     </span>
                   </div>
                 </div>
@@ -1231,30 +1364,54 @@ export default function ProfilePage() {
                     if (takenSortBy === "highest_score") {
                       const aPercentage = (a.correct / a.totalQuestions) * 100;
                       const bPercentage = (b.correct / b.totalQuestions) * 100;
-                      return bPercentage - aPercentage;
+                      return takenSortDirection === "desc" ? bPercentage - aPercentage : aPercentage - bPercentage;
                     }
                     if (takenSortBy === "category") {
-                      return (a.category || 'other').localeCompare(b.category || 'other');
+                      const aCat = a.category || 'other';
+                      const bCat = b.category || 'other';
+                      return takenSortDirection === "desc" ? bCat.localeCompare(aCat) : aCat.localeCompare(bCat);
                     }
                     if (takenSortBy === "difficulty") {
                       const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
                       const aDifficulty = difficultyOrder[a.difficulty] || 2;
                       const bDifficulty = difficultyOrder[b.difficulty] || 2;
-                      return aDifficulty - bDifficulty;
+                      return takenSortDirection === "desc" ? bDifficulty - aDifficulty : aDifficulty - bDifficulty;
                     }
                     if (takenSortBy === "questions") {
-                      return b.totalQuestions - a.totalQuestions;
+                      return takenSortDirection === "desc" ? b.totalQuestions - a.totalQuestions : a.totalQuestions - b.totalQuestions;
+                    }
+                    if (takenSortBy === "taken_on") {
+                      const aDate = new Date(a.attempted_at);
+                      const bDate = new Date(b.attempted_at);
+                      return takenSortDirection === "desc" ? bDate - aDate : aDate - bDate;
                     }
                     return 0;
                   }).map((quiz) => {
                     const percentage = Math.round((quiz.correct / quiz.totalQuestions) * 100);
                     const isMastered = percentage === 100;
-                    const gradientClass = "from-slate-800 to-green-600";
-
-                    const takenClass = `group block bg-white/80 backdrop-blur rounded-2xl p-5 border shadow-sm transition-all duration-200 ease-out ${isAccountLocked ? "opacity-60 cursor-not-allowed" : `hover:border-slate-300 hover:bg-white hover:shadow-[0_0_20px_0_rgba(203,213,225,0.6)] hover:scale-[1.005] ${isMastered ? 'border-amber-300/60 hover:border-amber-400/80' : 'border-slate-200/80'}`
-                      }`;
+                    const getGradientStyle = () => {
+                      if (percentage === 100) {
+                        return { background: 'linear-gradient(to right, rgb(245 158 11), rgb(217 119 6))' };
+                      }
+                      if (percentage >= 70) {
+                        // Create a smooth gradient transition starting at 70%
+                        const goldTransitionStart = (70 / percentage) * 100;
+                        const goldTransitionEnd = Math.min((80 / percentage) * 100, 100);
+                        return {
+                          background: `linear-gradient(to right, 
+                            rgb(71 85 105) 0%, 
+                            rgb(71 85 105) ${goldTransitionStart}%, 
+                            rgb(158 124 58) ${goldTransitionEnd}%, 
+                            rgb(245 158 11) 100%)`
+                        };
+                      }
+                      return { background: 'linear-gradient(to right, rgb(71 85 105), rgb(51 65 85))' };
+                    };
 
                     const quizCategory = quiz.category || "other";
+                    
+                    const takenClass = `group block bg-white/80 backdrop-blur rounded-2xl p-5 border shadow-sm transition-all duration-200 ease-out ${isAccountLocked ? "opacity-60 cursor-not-allowed" : `hover:border-slate-300 hover:bg-white hover:scale-[1.005] ${isMastered ? 'border-amber-300/60 hover:border-amber-400/80' : 'border-slate-200/80'}`
+                      }`;
                     const difficultyKey = difficultyChips[quiz.difficulty] ? quiz.difficulty : "medium";
                     const difficulty = difficultyChips[difficultyKey];
 
@@ -1283,7 +1440,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
-                          <div className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other} px-3 py-1.5 text-xs font-bold text-white shadow-sm`}>
+                          <div className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${categoryColors[quizCategory] || categoryColors.other} px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all duration-300 ease-out`}>
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                               {categoryIcons[quizCategory] || categoryIcons.other}
                             </svg>
@@ -1319,8 +1476,11 @@ export default function ProfilePage() {
                           </div>
                           <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-100">
                             <div
-                              className={`h-full bg-gradient-to-r ${gradientClass} transition-all duration-500 ease-out`}
-                              style={{ width: `${percentage}%` }}
+                              className="h-full transition-all duration-500 ease-out rounded-r-full"
+                              style={{ 
+                                width: `${percentage}%`,
+                                ...getGradientStyle()
+                              }}
                             ></div>
                           </div>
                         </div>
@@ -1328,8 +1488,26 @@ export default function ProfilePage() {
                     );
 
                     return isAccountLocked ? (
-                      <div key={quiz._id} className={takenClass}>
-                        {takenContent}
+                      <div 
+                        key={quiz._id} 
+                        className={takenClass}
+                        onMouseMove={handleCardMouseMove}
+                        onMouseLeave={handleCardMouseLeave}
+                        style={{ "--shadow-color": (categoryGradients[quizCategory] || categoryGradients.other).hover.primary }}
+                      >
+                        <div
+                          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-45 transition-opacity blur-2xl"
+                          style={{
+                            background: `
+                            radial-gradient(300px 220px at var(--hover-x, 50%) 110%, rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.primary} / 0.4), transparent 70%),
+                            radial-gradient(260px 200px at -6% var(--hover-y, 50%), rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%),
+                            radial-gradient(260px 200px at 106% var(--hover-y, 50%), rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%)
+                          `
+                          }}
+                        ></div>
+                        <div className="relative z-10">
+                          {takenContent}
+                        </div>
                       </div>
                     ) : (
                       <Link
@@ -1337,8 +1515,23 @@ export default function ProfilePage() {
                         to={`/quiz/${quiz._id}`}
                         state={{ returnTo }}
                         className={takenClass}
+                        onMouseMove={handleCardMouseMove}
+                        onMouseLeave={handleCardMouseLeave}
+                        style={{ "--shadow-color": (categoryGradients[quizCategory] || categoryGradients.other).hover.primary }}
                       >
-                        {takenContent}
+                        <div
+                          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-45 transition-opacity blur-2xl"
+                          style={{
+                            background: `
+                            radial-gradient(300px 220px at var(--hover-x, 50%) 110%, rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.primary} / 0.4), transparent 70%),
+                            radial-gradient(260px 200px at -6% var(--hover-y, 50%), rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%),
+                            radial-gradient(260px 200px at 106% var(--hover-y, 50%), rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.secondary} / 0.32), transparent 70%)
+                          `
+                          }}
+                        ></div>
+                        <div className="relative z-10">
+                          {takenContent}
+                        </div>
                       </Link>
                     );
                   })}
