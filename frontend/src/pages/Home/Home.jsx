@@ -12,6 +12,7 @@ export function Home() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const navigate = useNavigate();
   const location = useLocation();
+  const returnTo = `${location.pathname}${location.search || ""}`;
   const opalBackdropStyle = {
     backgroundColor: "#f7f5f1",
     backgroundImage: `
@@ -355,6 +356,7 @@ useEffect(() => {
                 <Link
                   key={quiz._id}
                   to={`/quiz/${quiz._id}`}
+                  state={{ returnTo }}
                   className="group relative block"
                   onMouseMove={handleCardMouseMove}
                   onMouseLeave={handleCardMouseLeave}

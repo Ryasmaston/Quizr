@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const [selectedQuizForStats, setSelectedQuizForStats] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState(null);
+  const returnTo = location.pathname;
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -444,6 +445,13 @@ export default function ProfilePage() {
     science: "from-blue-500 to-cyan-500",
     other: "from-gray-500 to-slate-500"
   };
+  const categoryStripeColors = {
+    art: "bg-rose-200/80 text-rose-700",
+    history: "bg-amber-200/80 text-amber-700",
+    music: "bg-sky-200/80 text-sky-700",
+    science: "bg-emerald-200/80 text-emerald-700",
+    other: "bg-slate-200/80 text-slate-700"
+  };
 
   const categoryIcons = {
     art: (
@@ -806,7 +814,12 @@ export default function ProfilePage() {
                       {cardContent}
                     </div>
                   ) : (
-                    <Link key={quizId} to={`/quiz/${quizId}`} className={cardClass}>
+                    <Link
+                      key={quizId}
+                      to={`/quiz/${quizId}`}
+                      state={{ returnTo }}
+                      className={cardClass}
+                    >
                       {cardContent}
                     </Link>
                   );
@@ -899,7 +912,12 @@ export default function ProfilePage() {
                     {takenContent}
                   </div>
                 ) : (
-                  <Link key={quiz._id} to={`/quiz/${quiz._id}`} className={takenClass}>
+                  <Link
+                    key={quiz._id}
+                    to={`/quiz/${quiz._id}`}
+                    state={{ returnTo }}
+                    className={takenClass}
+                  >
                     {takenContent}
                   </Link>
                 );
@@ -960,7 +978,7 @@ export default function ProfilePage() {
                     key={quiz._id}
                     onClick={() => {
                       if (isAccountLocked) return;
-                      window.location.href = `/quiz/${quiz._id}`;
+                      navigate(`/quiz/${quiz._id}`, { state: { returnTo } });
                     }}
                     className={`group relative bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transform duration-300 ${
                       isAccountLocked
@@ -968,16 +986,30 @@ export default function ProfilePage() {
                         : "hover:border-slate-300 hover:bg-white cursor-pointer transition-colors"
                     }`}
                   >
-                    <div className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${categoryColors[quiz.category] || categoryColors.other}`}>
-                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className={`flex items-center gap-2 px-4 py-2 ${categoryStripeColors[quiz.category] || categoryStripeColors.other}`}>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         {categoryIcons[quiz.category] || categoryIcons.other}
                       </svg>
-                      <span className="text-xs font-semibold text-white capitalize">{quiz.category}</span>
+                      <span className="text-xs font-semibold capitalize">{quiz.category}</span>
                     </div>
                     <div className="px-6 pt-4 pb-3">
                       <div className="flex items-center justify-between mb-4">
                         <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                          <img src={`/${quiz.difficulty || "medium"}.svg`} alt="" aria-hidden="true" className="h-4 w-4" />
+                          <span
+                            aria-hidden="true"
+                            className="h-4 w-4 text-slate-700"
+                            style={{
+                              backgroundColor: "currentColor",
+                              maskImage: `url(/${quiz.difficulty || "medium"}.svg)`,
+                              WebkitMaskImage: `url(/${quiz.difficulty || "medium"}.svg)`,
+                              maskRepeat: "no-repeat",
+                              WebkitMaskRepeat: "no-repeat",
+                              maskPosition: "center",
+                              WebkitMaskPosition: "center",
+                              maskSize: "contain",
+                              WebkitMaskSize: "contain"
+                            }}
+                          ></span>
                           <span className="capitalize">{quiz.difficulty || "medium"}</span>
                         </span>
                         {isOwnProfile && !isAccountLocked && (

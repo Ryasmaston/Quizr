@@ -7,7 +7,7 @@ const { runDueDeletions } = require("./services/userDeletion");
 
 function listenForRequests() {
   const port = process.env.PORT || 3000;
-  app.listen(port, () => {
+  app.listen(port, "0.0.0.0", () => {
     console.log("Now listening on port", port);
   });
 }

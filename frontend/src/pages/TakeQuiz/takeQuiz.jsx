@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
@@ -21,6 +21,7 @@ function TakeQuizPage() {
     //Getting the quiz id from the URL e.g. /quiz/:id
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     //Storing the quiz data from the backend
     const [quiz, setQuiz] = useState(null);
     // Phase of the quiz
@@ -102,6 +103,7 @@ const authorName = authorIsDeleted
   ? "deleted user"
   : authorUsername || "Unknown";
 const canNavigateToAuthor = !authorIsDeleted && Boolean(authorUsername);
+const returnTo = location.state?.returnTo;
 const baseQuizLeaderboard = useMemo(() => {
     const attempts = Array.isArray(quiz?.attempts) ? quiz.attempts : [];
     const questionsCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0;
@@ -528,7 +530,13 @@ return (
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-800 mb-3 sm:mb-4 select-none">
             {quiz.title}
         </h1>
-        <p className="text-slate-600 text-base sm:text-lg select-none">Ready to take on this quiz?</p>
+        <p
+          className={`text-slate-600 text-base sm:text-lg select-none transition-opacity ${
+            phase === "inProgress" ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
+          Ready to take on this quiz?
+        </p>
         </div>
 
         {phase === "intro" && (
@@ -701,7 +709,28 @@ return (
                 </div>
                 </div>
             </div>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 w-full items-stretch">
+            <div className="mt-6 grid gap-4 sm:grid-cols-3 w-full items-stretch">
+            <button
+                className="w-full h-full rounded-2xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 px-6 py-5 text-lg leading-tight"
+                type="button"
+                onClick={() => navigate(returnTo || -1)}
+            >
+                <svg
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                >
+                <path d="M10 8l-4 4 4 4" />
+                <path d="M6 12h8" />
+                <path d="M14 5h4a1 1 0 011 1v12a1 1 0 01-1 1h-4" />
+                </svg>
+                <span>Exit</span>
+            </button>
             <button
                 className="w-full h-full rounded-2xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors flex items-center justify-center px-6 py-5 text-xl leading-tight"
                 onClick={startQuiz}
@@ -892,7 +921,7 @@ return (
                     isSelected
                         ? "bg-slate-100/80 border-slate-300 text-slate-900"
                         : "bg-white/60 border-slate-200/80 text-slate-700"
-                    } ${isLocked ? "cursor-not-allowed opacity-60" : "hover:bg-white/80"}`}
+                    } ${isLocked ? "cursor-not-allowed opacity-60" : "hover:bg-slate-100"}`}
                     onClick={() => handleSelect(answer._id)}
                     type="button"
                     disabled={isLocked}
@@ -905,7 +934,30 @@ return (
 
             <div className="mt-6 flex gap-3 flex-wrap">
             <button
-                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-white/90 transition-colors disabled:opacity-50"
+                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors"
+                onClick={returnToQuiz}
+                type="button"
+            >
+                <span className="inline-flex items-center justify-center gap-2">
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M10 8l-4 4 4 4" />
+                    <path d="M6 12h8" />
+                    <path d="M14 5h4a1 1 0 011 1v12a1 1 0 01-1 1h-4" />
+                  </svg>
+                  <span>Exit</span>
+                </span>
+            </button>
+            <button
+                className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors disabled:opacity-50"
                 onClick={goBack}
                 disabled={currentIndex === 0}
                 type="button"

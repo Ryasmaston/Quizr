@@ -92,7 +92,8 @@ export default function EditQuiz() {
   const [reqToPass, setReqToPass] = useState(1);
   const prevQuestionCountRef = useRef(questions.length);
   const [initialSnapshot, setInitialSnapshot] = useState(null);
-  const ignoreBlockRef = useRef(false);
+  const [ignoreBlocker, setIgnoreBlocker] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(false);
   const opalBackdropStyle = {
     backgroundColor: "#f7f5f1",
     backgroundImage: `
@@ -145,14 +146,21 @@ export default function EditQuiz() {
         setRequireAllCorrect(Boolean(quiz.require_all_correct));
         setLockAnswers(Boolean(quiz.lock_answers));
         const questionList = Array.isArray(quiz.questions) ? quiz.questions : [];
-        const maxAnswers = Math.max(
-          DEFAULT_ANSWERS_PER_QUESTION,
+        const maxAnswersFromQuestions = Math.max(
+          0,
           ...questionList.map((item) => item.answers?.length || 0)
+        );
+        const maxAnswers = maxAnswersFromQuestions || DEFAULT_ANSWERS_PER_QUESTION;
+        const minAnswers = ANSWER_COUNT_OPTIONS[0];
+        const maxAllowedAnswers = ANSWER_COUNT_OPTIONS[ANSWER_COUNT_OPTIONS.length - 1];
+        const clampedAnswers = Math.min(
+          Math.max(maxAnswers, minAnswers),
+          maxAllowedAnswers
         );
         const normalizedQuestions = questionList.map((question) => ({
           _id: question._id,
           text: question.text || "",
-          answers: Array.from({ length: maxAnswers }, (_, index) => {
+          answers: Array.from({ length: clampedAnswers }, (_, index) => {
             const existing = question.answers?.[index];
             return {
               _id: existing?._id,
@@ -165,7 +173,7 @@ export default function EditQuiz() {
         const resolvedReqToPass = Number.isFinite(quiz.req_to_pass)
           ? Math.min(quiz.req_to_pass, normalizedQuestions.length || 1)
           : 1;
-        setAnswersPerQuestion(maxAnswers);
+        setAnswersPerQuestion(clampedAnswers);
         setQuestions(resolvedQuestions);
         setReqToPass(resolvedReqToPass);
         prevQuestionCountRef.current = normalizedQuestions.length || 1;
@@ -296,7 +304,7 @@ export default function EditQuiz() {
   );
   const hasChanges = Boolean(initialSnapshot) && currentSnapshot !== initialSnapshot;
 
-  const blocker = useBlocker(hasChanges && !ignoreBlockRef.current);
+  const blocker = useBlocker(hasChanges && !ignoreBlocker);
 
   useEffect(() => {
     if (blocker.state !== "blocked") return;
@@ -331,6 +339,11 @@ export default function EditQuiz() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasChanges]);
+
+  useEffect(() => {
+    if (!pendingNavigation || !ignoreBlocker) return;
+    navigate(returnTo);
+  }, [pendingNavigation, ignoreBlocker, navigate, returnTo]);
 
   if (loading)
     return (
@@ -425,9 +438,11 @@ export default function EditQuiz() {
         lock_answers: lockAnswers,
         req_to_pass: safeReqToPass,
       });
-      ignoreBlockRef.current = true;
-      navigate(returnTo);
+      setIgnoreBlocker(true);
+      setPendingNavigation(true);
     } catch (err) {
+      setIgnoreBlocker(false);
+      setPendingNavigation(false);
       alert(err.message);
     }
   }
@@ -437,24 +452,24 @@ export default function EditQuiz() {
       value: "easy",
       label: "Easy",
       description: "Review every question after finishing, including the correct answers.",
-      gradient: "from-emerald-500 to-lime-500",
-      border: "border-emerald-400/60",
+      gradient: "from-emerald-500/80 via-emerald-500/80 to-emerald-500/80",
+      border: "border-emerald-400/50",
       icon: "/easy.svg",
     },
     {
       value: "medium",
       label: "Medium",
       description: "Review every question after finishing, showing which selections were right or wrong.",
-      gradient: "from-amber-500 to-yellow-500",
-      border: "border-amber-400/60",
+      gradient: "from-amber-400/85 via-amber-400/85 to-amber-400/85",
+      border: "border-amber-400/50",
       icon: "/medium.svg",
     },
     {
       value: "hard",
       label: "Hard",
       description: "Only see the total number of correct answers after finishing.",
-      gradient: "from-rose-500 to-red-600",
-      border: "border-rose-400/60",
+      gradient: "from-rose-500/85 via-rose-500/85 to-rose-500/85",
+      border: "border-rose-400/50",
       icon: "/hard.svg",
     },
   ];
