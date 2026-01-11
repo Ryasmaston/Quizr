@@ -651,7 +651,7 @@ export default function ProfilePage() {
                           <button onClick={handleRemove} className="px-6 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors">Decline</button>
                         </>
                       ) : (
-                        <button onClick={handleSendRequest} disabled={sendingRequest} className="px-6 py-2.5 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">{sendingRequest ? "Sending..." : "Add Friend"}</button>
+                        <button onClick={handleSendRequest} disabled={sendingRequest} className="px-6 py-2.5 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50">{sendingRequest ? "Sending..." : "Add Friend"}</button>
                       )}
                     </div>
                   )}
@@ -727,7 +727,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={handleCancelDeletion}
                     disabled={deletionActionLoading}
-                    className="px-5 py-2.5 rounded-xl bg-white/80 text-slate-700 font-semibold border border-amber-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 rounded-xl bg-white/80 text-slate-700 font-semibold border border-amber-200/80 hover:bg-white transition-colors disabled:opacity-50"
                   >
                     {deletionActionLoading ? "Working..." : "Cancel Deletion"}
                   </button>
@@ -735,7 +735,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={handleDeleteNow}
                     disabled={deletionActionLoading}
-                    className="px-5 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors disabled:opacity-50"
                   >
                     Delete Now
                   </button>
@@ -764,7 +764,7 @@ export default function ProfilePage() {
                             }
                           }}
                           className={`w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isAccountLocked
-                            ? "opacity-50 cursor-not-allowed text-slate-400"
+                            ? "opacity-50 text-slate-400"
                             : isActive
                               ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50'
                               : 'text-slate-500 hover:text-slate-700'
@@ -789,8 +789,8 @@ export default function ProfilePage() {
                       );
                     })}
                 </div>
-                <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px] cursor-default">
-                  <span className="text-slate-700 font-semibold text-xs whitespace-nowrap leading-none">
+                <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[38px] cursor-default ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60' : 'bg-slate-100/80 border-slate-200/80'}`}>
+                  <span className={`font-semibold text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400' : 'text-slate-700'}`}>
                     {createdQuizzes.length} quiz{createdQuizzes.length !== 1 ? 'zes' : ''}
                   </span>
                 </div>
@@ -862,16 +862,16 @@ export default function ProfilePage() {
                           if (isAccountLocked) return;
                           navigate(`/quiz/${quiz._id}`, { state: { returnTo } });
                         }}
-                        onMouseMove={handleCardMouseMove}
-                        onMouseLeave={handleCardMouseLeave}
+                        onMouseMove={isAccountLocked ? undefined : handleCardMouseMove}
+                        onMouseLeave={isAccountLocked ? undefined : handleCardMouseLeave}
                         className={`group relative bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transform transition-all duration-300 ease-out ${isAccountLocked
-                          ? "cursor-not-allowed opacity-60"
+                          ? "opacity-60"
                           : "hover:border-slate-300 hover:bg-white hover:scale-[1.012] cursor-pointer"
                           }`}
                         style={{ "--shadow-color": (categoryGradients[quiz.category] || categoryGradients.other).hover.primary }}
                       >
                         <div
-                          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-45 transition-opacity blur-2xl"
+                          className={`pointer-events-none absolute inset-0 transition-opacity blur-2xl ${isAccountLocked ? "opacity-0" : "opacity-0 group-hover:opacity-45"}`}
                           style={{
                             background: `
                             radial-gradient(300px 220px at var(--hover-x, 50%) 110%, rgb(${(categoryGradients[quiz.category] || categoryGradients.other).hover.primary} / 0.4), transparent 70%),
@@ -1013,7 +1013,7 @@ export default function ProfilePage() {
                                 handleViewStats(quiz._id);
                               }}
                               disabled={isAccountLocked}
-                              className={`w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-bold transition-all duration-100 ease-out flex items-center justify-center gap-2 ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-100/80 active:scale-95"
+                              className={`w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-bold transition-all duration-100 ease-out flex items-center justify-center gap-2 ${isAccountLocked ? "opacity-50" : "hover:bg-slate-100/80 active:scale-95"
                                 }`}
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1047,8 +1047,8 @@ export default function ProfilePage() {
             <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                 <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Favourites</h2>
-                <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px] cursor-default">
-                  <span className="text-slate-700 font-semibold text-xs whitespace-nowrap leading-none">
+                <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[38px] cursor-default ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60' : 'bg-slate-100/80 border-slate-200/80'}`}>
+                  <span className={`font-semibold text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400' : 'text-slate-700'}`}>
                     {myFavourites.length} quiz{myFavourites.length !== 1 ? 'zes' : ''}
                   </span>
                 </div>
@@ -1101,7 +1101,7 @@ export default function ProfilePage() {
                                 handleRemoveFavourite(quizId);
                               }}
                               disabled={isAccountLocked}
-                              className={`px-3 py-1.5 rounded-xl bg-rose-50/70 backdrop-blur text-rose-600 text-xs font-bold transition-all duration-100 ease-out ${isAccountLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-100/80 active:scale-95"}`}
+                              className={`px-3 py-1.5 rounded-xl bg-rose-50/70 backdrop-blur text-rose-600 text-xs font-bold transition-all duration-100 ease-out ${isAccountLocked ? "opacity-50" : "hover:bg-rose-100/80 active:scale-95"}`}
                             >
                               Remove
                             </button>
@@ -1177,19 +1177,17 @@ export default function ProfilePage() {
                       </>
                     );
 
-                    const cardClass = `group relative block bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm transition-all duration-300 ease-out ${isAccountLocked ? "opacity-60 cursor-not-allowed" : "hover:border-slate-300 hover:bg-white hover:scale-[1.012]"
+                    const cardClass = `group relative block bg-white/80 backdrop-blur rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm transition-all duration-300 ease-out ${isAccountLocked ? "opacity-60" : "hover:border-slate-300 hover:bg-white hover:scale-[1.012]"
                       }`;
 
                     return isAccountLocked ? (
                       <div 
                         key={quizId} 
                         className={cardClass}
-                        onMouseMove={handleCardMouseMove}
-                        onMouseLeave={handleCardMouseLeave}
                         style={{ "--shadow-color": (categoryGradients[quizCategory] || categoryGradients.other).hover.primary }}
                       >
                         <div
-                          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-45 transition-opacity blur-2xl"
+                          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity blur-2xl"
                           style={{
                             background: `
                             radial-gradient(300px 220px at var(--hover-x, 50%) 110%, rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.primary} / 0.4), transparent 70%),
@@ -1244,6 +1242,7 @@ export default function ProfilePage() {
                       return (
                         <button
                           key={option}
+                          disabled={isAccountLocked}
                           onClick={() => {
                             if (isActive) {
                               setTakenSortDirection(prev => prev === "desc" ? "asc" : "desc");
@@ -1252,9 +1251,11 @@ export default function ProfilePage() {
                               setTakenSortDirection("desc");
                             }
                           }}
-                          className={`w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isActive
-                            ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50'
-                            : 'text-slate-500 hover:text-slate-700'
+                          className={`w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isAccountLocked
+                            ? "opacity-50 text-slate-400"
+                            : isActive
+                              ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50'
+                              : 'text-slate-500 hover:text-slate-700'
                             }`}
                           style={{ WebkitTapHighlightColor: 'transparent' }}
                         >
@@ -1276,8 +1277,8 @@ export default function ProfilePage() {
                       );
                     })}
                   </div>
-                  <div className="px-4 py-2.5 bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center h-[38px] cursor-default">
-                    <span className="text-slate-700 font-semibold text-xs whitespace-nowrap leading-none">
+                  <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[38px] cursor-default ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60' : 'bg-slate-100/80 border-slate-200/80'}`}>
+                    <span className={`font-semibold text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400' : 'text-slate-700'}`}>
                       {takenQuizzes.length} quiz{takenQuizzes.length !== 1 ? 'zes' : ''}
                     </span>
                   </div>
@@ -1413,7 +1414,7 @@ export default function ProfilePage() {
 
                     const quizCategory = quiz.category || "other";
                     
-                    const takenClass = `group block bg-white/80 backdrop-blur rounded-2xl p-5 border shadow-sm transition-all duration-200 ease-out ${isAccountLocked ? "opacity-60 cursor-not-allowed" : `hover:border-slate-300 hover:bg-white hover:scale-[1.005] ${isMastered ? 'border-amber-300/60 hover:border-amber-400/80' : 'border-slate-200/80'}`
+                    const takenClass = `group block bg-white/80 backdrop-blur rounded-2xl p-5 border shadow-sm transition-all duration-200 ease-out ${isAccountLocked ? "opacity-60" : `hover:border-slate-300 hover:bg-white hover:scale-[1.005] ${isMastered ? 'border-amber-300/60 hover:border-amber-400/80' : 'border-slate-200/80'}`
                       }`;
                     const difficultyKey = difficultyChips[quiz.difficulty] ? quiz.difficulty : "medium";
                     const difficulty = difficultyChips[difficultyKey];
@@ -1494,12 +1495,12 @@ export default function ProfilePage() {
                       <div 
                         key={quiz._id} 
                         className={takenClass}
-                        onMouseMove={handleCardMouseMove}
-                        onMouseLeave={handleCardMouseLeave}
+                        onMouseMove={isAccountLocked ? undefined : handleCardMouseMove}
+                        onMouseLeave={isAccountLocked ? undefined : handleCardMouseLeave}
                         style={{ "--shadow-color": (categoryGradients[quizCategory] || categoryGradients.other).hover.primary }}
                       >
                         <div
-                          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-45 transition-opacity blur-2xl"
+                          className={`pointer-events-none absolute inset-0 transition-opacity blur-2xl ${isAccountLocked ? "opacity-0" : "opacity-0 group-hover:opacity-45"}`}
                           style={{
                             background: `
                             radial-gradient(300px 220px at var(--hover-x, 50%) 110%, rgb(${(categoryGradients[quizCategory] || categoryGradients.other).hover.primary} / 0.4), transparent 70%),

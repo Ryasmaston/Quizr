@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged, updatePassword, updateEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { auth } from "../../services/firebase";
@@ -33,7 +33,7 @@ export default function SettingsPage() {
     return unsub;
   }, []);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!loggedInUser) {
       return;
     }
@@ -52,11 +52,11 @@ export default function SettingsPage() {
       setError("Failed to load profile");
       setLoading(false);
     }
-  };
+  }, [loggedInUser]);
 
   useEffect(() => {
     loadProfile();
-  }, [loggedInUser]);
+  }, [loadProfile]);
 
   useEffect(() => {
     if (!profile) return;
@@ -317,7 +317,7 @@ export default function SettingsPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isAccountLocked}
-                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50"
                   required
                 />
               </div>
@@ -329,7 +329,7 @@ export default function SettingsPage() {
                   onChange={(e) => setProfilePic(e.target.value)}
                   placeholder="https://example.com/image.jpg"
                   disabled={isAccountLocked}
-                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50"
                 />
               </div>
               {profilePic && (
@@ -346,7 +346,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={saving || isAccountLocked}
-                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save Profile"}
               </button>
@@ -362,7 +362,7 @@ export default function SettingsPage() {
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   disabled={isAccountLocked}
-                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50"
                   required
                 />
               </div>
@@ -374,14 +374,14 @@ export default function SettingsPage() {
                   onChange={(e) => setCurrentEmailPassword(e.target.value)}
                   placeholder="Enter current password"
                   disabled={isAccountLocked}
-                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={saving || isAccountLocked || newEmail === loggedInUser?.email || !currentEmailPassword}
-                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
                 {saving ? "Updating..." : "Update Email"}
               </button>
@@ -398,7 +398,7 @@ export default function SettingsPage() {
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
                   disabled={isAccountLocked}
-                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50"
                   required
                 />
               </div>
@@ -410,7 +410,7 @@ export default function SettingsPage() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password"
                   disabled={isAccountLocked}
-                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50"
                   minLength={6}
                 />
               </div>
@@ -422,14 +422,14 @@ export default function SettingsPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
                   disabled={isAccountLocked}
-                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/70 disabled:opacity-50"
                   minLength={6}
                 />
               </div>
               <button
                 type="submit"
                 disabled={saving || isAccountLocked || !currentPassword || !newPassword || !confirmPassword}
-                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
                 {saving ? "Updating..." : "Change Password"}
               </button>
@@ -471,7 +471,7 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => setDeletionStep("intro")}
                       disabled={deletionSaving}
-                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -479,7 +479,7 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => handleChooseDeletion("delete_quizzes")}
                       disabled={deletionSaving}
-                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50"
                     >
                       Delete My Quizzes
                     </button>
@@ -487,7 +487,7 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => handleChooseDeletion("preserve_quizzes")}
                       disabled={deletionSaving}
-                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-3 rounded-xl bg-white/70 text-slate-700 font-semibold border border-slate-200/80 hover:bg-white transition-colors disabled:opacity-50"
                     >
                       Preserve My Quizzes
                     </button>
