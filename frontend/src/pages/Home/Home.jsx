@@ -341,7 +341,7 @@ export function Home() {
                           const dropdown = document.getElementById('category-dropdown');
                           dropdown.classList.add('hidden');
                         }}
-                        className={`w-full text-left px-4 py-3 text-xs sm:text-sm font-semibold transition-colors hover:bg-slate-100/30 dark:hover:bg-slate-700/30 first:rounded-t-2xl last:rounded-b-2xl ${selectedCategory === category
+                        className={`w-full text-left px-4 py-3 text-xs sm:text-sm font-semibold transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-700/30 first:rounded-t-2xl last:rounded-b-2xl ${selectedCategory === category
                           ? 'bg-slate-50/60 dark:bg-slate-700/40 text-slate-900 dark:text-slate-100'
                           : 'text-slate-700 dark:text-slate-300'
                           }`}
@@ -378,7 +378,7 @@ export function Home() {
                           setSortDirection("desc");
                         }
                       }}
-                      className={`sorting-button h-full ${option.width} px-4 rounded-xl text-sm font-semibold flex items-center justify-center relative transition-[background-color,color,transform,shadow] duration-200 [outline:none] [box-shadow:none] [ring:none] [-webkit-tap-highlight-color:transparent] ${isActive ? 'bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50 isActive' : 'text-slate-900 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent hover:bg-slate-100/50 dark:hover:bg-transparent'}`}
+                      className={`sorting-button h-full ${option.width} px-4 rounded-xl text-sm font-semibold flex items-center justify-center relative transition-[background-color,color,transform,shadow] duration-200 [outline:none] [box-shadow:none] [ring:none] [-webkit-tap-highlight-color:transparent] ${isActive ? 'bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50 isActive' : 'text-slate-900 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent hover:bg-slate-200/50 dark:hover:bg-transparent'}`}
                     >
                       <span className="truncate">
                         {option.id === 'newest'
