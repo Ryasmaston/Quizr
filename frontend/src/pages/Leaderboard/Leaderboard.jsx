@@ -139,7 +139,7 @@ export default function LeaderboardPage() {
   if (loading) {
     return (
       <div
-        className="fixed inset-0 flex items-center justify-center"
+        className="fixed inset-0 -top-20 flex items-center justify-center"
         style={opalBackdropStyle}
       >
         <div className="relative flex flex-col items-center">
@@ -152,7 +152,7 @@ export default function LeaderboardPage() {
 
   if (error) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center p-4" style={opalBackdropStyle}>
+      <div className="fixed inset-0 -top-20 flex items-center justify-center p-4" style={opalBackdropStyle}>
         <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-8 border border-slate-200/80 max-w-md text-center shadow-sm">
           <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-amber-400 rounded-full mx-auto mb-4 flex items-center justify-center">
             <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,8 +168,8 @@ export default function LeaderboardPage() {
 
   return (
     <>
-      <div className="fixed inset-0" style={opalBackdropStyle}></div>
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 -top-20" style={opalBackdropStyle}></div>
+      <div className="fixed inset-0 -top-20 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-[28rem] h-[28rem] bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
         <div
           className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] bg-rose-200/30 rounded-full blur-3xl animate-pulse"

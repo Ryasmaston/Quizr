@@ -104,7 +104,7 @@ export default function FriendsPage() {
   if (loading) {
     return (
       <div
-        className="fixed inset-0 flex items-center justify-center"
+        className="fixed inset-0 -top-20 flex items-center justify-center"
         style={opalBackdropStyle}
       >
         <div className="relative flex flex-col items-center">
@@ -117,8 +117,8 @@ export default function FriendsPage() {
 
   return (
     <>
-      <div className="fixed inset-0" style={opalBackdropStyle}></div>
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 -top-20" style={opalBackdropStyle}></div>
+      <div className="fixed inset-0 -top-20 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-[28rem] h-[28rem] bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
         <div
           className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] bg-rose-200/30 rounded-full blur-3xl animate-pulse"

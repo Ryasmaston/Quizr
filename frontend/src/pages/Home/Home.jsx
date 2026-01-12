@@ -192,6 +192,14 @@ export function Home() {
     event.currentTarget.style.setProperty("--hover-y", "50%");
   };
 
+  const handleCardTouch = (event) => {
+    event.currentTarget.style.transform = 'scale(1.012)';
+  };
+
+  const handleCardTouchEnd = (event) => {
+    event.currentTarget.style.transform = '';
+  };
+
   const handleOutsideClick = (event) => {
     const dropdown = document.getElementById('category-dropdown');
     const button = event.target.closest('button');
@@ -232,8 +240,8 @@ export function Home() {
 
   return (
     <>
-      <div className="fixed inset-0" style={opalBackdropStyle}></div>
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 -top-20" style={opalBackdropStyle}></div>
+      <div className="fixed inset-0 -top-20 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-[28rem] h-[28rem] bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
         <div
           className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] bg-rose-200/30 rounded-full blur-3xl animate-pulse"
@@ -319,7 +327,7 @@ export function Home() {
                       const dropdown = document.getElementById('category-dropdown');
                       dropdown.classList.toggle('hidden');
                     }}
-                    className="category-dropdown-button w-full h-[72px] bg-white/70 text-slate-800 rounded-2xl border border-slate-200/80 backdrop-blur text-left focus:outline-none focus:ring-0 appearance-none transition-all duration-200 hover:bg-white/90 hover:border-slate-300 hover:shadow-sm text-xs sm:text-sm font-semibold cursor-pointer flex flex-col sm:flex-row items-center justify-center sm:justify-between px-4 sm:px-8 relative"
+                    className="category-dropdown-button w-full h-[72px] bg-white/70 text-slate-800 rounded-2xl border border-slate-200/80 backdrop-blur text-left focus:outline-none focus:ring-0 appearance-none transition-all duration-200 hover:bg-white/90 hover:border-slate-300 hover:shadow-sm text-base sm:text-sm font-semibold cursor-pointer flex flex-col sm:flex-row items-center justify-center sm:justify-between px-4 sm:px-8 relative active:scale-95 [-webkit-tap-highlight-color:transparent]"
                   >
                     <span className="truncate text-center w-full">
                       {selectedCategory === "all"
@@ -341,10 +349,10 @@ export function Home() {
                           const dropdown = document.getElementById('category-dropdown');
                           dropdown.classList.add('hidden');
                         }}
-                        className={`w-full text-left px-4 py-3 text-xs sm:text-sm font-semibold transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-700/30 first:rounded-t-2xl last:rounded-b-2xl ${selectedCategory === category
-                          ? 'bg-slate-50/60 dark:bg-slate-700/40 text-slate-900 dark:text-slate-100'
-                          : 'text-slate-700 dark:text-slate-300'
-                          }`}
+                        className={`w-full text-left px-4 py-3 text-xs sm:text-sm font-semibold transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-600/50 first:rounded-t-2xl last:rounded-b-2xl ${selectedCategory === category
+                          ? 'bg-slate-50/60 dark:bg-slate-600/60 text-slate-900 dark:text-white'
+                          : 'text-slate-700 dark:text-slate-200'
+                        }`}
                       >
                         {category === "all"
                           ? "All Categories"
@@ -358,7 +366,7 @@ export function Home() {
               </div>
 
               {/* Sorting Bar */}
-              <div className="sorting-bar-container flex items-center gap-1.5 p-1 bg-white/70 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl border border-slate-200/80 dark:border-slate-800/60 h-[72px] w-full sm:w-auto overflow-x-auto no-scrollbar">
+              <div className="sorting-bar-container flex items-center gap-1.5 p-1 bg-white/70 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl border border-slate-200/80 dark:border-slate-800/60 h-[72px] w-full sm:w-auto overflow-x-auto no-scrollbar relative before:content-[''] before:absolute before:right-0 before:top-0 before:bottom-0 before:w-8 before:bg-gradient-to-l before:from-white/70 before:to-transparent before:pointer-events-none before:sm:hidden before:z-10">
                 {[
                   { id: 'newest', label: 'Date', options: { desc: 'Newest', asc: 'Oldest' }, width: 'w-[120px]' },
                   { id: 'stars', label: 'Stars', width: 'w-[100px]' },
@@ -448,9 +456,11 @@ export function Home() {
                     className="group relative block"
                     onMouseMove={handleCardMouseMove}
                     onMouseLeave={handleCardMouseLeave}
+                    onTouchStart={handleCardTouch}
+                    onTouchEnd={handleCardTouchEnd}
                   >
                     <div
-                      className="relative z-10 bg-white/70 backdrop-blur-lg rounded-2xl sm:rounded-3xl pt-4 px-5 pb-1.5 sm:pt-5 sm:px-6 sm:pb-2 border border-slate-200/80 hover:border-slate-300 transition-all transform group-hover:scale-[1.012] group-hover:[box-shadow:0_10px_26px_-18px_rgb(var(--shadow-color)/0.42),0_0_18px_-10px_rgb(var(--shadow-color)/0.32)] overflow-hidden h-[200px] flex flex-col"
+                      className="relative z-10 bg-white/70 dark:bg-slate-800/80backdrop-blur-lg rounded-2xl sm:rounded-3xl pt-4 px-5 pb-1.5 sm:pt-5 sm:px-6 sm:pb-2 border border-slate-200/80 hover:border-slate-300 transition-all transform group-hover:scale-[1.012] group-hover:[box-shadow:0_10px_26px_-18px_rgb(var(--shadow-color)/0.42),0_0_18px_-10px_rgb(var(--shadow-color)/0.32)] overflow-hidden h-[200px] flex flex-col"
                       style={{ "--shadow-color": gradient.hover.primary }}
                     >
                       <div
