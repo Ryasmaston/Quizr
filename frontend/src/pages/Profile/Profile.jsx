@@ -424,7 +424,7 @@ export default function ProfilePage() {
     return (
       <>
         <div
-          className="fixed inset-0"
+          className="fixed inset-0 -top-20"
           style={{
             backgroundColor: "var(--opal-bg-color)",
             backgroundImage: "var(--opal-backdrop-image)"
@@ -444,7 +444,7 @@ export default function ProfilePage() {
     return (
       <>
         <div
-          className="fixed inset-0"
+          className="fixed inset-0 -top-20"
           style={{
             backgroundColor: "var(--opal-bg-color)",
             backgroundImage: "var(--opal-backdrop-image)"
@@ -469,7 +469,7 @@ export default function ProfilePage() {
     return (
       <>
         <div
-          className="fixed inset-0"
+          className="fixed inset-0 -top-20"
           style={{
             backgroundColor: "var(--opal-bg-color)",
             backgroundImage: "var(--opal-backdrop-image)"
@@ -582,7 +582,7 @@ export default function ProfilePage() {
   return (
     <>
       <div
-        className="fixed inset-0"
+        className="fixed inset-0 -top-20"
         style={{
           backgroundColor: "var(--opal-bg-color)",
           backgroundImage: "var(--opal-backdrop-image)"
@@ -1426,10 +1426,10 @@ export default function ProfilePage() {
                         const goldTransitionStart = (70 / percentage) * 100;
                         const goldTransitionEnd = Math.min((80 / percentage) * 100, 100);
                         return {
-                          background: `linear-gradient(to right, 
-                            rgb(71 85 105) 0%, 
-                            rgb(71 85 105) ${goldTransitionStart}%, 
-                            rgb(158 124 58) ${goldTransitionEnd}%, 
+                          background: `linear-gradient(to right,
+                            rgb(71 85 105) 0%,
+                            rgb(71 85 105) ${goldTransitionStart}%,
+                            rgb(158 124 58) ${goldTransitionEnd}%,
                             rgb(245 158 11) 100%)`
                         };
                       }

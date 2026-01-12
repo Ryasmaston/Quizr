@@ -252,7 +252,7 @@ export default function SettingsPage() {
   return (
     <>
       <div
-        className="fixed inset-0"
+        className="fixed inset-0 -top-20"
         style={{
           backgroundColor: "var(--opal-bg-color)",
           backgroundImage: "var(--opal-backdrop-image)"

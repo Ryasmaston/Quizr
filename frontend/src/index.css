@@ -3,6 +3,54 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Find this section (around line 5-50) and REPLACE it with: */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overscroll-behavior-y: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 auto;
+  text-align: center;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media screen and (max-width: 640px) {
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* CRITICAL: Global reset to kill ALL focus indicators that cause flashing */
 *:focus,
 *:active,
@@ -89,7 +137,7 @@ html.dark input[type="url"]:focus {
   --scrollbar-thumb: rgba(148, 163, 184, 0.35);
   --scrollbar-thumb-hover: rgba(100, 116, 139, 0.5);
   --scrollbar-border: rgba(241, 245, 249, 0.2);
-  --opal-bg-color: #f7f5f1;
+  --opal-bg-color: rgba(247, 245, 241, 0.9);
   --opal-backdrop-image:
     radial-gradient(1200px 800px at 5% 0%, rgba(255, 227, 170, 0.28), transparent 60%),
     radial-gradient(900px 700px at 85% 10%, rgba(255, 190, 220, 0.24), transparent 55%),
@@ -106,7 +154,7 @@ html.dark {
   --scrollbar-thumb: rgba(148, 163, 184, 0.24);
   --scrollbar-thumb-hover: rgba(226, 232, 240, 0.28);
   --scrollbar-border: rgba(15, 23, 42, 0.35);
-  --opal-bg-color: #05070a;
+  --opal-bg-color: rgb(18, 23, 40);
   --opal-backdrop-image:
     radial-gradient(1200px 800px at 5% 0%, rgba(245, 158, 11, 0.015), transparent 90%),
     radial-gradient(900px 700px at 85% 10%, rgba(236, 72, 153, 0.015), transparent 85%),
@@ -265,11 +313,6 @@ html.dark [class~="text-rose-700"] {
   color: #f43f5e;
 }
 
-html {
-  width: 100vw;
-  min-width: 100vw;
-  overflow-x: hidden;
-}
 
 * {
   scrollbar-width: thin;
@@ -454,19 +497,6 @@ a:hover {
   color: #535bf2;
 }
 
-body {
-  margin: 0;
-  /* display: flex; was removed to make auth layout vertical */
-  min-width: 320px;
-  min-height: 100vh;
-  width: 100vw;
-  overflow-x: hidden;
-}
-
-#root {
-  width: 100vw;
-  min-width: 100vw;
-}
 
 .home-scroll {
   width: 100vw;
