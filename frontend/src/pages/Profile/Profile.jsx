@@ -919,7 +919,7 @@ export default function ProfilePage() {
                                       });
                                       handleToggleFavourite(quiz, isFavourited);
                                     }}
-                                    className="h-10 px-3 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-slate-500 transition-all duration-100 ease-out hover:text-amber-500 hover:bg-white active:scale-95 flex items-center gap-2"
+                                    className="h-10 px-3 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 backdrop-blur text-slate-500 dark:text-slate-400 transition-all duration-100 ease-out hover:text-amber-500 dark:hover:text-amber-400 hover:bg-white dark:hover:bg-slate-700/80 active:scale-95 flex items-center gap-2"
                                     aria-label="Toggle favourite"
                                     title="Toggle favourite"
                                   >
@@ -948,7 +948,7 @@ export default function ProfilePage() {
                                       setQuizToDelete(quiz);
                                       setShowDeleteConfirm(true);
                                     }}
-                                    className="h-10 w-10 rounded-xl bg-white/70 border border-slate-200/80 backdrop-blur text-rose-500 transition-all duration-100 ease-out hover:bg-rose-100/70 active:scale-95"
+                                    className="h-10 w-10 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 backdrop-blur text-rose-500 dark:text-rose-400 transition-all duration-100 ease-out hover:bg-rose-100/70 dark:hover:bg-rose-500 dark:hover:text-white active:scale-95"
                                     aria-label="Delete quiz"
                                     title="Delete quiz"
                                   >
@@ -966,7 +966,7 @@ export default function ProfilePage() {
                                 {quiz.title}
                               </h3>
                             </div>
-                            <div className="mb-3 text-xs text-slate-600 divide-y divide-slate-200/80">
+                            <div className="mb-3 text-xs text-slate-600 dark:text-slate-400 divide-y divide-slate-200/80 dark:divide-slate-800/90">
                               <div className="flex items-center justify-between py-2">
                                 <span>Answers per question</span>
                                 <span className="font-semibold text-slate-800">{answersPerQuestion}</span>
@@ -993,7 +993,7 @@ export default function ProfilePage() {
                                       state: { from: "profile", returnTo: `/users/${routeUsername}` }
                                     });
                                   }}
-                                  className="w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-bold transition-all duration-100 ease-out hover:bg-slate-100/80 active:scale-95 flex items-center justify-center gap-2"
+                                  className="w-full px-4 py-2.5 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-200 text-sm font-bold transition-all duration-100 ease-out hover:bg-slate-100/80 dark:hover:bg-slate-700/50 active:scale-95 flex items-center justify-center gap-2"
                                 >
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 4.487a2 2 0 112.828 2.828L8.828 18.175a4 4 0 01-1.414.944l-3.536 1.178 1.178-3.536a4 4 0 01.944-1.414L16.862 4.487z" />
@@ -1008,7 +1008,7 @@ export default function ProfilePage() {
                                   handleViewStats(quiz._id);
                                 }}
                                 disabled={isAccountLocked}
-                                className={`w-full px-4 py-2.5 bg-white/70 border border-slate-200/80 rounded-xl text-slate-700 text-sm font-bold transition-all duration-100 ease-out flex items-center justify-center gap-2 ${isAccountLocked ? "opacity-50" : "hover:bg-slate-100/80 active:scale-95"
+                                className={`w-full px-4 py-2.5 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-200 text-sm font-bold transition-all duration-100 ease-out flex items-center justify-center gap-2 ${isAccountLocked ? "opacity-50" : "hover:bg-slate-100/80 dark:hover:bg-slate-700/50 active:scale-95"
                                   }`}
                               >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
