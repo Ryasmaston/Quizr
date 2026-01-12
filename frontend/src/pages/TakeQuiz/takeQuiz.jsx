@@ -724,7 +724,7 @@ function TakeQuizPage() {
                                         <span>Exit</span>
                                     </button>
                                     <button
-                                        className="w-full h-full rounded-2xl bg-slate-800 dark:bg-slate-900/85 text-white font-semibold hover:bg-slate-700 dark:hover:bg-slate-900 transition-colors flex items-center justify-center px-6 py-5 text-xl leading-tight"
+                                        className="w-full h-full rounded-2xl bg-slate-800 dark:bg-slate-900/85 dark:border dark:border-slate-800/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-slate-900 transition-colors flex items-center justify-center px-6 py-5 text-xl leading-tight"
                                         onClick={startQuiz}
                                     >
                                         Take the quiz
@@ -874,7 +874,7 @@ function TakeQuizPage() {
                                 <span>Question {currentIndex + 1} of {quiz.questions.length}</span>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span
-                                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${activeCategoryStyle.badge}`}
+                                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide dark:bg-slate-900/60 dark:border-slate-800/80 ${activeCategoryStyle.badge}`}
                                     >
                                         <svg className="w-4 h-4 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             {categoryIcons[quiz.category] || categoryIcons.other}
@@ -882,7 +882,7 @@ function TakeQuizPage() {
                                         <span className="capitalize">{quiz.category}</span>
                                     </span>
                                     <span
-                                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200/80 bg-white/40 text-slate-700 text-xs font-semibold normal-case"
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200/80 bg-white/40 text-slate-700 dark:bg-slate-900/60 dark:border-slate-800/80 dark:text-slate-300 text-xs font-semibold normal-case"
                                     >
                                         <svg
                                             className="h-4 w-4 text-current"
@@ -900,7 +900,7 @@ function TakeQuizPage() {
                                     </span>
                                 </div>
                             </div>
-                            <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-6 pb-2">{question.text}</h2>
+                            <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-slate-200 mb-6 pb-2">{question.text}</h2>
 
                             <div className="grid gap-3 sm:grid-cols-2">
                                 {question.answers.map((answer) => {
@@ -909,9 +909,9 @@ function TakeQuizPage() {
                                         <button
                                             key={answer._id}
                                             className={`text-left px-4 py-3 rounded-xl border transition-colors ${isSelected
-                                                ? "bg-slate-100/80 border-slate-300 text-slate-900"
-                                                : "bg-white/60 border-slate-200/80 text-slate-700"
-                                                } ${isLocked ? "cursor-not-allowed opacity-60" : "hover:bg-slate-100"}`}
+                                                ? "bg-slate-100/80 border-slate-300 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                                : "bg-white/60 border-slate-200/80 text-slate-700 dark:bg-slate-900/40 dark:border-slate-800/60 dark:text-slate-300"
+                                                } ${isLocked ? "cursor-not-allowed opacity-60" : "hover:bg-slate-100 dark:hover:bg-slate-800/60"}`}
                                             onClick={() => handleSelect(answer._id)}
                                             type="button"
                                             disabled={isLocked}
@@ -924,7 +924,7 @@ function TakeQuizPage() {
 
                             <div className="mt-6 flex gap-3 flex-wrap">
                                 <button
-                                    className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors"
+                                    className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors"
                                     onClick={returnToQuiz}
                                     type="button"
                                 >
@@ -947,7 +947,7 @@ function TakeQuizPage() {
                                     </span>
                                 </button>
                                 <button
-                                    className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors disabled:opacity-50"
+                                    className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-white/70 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors disabled:opacity-50"
                                     onClick={goBack}
                                     disabled={currentIndex === 0}
                                     type="button"
@@ -956,7 +956,7 @@ function TakeQuizPage() {
                                 </button>
                                 {!isLastQuestion && (
                                     <button
-                                        className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
+                                        className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 dark:bg-slate-900/85 dark:border dark:border-slate-800/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-slate-900 transition-colors disabled:opacity-50"
                                         onClick={goNext}
                                         disabled={currentSelections.length === 0}
                                         type="button"
@@ -966,7 +966,7 @@ function TakeQuizPage() {
                                 )}
                                 {isLastQuestion && (
                                     <button
-                                        className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
+                                        className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 dark:bg-slate-900/85 dark:border dark:border-slate-800/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-slate-900 transition-colors disabled:opacity-50"
                                         onClick={submitQuiz}
                                         disabled={currentSelections.length === 0}
                                         type="button"
