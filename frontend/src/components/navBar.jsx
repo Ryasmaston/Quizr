@@ -37,7 +37,7 @@ function NavBar({ accountStatus, accountUsername }) {
     <nav className="fixed top-0 left-0 z-50 w-screen bg-white/70 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-0">
+          <div className="flex items-center gap-1.5">
             {!isAccountLocked && (
               <>
                 <NavLink
@@ -49,14 +49,14 @@ function NavBar({ accountStatus, accountUsername }) {
                     }
                   }}
                   className={({ isActive }) =>
-                    `text-sm transition-colors h-16 px-5 inline-flex items-center ${isActive
-                      ? "text-slate-900 dark:text-slate-100 font-semibold hover:text-slate-800 dark:hover:text-slate-200"
-                      : "text-slate-700 dark:text-slate-300 hover:text-slate-500 dark:hover:text-slate-200"
+                    `text-sm transition-all duration-200 h-11 px-4 min-w-[5.5rem] justify-center rounded-xl inline-flex items-center ${isActive
+                      ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
+                      : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                     }`
                   }
                 >
                   <span className="inline-grid items-center leading-none">
-                    <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                    <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
                       Home
                     </span>
                     <span className="col-start-1 row-start-1 leading-none">Home</span>
@@ -66,14 +66,14 @@ function NavBar({ accountStatus, accountUsername }) {
                   to="/quizzes/create"
                   state={{ returnTo: location.pathname }}
                   className={({ isActive }) =>
-                    `text-sm transition-colors h-16 px-5 inline-flex items-center ${isActive
-                      ? "text-slate-900 dark:text-slate-100 font-semibold hover:text-slate-800 dark:hover:text-slate-200"
-                      : "text-slate-700 dark:text-slate-300 hover:text-slate-500 dark:hover:text-slate-200"
+                    `text-sm transition-all duration-200 h-11 px-4 min-w-[7.5rem] justify-center rounded-xl inline-flex items-center ${isActive
+                      ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
+                      : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                     }`
                   }
                 >
                   <span className="inline-grid items-center leading-none">
-                    <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                    <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
                       Create Quiz
                     </span>
                     <span className="col-start-1 row-start-1 leading-none">Create Quiz</span>
@@ -83,14 +83,14 @@ function NavBar({ accountStatus, accountUsername }) {
                   <NavLink
                     to="/friends"
                     className={({ isActive }) =>
-                      `text-sm transition-colors h-16 px-5 inline-flex items-center ${isActive
-                        ? "text-slate-900 dark:text-slate-100 font-semibold hover:text-slate-800 dark:hover:text-slate-200"
-                        : "text-slate-700 dark:text-slate-300 hover:text-slate-500 dark:hover:text-slate-200"
+                      `text-sm transition-all duration-200 h-11 px-4 min-w-[6.5rem] justify-center rounded-xl inline-flex items-center ${isActive
+                        ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
+                        : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                       }`
                     }
                   >
                     <span className="inline-grid items-center leading-none">
-                      <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                      <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
                         Friends
                       </span>
                       <span className="col-start-1 row-start-1 leading-none">Friends</span>
@@ -101,14 +101,14 @@ function NavBar({ accountStatus, accountUsername }) {
                   <NavLink
                     to="/leaderboard"
                     className={({ isActive }) =>
-                      `text-sm transition-colors h-16 px-5 inline-flex items-center ${isActive
-                        ? "text-slate-900 dark:text-slate-100 font-semibold hover:text-slate-800 dark:hover:text-slate-200"
-                        : "text-slate-700 dark:text-slate-300 hover:text-slate-500 dark:hover:text-slate-200"
+                      `text-sm transition-all duration-200 h-11 px-4 min-w-[8.5rem] justify-center rounded-xl inline-flex items-center ${isActive
+                        ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
+                        : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                       }`
                     }
                   >
                     <span className="inline-grid items-center leading-none">
-                      <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                      <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
                         Leaderboard
                       </span>
                       <span className="col-start-1 row-start-1 leading-none">Leaderboard</span>
@@ -130,7 +130,7 @@ function NavBar({ accountStatus, accountUsername }) {
                 type="button"
                 onClick={toggleTheme}
                 aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                className="h-10 w-10 inline-flex items-center justify-center rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                className="h-10 w-10 inline-flex items-center justify-center rounded-xl text-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-colors"
                 title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
                 {theme === "dark" ? (
@@ -174,14 +174,14 @@ function NavBar({ accountStatus, accountUsername }) {
               <NavLink
                 to={`/users/${username}`}
                 className={({ isActive }) =>
-                  `${profileSizeClass} transition-colors h-16 px-5 inline-flex items-center ${isActive
-                    ? "text-slate-900 dark:text-slate-100 font-semibold hover:text-slate-800 dark:hover:text-slate-200"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-500 dark:hover:text-slate-200"
+                  `${profileSizeClass} transition-all duration-200 h-11 px-4 min-w-[6.5rem] justify-center rounded-xl inline-flex items-center ${isActive
+                    ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100"
+                    : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                   }`
                 }
               >
                 <span className="inline-grid items-center leading-none">
-                  <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold leading-none opacity-0">
+                  <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
                     {profileLabel}
                   </span>
                   <span className="col-start-1 row-start-1 leading-none">{profileLabel}</span>
@@ -191,7 +191,7 @@ function NavBar({ accountStatus, accountUsername }) {
             {user && (
               <button
                 onClick={() => signOut(auth)}
-                className="bg-slate-800 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors hover:bg-slate-700 dark:hover:bg-slate-600"
+                className="bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-100 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors hover:bg-slate-700 dark:hover:bg-slate-700 dark:border dark:border-slate-800/50"
               >
                 Sign out
               </button>
