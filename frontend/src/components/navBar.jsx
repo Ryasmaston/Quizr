@@ -6,15 +6,16 @@ import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { useIsMobile } from "../hooks/useIsMobile";
 import UserSearchBar from "./UserSearchBar";
-import {
-  Home as HomeIcon,
-  PlusSquare,
-  Users,
-  Trophy,
-  User,
-  LogOut,
-  Sun,
-  Moon
+import { 
+  Home as HomeIcon, 
+  PlusSquare, 
+  Users, 
+  Trophy, 
+  User, 
+  LogOut, 
+  Sun, 
+  Moon,
+  Search
 } from "lucide-react";
 
 function NavBar({ accountStatus, accountUsername }) {
@@ -26,7 +27,7 @@ function NavBar({ accountStatus, accountUsername }) {
   const username = accountUsername;
   const isAccountLocked = accountStatus === "pending_deletion";
   const profileLabel = username || "Profile";
-
+  
   useEffect(() => {
     if (user === null) {
       navigate("/login");
@@ -52,16 +53,17 @@ function NavBar({ accountStatus, accountUsername }) {
           {navLinks.map((link) => {
             if (link.requiresAuth && !user) return null;
             if (link.isProfile && !username) return null;
-
+            
             const Icon = link.icon;
             return (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `flex flex-col items-center justify-center w-full h-full transition-colors ${isActive
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-slate-500 dark:text-slate-400"
+                  `flex flex-col items-center justify-center w-full h-full transition-colors ${
+                    isActive 
+                      ? "text-blue-600 dark:text-blue-400" 
+                      : "text-slate-500 dark:text-slate-400"
                   }`
                 }
               >
@@ -70,7 +72,7 @@ function NavBar({ accountStatus, accountUsername }) {
               </NavLink>
             );
           })}
-
+          
           <button
             onClick={toggleTheme}
             className="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400"
