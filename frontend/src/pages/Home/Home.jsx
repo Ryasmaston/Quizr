@@ -311,7 +311,7 @@ export function Home() {
 
                 {/* Category filter drop down */}
                 <div className="relative flex-1 sm:w-64">
-                  <button
+                    <button
                     type="button"
                     aria-haspopup="true"
                     aria-expanded="false"
@@ -319,16 +319,16 @@ export function Home() {
                       const dropdown = document.getElementById('category-dropdown');
                       dropdown.classList.toggle('hidden');
                     }}
-                    className="category-dropdown-button w-full h-[72px] bg-white/70 text-slate-800 rounded-2xl border border-slate-200/80 backdrop-blur text-left focus:outline-none focus:ring-0 appearance-none transition-all duration-200 hover:bg-white/90 hover:border-slate-300 hover:shadow-sm text-xs sm:text-sm font-semibold cursor-pointer flex items-center relative"
+                    className="category-dropdown-button w-full h-[72px] bg-white/70 text-slate-800 rounded-2xl border border-slate-200/80 backdrop-blur text-left focus:outline-none focus:ring-0 appearance-none transition-all duration-200 hover:bg-white/90 hover:border-slate-300 hover:shadow-sm text-xs sm:text-sm font-semibold cursor-pointer flex flex-col sm:flex-row items-center justify-center sm:justify-between px-4 sm:px-8 relative"
                   >
-                    <span className="truncate text-center w-full px-8">
+                    <span className="truncate text-center w-full">
                       {selectedCategory === "all"
                         ? "All Categories"
                         : selectedCategory === "favourites"
                           ? "Favourites"
                           : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
                     </span>
-                    <svg className="w-4 h-4 text-slate-500 flex-shrink-0 absolute right-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-slate-500 flex-shrink-0 mt-1 sm:mt-0 sm:absolute sm:right-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
@@ -378,7 +378,7 @@ export function Home() {
                           setSortDirection("desc");
                         }
                       }}
-                      className={`sorting-button h-full ${option.width} px-4 rounded-xl text-sm font-semibold flex items-center justify-center relative transition-[background-color,color,transform,shadow] duration-200 [outline:none] [box-shadow:none] [ring:none] [-webkit-tap-highlight-color:transparent] ${isActive ? 'bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50 isActive' : 'text-slate-900 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent hover:bg-slate-200/50 dark:hover:bg-transparent'}`}
+                      className={`sorting-button h-full ${option.width} px-4 rounded-xl text-sm font-semibold flex flex-col sm:flex-row items-center justify-center relative transition-[background-color,color,transform,shadow] duration-200 [outline:none] [box-shadow:none] [ring:none] [-webkit-tap-highlight-color:transparent] ${isActive ? 'bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50 isActive' : 'text-slate-900 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent hover:bg-slate-200/50 dark:hover:bg-transparent'}`}
                     >
                       <span className="truncate">
                         {option.id === 'newest'
@@ -386,7 +386,7 @@ export function Home() {
                           : option.label}
                       </span>
                       {isActive && (
-                        <span className="absolute right-2 flex items-center justify-center w-4">
+                        <span className="mt-1 sm:mt-0 sm:absolute sm:right-2 flex items-center justify-center w-4">
                           {isAsc ? (
                             <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M10 5l4 6H6l4-6z" />

@@ -109,7 +109,7 @@ export default function ProfilePage() {
         getFriends(),
         getPendingRequests()
       ]);
-      
+
       const friends = friendsData.friends || [];
       const requests = requestsData.requests || [];
 
@@ -118,15 +118,15 @@ export default function ProfilePage() {
         return other?._id === profile._id;
       });
       setIsFriend(isAlreadyFriend);
-      
+
       setPendingSent(false);
       setIncomingRequest(null);
-      
+
       const relevantRequest = Array.isArray(requests) && requests.find((r) => {
         const other = r.user1._id === myUserId ? r.user2 : r.user1;
         return other?._id === profile._id;
       });
-      
+
       if (relevantRequest) {
         if (relevantRequest.user1._id === myUserId) {
           setPendingSent(true);
@@ -494,7 +494,7 @@ export default function ProfilePage() {
     art: "border-pink-400/40 bg-pink-500/20 text-pink-700 dark:border-pink-500/30 dark:bg-pink-500/10 dark:text-pink-400 hover:border-pink-200/80 hover:bg-pink-100/70 hover:text-pink-700 dark:hover:border-pink-400/50 dark:hover:bg-pink-500/20",
     history: "border-amber-400/40 bg-amber-500/20 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400 hover:border-amber-200/80 hover:bg-amber-100/70 hover:text-amber-700 dark:hover:border-amber-400/50 dark:hover:bg-amber-500/20",
     music: "border-indigo-400/40 bg-indigo-500/20 text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400 hover:border-indigo-200/80 hover:bg-indigo-100/70 hover:text-indigo-700 dark:hover:border-indigo-400/50 dark:hover:bg-indigo-500/20",
-    science: "border-emerald-400/40 bg-emerald-500/20 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 hover:border-emerald-200/80 hover:bg-emerald-100/70 hover:text-emerald-700 dark:hover:border-emerald-400/50 dark:hover:bg-emerald-500/20",
+    science: "border-blue-400/40 bg-blue-500/20 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 hover:border-blue-200/80 hover:bg-blue-100/70 hover:text-blue-700 dark:hover:border-blue-400/50 dark:hover:bg-blue-500/20",
     other: "border-slate-400/40 bg-slate-500/20 text-slate-700 dark:border-slate-500/30 dark:bg-slate-500/10 dark:text-slate-400 hover:border-slate-200/80 hover:bg-slate-100/70 hover:text-slate-700 dark:hover:border-slate-400/50 dark:hover:bg-slate-500/20"
   };
   const categoryGradients = {
@@ -523,7 +523,7 @@ export default function ProfilePage() {
     art: "bg-pink-500/15 text-pink-700 border-b border-pink-500/20 dark:bg-pink-900/40 dark:text-pink-300 dark:border-pink-800/40",
     history: "bg-amber-500/15 text-amber-700 border-b border-amber-500/20 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800/40",
     music: "bg-indigo-500/15 text-indigo-700 border-b border-indigo-500/20 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-800/40",
-    science: "bg-emerald-500/15 text-emerald-700 border-b border-emerald-500/20 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800/40",
+    science: "bg-blue-500/15 text-blue-700 border-b border-blue-500/20 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800/40",
     other: "bg-slate-500/15 text-slate-700 border-b border-slate-500/20 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800/40"
   };
 
