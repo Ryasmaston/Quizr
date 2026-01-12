@@ -183,15 +183,13 @@ export default function FriendsPage() {
                         const other = getOtherUser(r);
                         const gradient = getAvatarGradient(other?._id || other?.id || other?.user_id);
                         return (
-                          <div
+                          <Link
                             key={r._id}
-                            className="bg-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80"
+                            to={`/users/${other.user_data?.username}`}
+                            className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80 dark:hover:border-slate-700 block"
                           >
                             <div className="flex items-center justify-between gap-3">
-                              <Link
-                                to={`/users/${other.user_data?.username}`}
-                                className="flex items-center gap-3 min-w-0 text-left hover:opacity-80 transition-opacity"
-                              >
+                              <div className="flex items-center gap-3 min-w-0 text-left">
                                 <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg`}>
                                   {other.user_data?.profile_pic ? (
                                     <img
@@ -208,26 +206,34 @@ export default function FriendsPage() {
                                   )}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.user_data?.username}</p>
-                                  <p className="text-xs sm:text-sm text-slate-500">Sent you a request</p>
+                                  <p className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-lg truncate">{other.user_data?.username}</p>
+                                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Sent you a request</p>
                                 </div>
-                              </Link>
+                              </div>
                               <div className="flex gap-2">
                                 <button
-                                  onClick={() => handleAccept(r._id)}
-                                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 dark:hover:bg-emerald-500/25 text-emerald-800 text-xs sm:text-sm font-semibold transition-colors"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleAccept(r._id);
+                                  }}
+                                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 hover:bg-emerald-200 dark:hover:bg-emerald-800/40 text-emerald-800 dark:text-emerald-400 text-xs sm:text-sm font-semibold transition-colors border border-emerald-200/50 dark:border-emerald-800/50"
                                 >
                                   Accept
                                 </button>
                                 <button
-                                  onClick={() => handleRemove(other._id)}
-                                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-rose-100 hover:bg-rose-200 dark:hover:bg-rose-500/25 text-rose-800 text-xs sm:text-sm font-semibold transition-colors"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleRemove(other._id);
+                                  }}
+                                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 hover:bg-rose-200 dark:hover:bg-rose-800/40 text-rose-800 dark:text-rose-400 text-xs sm:text-sm font-semibold transition-colors border border-rose-200/50 dark:border-rose-800/50"
                                 >
                                   Decline
                                 </button>
                               </div>
                             </div>
-                          </div>
+                          </Link>
                         );
                       })}
                     </div>
@@ -253,15 +259,13 @@ export default function FriendsPage() {
                         const other = getOtherUser(r);
                         const gradient = getAvatarGradient(other?._id || other?.id || other?.user_id);
                         return (
-                          <div
+                          <Link
                             key={r._id}
-                            className="bg-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80"
+                            to={`/users/${other.user_data?.username}`}
+                            className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80 dark:hover:border-slate-700 block"
                           >
                             <div className="flex items-center justify-between gap-3">
-                              <Link
-                                to={`/users/${other.user_data?.username}`}
-                                className="flex items-center gap-3 min-w-0 text-left hover:opacity-80 transition-opacity"
-                              >
+                              <div className="flex items-center gap-3 min-w-0 text-left">
                                 <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg`}>
                                   {other.user_data?.profile_pic ? (
                                     <img
@@ -278,18 +282,22 @@ export default function FriendsPage() {
                                   )}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.user_data?.username}</p>
-                                  <p className="text-xs sm:text-sm text-slate-500">Request sent</p>
+                                  <p className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-lg truncate">{other.user_data?.username}</p>
+                                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Request sent</p>
                                 </div>
-                              </Link>
+                              </div>
                               <button
-                                onClick={() => handleRemove(other._id)}
-                                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-amber-100 hover:bg-amber-200 dark:hover:bg-amber-500/25 text-amber-800 text-xs sm:text-sm font-semibold transition-colors"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleRemove(other._id);
+                                }}
+                                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-amber-100 dark:bg-amber-900/40 hover:bg-amber-200 dark:hover:bg-amber-800/40 text-amber-800 dark:text-amber-400 text-xs sm:text-sm font-semibold transition-colors border border-amber-200/50 dark:border-amber-800/50"
                               >
                                 Cancel
                               </button>
                             </div>
-                          </div>
+                          </Link>
                         );
                       })}
                     </div>
@@ -347,47 +355,51 @@ export default function FriendsPage() {
                     const other = getOtherUser(f);
                     const gradient = getAvatarGradient(other?._id || other?.id || other?.user_id);
                     return (
-                      <div
+                      <Link
                         key={f._id}
-                        className="bg-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80"
+                        to={`/users/${other.user_data?.username}`}
+                        className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80 dark:hover:border-slate-700 block"
                       >
                         {confirmRemoveId === f._id ? (
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
                             <div className="min-w-0 text-left">
-                              <p className="font-semibold text-slate-800 text-base sm:text-lg">
+                              <p className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-lg">
                                 Remove {other.user_data?.username}?
                               </p>
-                              <p className="text-xs sm:text-sm text-slate-500">
+                              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                                 This will remove them from your friends list.
                               </p>
                             </div>
                             <div className="flex gap-2">
                               <button
-                                onClick={() => setConfirmRemoveId(null)}
-                                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition-colors"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setConfirmRemoveId(null);
+                                }}
+                                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold transition-colors"
                               >
                                 Cancel
                               </button>
                               <button
-                                onClick={async () => {
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
                                   try {
                                     await handleRemove(other._id);
                                   } finally {
                                     setConfirmRemoveId(null);
                                   }
                                 }}
-                                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-rose-100 hover:bg-rose-200 dark:hover:bg-rose-500/25 text-rose-800 text-xs sm:text-sm font-semibold transition-colors"
+                                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 hover:bg-rose-200 dark:hover:bg-rose-800/40 text-rose-800 dark:text-rose-400 text-xs sm:text-sm font-semibold transition-colors border border-rose-200/50 dark:border-rose-800/50"
                               >
                                 Confirm
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-between gap-3">
-                            <Link
-                              to={`/users/${other.user_data?.username}`}
-                              className="flex items-center gap-3 min-w-0 text-left hover:opacity-80 transition-opacity"
-                            >
+                          <div className="flex items-center justify-between gap-3 w-full">
+                            <div className="flex items-center gap-3 min-w-0 text-left">
                               <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg`}>
                                 {other.user_data?.profile_pic ? (
                                   <img
@@ -404,9 +416,9 @@ export default function FriendsPage() {
                                 )}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-slate-800 text-base sm:text-lg truncate">{other.user_data?.username}</p>
+                                <p className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-lg truncate">{other.user_data?.username}</p>
                                 {other.user_data?.created_at && (
-                                  <p className="text-xs sm:text-sm text-slate-500">
+                                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                                     Since {new Date(other.user_data.created_at).toLocaleDateString("en-GB", {
                                       day: "numeric",
                                       month: "short",
@@ -415,16 +427,20 @@ export default function FriendsPage() {
                                   </p>
                                 )}
                               </div>
-                            </Link>
+                            </div>
                             <button
-                              onClick={() => setConfirmRemoveId(f._id)}
-                              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-rose-100 hover:bg-rose-200 dark:hover:bg-rose-500/25 text-rose-800 text-xs sm:text-sm font-semibold transition-colors"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setConfirmRemoveId(f._id);
+                              }}
+                              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 hover:bg-rose-200 dark:hover:bg-rose-800/40 text-rose-800 dark:text-rose-400 text-xs sm:text-sm font-semibold transition-colors border border-rose-200/50 dark:border-rose-800/50"
                             >
                               Remove
                             </button>
                           </div>
                         )}
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>

@@ -105,26 +105,35 @@ export default function ProfilePage() {
     }
     setFriendsLoading(true);
     try {
-      const [friends, requests] = await Promise.all([
+      const [friendsData, requestsData] = await Promise.all([
         getFriends(),
         getPendingRequests()
       ]);
-      const isAlreadyFriend = Array.isArray(friends) && friends.some((other) => {
+      
+      const friends = friendsData.friends || [];
+      const requests = requestsData.requests || [];
+
+      const isAlreadyFriend = Array.isArray(friends) && friends.some((f) => {
+        const other = f.user1._id === myUserId ? f.user2 : f.user1;
         return other?._id === profile._id;
       });
       setIsFriend(isAlreadyFriend);
+      
       setPendingSent(false);
       setIncomingRequest(null);
+      
       const relevantRequest = Array.isArray(requests) && requests.find((r) => {
         const other = r.user1._id === myUserId ? r.user2 : r.user1;
         return other?._id === profile._id;
       });
-      if (!relevantRequest) return;
-      if (relevantRequest.user1._id === myUserId) {
-        setPendingSent(true);
-        return;
+      
+      if (relevantRequest) {
+        if (relevantRequest.user1._id === myUserId) {
+          setPendingSent(true);
+        } else {
+          setIncomingRequest(relevantRequest);
+        }
       }
-      setIncomingRequest(relevantRequest);
     } catch (err) {
       console.error("Could not load friend status", err);
     } finally {
@@ -637,14 +646,30 @@ export default function ProfilePage() {
                       ) : friendsLoading ? (
                         <button disabled className="px-6 py-2.5 rounded-xl bg-white/70 text-slate-600 font-semibold border border-slate-200/80">Loading...</button>
                       ) : isFriend ? (
-                        <button onClick={handleRemove} className="px-6 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors">Remove Friend</button>
+                        <div className="flex items-center gap-3">
+                          <span className="px-4 py-2 text-sm rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-200/50 dark:border-emerald-800/50 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Friends
+                          </span>
+                          <button onClick={handleRemove} className="px-4 py-2 text-sm rounded-xl bg-rose-100 dark:bg-rose-900/40 hover:bg-rose-200 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 font-semibold transition-colors border border-rose-200/50 dark:border-rose-800/50">Remove</button>
+                        </div>
                       ) : pendingSent ? (
-                        <button onClick={handleRemove} className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-semibold border border-slate-200/80 hover:bg-slate-200/70 transition-colors">Cancel Request</button>
+                        <div className="flex items-center gap-3">
+                          <span className="px-4 py-2 text-sm rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-semibold border border-amber-200/50 dark:border-amber-800/50 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Pending
+                          </span>
+                          <button onClick={handleRemove} className="px-4 py-2 text-sm rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold transition-colors border border-slate-200/80 dark:border-slate-700">Cancel Request</button>
+                        </div>
                       ) : incomingRequest ? (
-                        <>
-                          <button onClick={handleAccept} className="px-6 py-2.5 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors">Accept Request</button>
-                          <button onClick={handleRemove} className="px-6 py-2.5 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors">Decline</button>
-                        </>
+                        <div className="flex items-center gap-3">
+                          <button onClick={handleAccept} className="px-4 py-2 text-sm rounded-xl bg-emerald-100 dark:bg-emerald-900/40 hover:bg-emerald-200 dark:hover:bg-emerald-800/40 text-emerald-800 dark:text-emerald-400 font-semibold transition-colors border border-emerald-200/50 dark:border-emerald-800/50">Accept Request</button>
+                          <button onClick={handleRemove} className="px-4 py-2 text-sm rounded-xl bg-rose-100 dark:bg-rose-900/40 hover:bg-rose-200 dark:hover:bg-rose-800/40 text-rose-800 dark:text-rose-400 font-semibold transition-colors border border-rose-200/50 dark:border-rose-800/50">Decline</button>
+                        </div>
                       ) : (
                         <button onClick={handleSendRequest} disabled={sendingRequest} className="px-4 py-2 text-sm rounded-xl bg-slate-800 dark:bg-blue-950/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 transition-colors disabled:opacity-50">{sendingRequest ? "Sending..." : "Add Friend"}</button>
                       )}
