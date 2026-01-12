@@ -271,10 +271,10 @@ export function Home() {
                   Quizr.fun
                 </span>
                 <span
-                  className="relative z-10 text-slate-800"
+                  className="relative z-10 text-slate-800 dark:text-slate-500"
                   style={{
-                    textShadow: "1.5px 0 0 rgba(203, 213, 225, 0.75), -1.5px 0 0 rgba(203, 213, 225, 0.75), 0 1.5px 0 rgba(203, 213, 225, 0.75), 0 -1.5px 0 rgba(203, 213, 225, 0.75)",
-                    WebkitTextStroke: "0.5px rgba(255,255,255,0.1)"
+                    textShadow: "var(--logo-shadow)",
+                    WebkitTextStroke: "var(--logo-stroke)"
                   }}
                   data-theme-text="true"
                 >
@@ -282,13 +282,13 @@ export function Home() {
                 </span>
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 text-transparent bg-clip-text opacity-0 group-hover:opacity-95 dark:group-hover:opacity-75 transition-opacity duration-200 z-20"
+                  className="pointer-events-none absolute inset-0 text-transparent bg-clip-text opacity-0 group-hover:opacity-95 dark:group-hover:opacity-100 transition-opacity duration-200 z-20"
                   style={{
                     backgroundImage: logoHoverGradient,
                     backgroundSize: "220% 220%",
                     backgroundRepeat: "no-repeat",
                     backgroundPosition: "var(--logo-x, 50%) var(--logo-y, 50%)",
-                    filter: "saturate(1.55) brightness(var(--logo-hover-brightness, 1.06))",
+                    filter: "saturate(1.8) brightness(var(--logo-hover-brightness, 1.06))",
                     mixBlendMode: "normal",
                     WebkitMaskImage: "radial-gradient(180px 120px at var(--logo-x, 50%) calc(var(--logo-y, 50%) + 18%), rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.85) 32%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0) 78%)",
                     maskImage: "radial-gradient(180px 120px at var(--logo-x, 50%) calc(var(--logo-y, 50%) + 18%), rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.85) 32%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0) 78%)"
