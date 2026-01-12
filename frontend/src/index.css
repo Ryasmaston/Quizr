@@ -6,7 +6,8 @@
 
 /* Find this section (around line 5-50) and REPLACE it with: */
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -39,6 +40,7 @@ body {
 }
 
 @media screen and (max-width: 640px) {
+
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -48,6 +50,7 @@ body {
     font-size: 16px !important;
   }
 }
+
 /* CRITICAL: Global reset to kill ALL focus indicators that cause flashing */
 *:focus,
 *:active,
@@ -151,7 +154,7 @@ html.dark {
   --scrollbar-thumb: rgba(148, 163, 184, 0.24);
   --scrollbar-thumb-hover: rgba(226, 232, 240, 0.28);
   --scrollbar-border: rgba(15, 23, 42, 0.35);
-  --opal-bg-color: rgba(5, 7, 10, 0.93);
+  --opal-bg-color: rgb(18, 23, 40);
   --opal-backdrop-image:
     radial-gradient(1200px 800px at 5% 0%, rgba(245, 158, 11, 0.015), transparent 90%),
     radial-gradient(900px 700px at 85% 10%, rgba(236, 72, 153, 0.015), transparent 85%),
