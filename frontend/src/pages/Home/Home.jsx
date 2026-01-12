@@ -507,8 +507,8 @@ export function Home() {
                               handleToggleFavourite(quiz._id, isFavourited);
                             }}
                             className={`inline-flex items-center justify-center rounded-full border border-slate-200/70 bg-white/80 p-2 backdrop-blur transition-all duration-150 ease-out group-hover:border-white/30 ${isFavourited
-                              ? "text-amber-500 hover:text-amber-400 group-hover:text-amber-500"
-                              : "text-slate-500 hover:text-amber-500 group-hover:text-white/90"
+                              ? "text-amber-500 hover:text-slate-700 dark:hover:text-white"
+                              : "text-slate-500 hover:text-amber-500 dark:hover:text-amber-500"
                               }`}
                           >
                             <svg
