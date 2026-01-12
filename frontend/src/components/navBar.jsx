@@ -4,33 +4,95 @@ import { signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
+import { useIsMobile } from "../hooks/useIsMobile";
 import UserSearchBar from "./UserSearchBar";
+import { 
+  Home as HomeIcon, 
+  PlusSquare, 
+  Users, 
+  Trophy, 
+  User, 
+  LogOut, 
+  Sun, 
+  Moon,
+  Search
+} from "lucide-react";
 
 function NavBar({ accountStatus, accountUsername }) {
   const user = useAuth();
+  const isMobile = useIsMobile();
   const { theme, toggleTheme, isLoading } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const username = accountUsername;
   const isAccountLocked = accountStatus === "pending_deletion";
   const profileLabel = username || "Profile";
-  const profileSizeClass =
-    username && username.length > 16
-      ? "text-xs"
-      : username && username.length > 12
-        ? "text-sm"
-        : "text-sm";
-
+  
   useEffect(() => {
-    // redirect to login when we know there's no user
     if (user === null) {
       navigate("/login");
     }
   }, [user, navigate]);
 
-  // Don't render until theme is loaded
   if (isLoading) {
     return null;
+  }
+
+  const navLinks = [
+    { to: "/", icon: HomeIcon, label: "Home", mobileOnly: false },
+    { to: "/quizzes/create", icon: PlusSquare, label: "Create", mobileOnly: false },
+    { to: "/friends", icon: Users, label: "Friends", mobileOnly: false, requiresAuth: true },
+    { to: "/leaderboard", icon: Trophy, label: "Rank", mobileOnly: false, requiresAuth: true },
+    { to: `/users/${username}`, icon: User, label: "Profile", mobileOnly: false, requiresAuth: true, isProfile: true },
+  ];
+
+  if (isMobile) {
+    return (
+      <nav className="fixed bottom-0 left-0 z-50 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe">
+        <div className="flex justify-around items-center h-16 px-2">
+          {navLinks.map((link) => {
+            if (link.requiresAuth && !user) return null;
+            if (link.isProfile && !username) return null;
+            
+            const Icon = link.icon;
+            return (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `flex flex-col items-center justify-center w-full h-full transition-colors ${
+                    isActive 
+                      ? "text-blue-600 dark:text-blue-400" 
+                      : "text-slate-500 dark:text-slate-400"
+                  }`
+                }
+              >
+                <Icon size={24} />
+                <span className="text-[10px] mt-1 font-medium">{link.label}</span>
+              </NavLink>
+            );
+          })}
+          
+          <button
+            onClick={toggleTheme}
+            className="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400"
+          >
+            {theme === "dark" ? <Sun size={24} /> : <Moon size={24} />}
+            <span className="text-[10px] mt-1 font-medium">Theme</span>
+          </button>
+
+          {user && (
+            <button
+              onClick={() => signOut(auth)}
+              className="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400"
+            >
+              <LogOut size={24} />
+              <span className="text-[10px] mt-1 font-medium">Exit</span>
+            </button>
+          )}
+        </div>
+      </nav>
+    );
   }
 
   return (
@@ -55,16 +117,10 @@ function NavBar({ accountStatus, accountUsername }) {
                     }`
                   }
                 >
-                  <span className="inline-grid items-center leading-none">
-                    <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
-                      Home
-                    </span>
-                    <span className="col-start-1 row-start-1 leading-none">Home</span>
-                  </span>
+                  Home
                 </NavLink>
                 <NavLink
                   to="/quizzes/create"
-                  state={{ returnTo: location.pathname }}
                   className={({ isActive }) =>
                     `text-sm transition-all duration-200 h-11 px-4 min-w-[7.5rem] justify-center rounded-xl inline-flex items-center ${isActive
                       ? "text-slate-900 dark:text-slate-100 font-bold hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-800/40"
@@ -72,12 +128,7 @@ function NavBar({ accountStatus, accountUsername }) {
                     }`
                   }
                 >
-                  <span className="inline-grid items-center leading-none">
-                    <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
-                      Create Quiz
-                    </span>
-                    <span className="col-start-1 row-start-1 leading-none">Create Quiz</span>
-                  </span>
+                  Create Quiz
                 </NavLink>
                 {user && (
                   <NavLink
@@ -89,12 +140,7 @@ function NavBar({ accountStatus, accountUsername }) {
                       }`
                     }
                   >
-                    <span className="inline-grid items-center leading-none">
-                      <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
-                        Friends
-                      </span>
-                      <span className="col-start-1 row-start-1 leading-none">Friends</span>
-                    </span>
+                    Friends
                   </NavLink>
                 )}
                 {user && (
@@ -107,19 +153,13 @@ function NavBar({ accountStatus, accountUsername }) {
                       }`
                     }
                   >
-                    <span className="inline-grid items-center leading-none">
-                      <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
-                        Leaderboard
-                      </span>
-                      <span className="col-start-1 row-start-1 leading-none">Leaderboard</span>
-                    </span>
+                    Leaderboard
                   </NavLink>
                 )}
               </>
             )}
           </div>
 
-          {/* Global user search (only when logged in) */}
           <div className="flex-1 flex justify-center px-4">
             {user && !isAccountLocked && <UserSearchBar excludeUsername={username} />}
           </div>
@@ -129,69 +169,28 @@ function NavBar({ accountStatus, accountUsername }) {
               <button
                 type="button"
                 onClick={toggleTheme}
-                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
                 className="h-10 w-10 inline-flex items-center justify-center rounded-xl text-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-colors"
-                title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
-                {theme === "dark" ? (
-                  <svg
-                    className="h-5 w-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v2" />
-                    <path d="M12 20v2" />
-                    <path d="m4.93 4.93 1.41 1.41" />
-                    <path d="m17.66 17.66 1.41 1.41" />
-                    <path d="M2 12h2" />
-                    <path d="M20 12h2" />
-                    <path d="m6.34 17.66-1.41 1.41" />
-                    <path d="m19.07 4.93-1.41 1.41" />
-                  </svg>
-                ) : (
-                  <svg
-                    className="h-5 w-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                  </svg>
-                )}
+                {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
               </button>
             )}
             {user && username && (
               <NavLink
                 to={`/users/${username}`}
                 className={({ isActive }) =>
-                  `${profileSizeClass} transition-all duration-200 h-11 px-4 min-w-[6.5rem] justify-center rounded-xl inline-flex items-center ${isActive
+                  `text-sm transition-all duration-200 h-11 px-4 min-w-[6.5rem] justify-center rounded-xl inline-flex items-center ${isActive
                     ? "text-slate-900 dark:text-slate-100 font-bold hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-800/40"
                     : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                   }`
                 }
               >
-                <span className="inline-grid items-center leading-none">
-                  <span aria-hidden="true" className="col-start-1 row-start-1 font-bold leading-none opacity-0">
-                    {profileLabel}
-                  </span>
-                  <span className="col-start-1 row-start-1 leading-none">{profileLabel}</span>
-                </span>
+                {profileLabel}
               </NavLink>
             )}
             {user && (
               <button
                 onClick={() => signOut(auth)}
-                className="bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-100 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors hover:bg-slate-700 dark:hover:bg-slate-700 dark:border dark:border-slate-800/50"
+                className="bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-100 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors hover:bg-slate-700 dark:hover:bg-slate-700"
               >
                 Sign out
               </button>
