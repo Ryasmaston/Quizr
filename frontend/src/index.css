@@ -7,11 +7,8 @@
 *:focus,
 *:active,
 *:focus-visible,
-*:focus-within,
 button,
-button:focus,
 button:active,
-button:focus-visible,
 button:focus-within,
 [role="button"]:focus,
 [role="button"]:active,
@@ -27,6 +24,43 @@ button:focus-within,
   --tw-ring-offset-shadow: 0 0 #0000 !important;
   --tw-ring-shadow: 0 0 #0000 !important;
   --tw-ring-offset-color: transparent !important;
+}
+
+/* Allow focus-within shadows for answer containers - override global reset */
+div:focus-within:not(:has(input:focus)) {
+  box-shadow: none !important;
+}
+
+/* IMPORTANT: Answer container focus shadow - must override everything */
+div.flex.items-center.gap-3.p-3.rounded-xl.border:focus-within,
+div[class*="focus-within:shadow"]:focus-within {
+  box-shadow: 0 0 12px -2px rgba(100, 116, 139, 0.25) !important;
+  outline: none !important;
+}
+
+html.dark div.flex.items-center.gap-3.p-3.rounded-xl.border:focus-within,
+html.dark div[class*="focus-within:shadow"]:focus-within {
+  box-shadow: 0 0 16px -2px rgba(255, 255, 255, 0.15) !important;
+  outline: none !important;
+}
+
+/* EXCEPTION: Allow specific buttons to have focus shadow */
+button:focus,
+button:focus-visible {
+  box-shadow: none !important;
+}
+
+/* Quiz answer buttons - allow focus shadow */
+button[class*="text-left px-4 py-3 rounded-xl"]:focus,
+button[class*="text-left px-4 py-3 rounded-xl"]:focus-visible {
+  box-shadow: 0 0 16px -6px rgba(148, 163, 184, 0.6) !important;
+  outline: none !important;
+}
+
+html.dark button[class*="text-left px-4 py-3 rounded-xl"]:focus,
+html.dark button[class*="text-left px-4 py-3 rounded-xl"]:focus-visible {
+  box-shadow: 0 0 16px -6px rgba(255, 255, 255, 0.3) !important;
+  outline: none !important;
 }
 
 /* Allow inputs to have focus shadow */
@@ -45,6 +79,7 @@ html.dark input[type="email"]:focus,
 html.dark input[type="url"]:focus {
   box-shadow: 0 0 16px -2px rgba(255, 255, 255, 0.15) !important;
 }
+
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -439,4 +474,30 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+.no-global-shadow:focus,
+input.no-global-shadow:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Also prevent any input inside answer containers from having its own shadow */
+div[class*="focus-within:shadow"] input:focus,
+div.flex.items-center.gap-3.p-3.rounded-xl.border input:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* FINAL OVERRIDE: Answer container focus shadow - highest specificity */
+html body div.flex.items-center.gap-3.p-3.rounded-xl.border:focus-within,
+html body div[class*="focus-within:shadow"]:focus-within {
+  box-shadow: 0 0 12px -2px rgba(100, 116, 139, 0.25) !important;
+  outline: none !important;
+}
+
+html.dark body div.flex.items-center.gap-3.p-3.rounded-xl.border:focus-within,
+html.dark body div[class*="focus-within:shadow"]:focus-within {
+  box-shadow: 0 0 16px -2px rgba(255, 255, 255, 0.15) !important;
+  outline: none !important;
 }

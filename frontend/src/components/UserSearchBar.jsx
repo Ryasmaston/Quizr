@@ -108,10 +108,10 @@ export default function UserSearchBar({ excludeUsername }) {
                   <img
                     src={u.profile_pic}
                     alt=""
-                    className="h-7 w-7 rounded-full object-cover"
+                    className="h-7 w-7 rounded-xl object-cover"
                   />
                 ) : (
-                  <div className="h-7 w-7 rounded-full bg-slate-200/80 dark:bg-slate-900/60" />
+                  <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-amber-400 to-rose-400" />
                 )}
                 <span>{u.username}</span>
               </button>

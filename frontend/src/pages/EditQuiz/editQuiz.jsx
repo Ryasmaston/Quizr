@@ -209,6 +209,25 @@ export default function EditQuiz() {
     }
   }, [questions.length]);
 
+  // Click outside to close dropdowns
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      const categoryDropdown = document.getElementById('category-dropdown-edit');
+      const answersDropdown = document.getElementById('answers-dropdown-edit');
+      const button = event.target.closest('button');
+      const isDropdownButton = button && (button.getAttribute('aria-haspopup') === 'true');
+
+      if (categoryDropdown && !categoryDropdown.contains(event.target) && !isDropdownButton) {
+        categoryDropdown.classList.add('hidden');
+      }
+      if (answersDropdown && !answersDropdown.contains(event.target) && !isDropdownButton) {
+        answersDropdown.classList.add('hidden');
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
+
   function normalizeAnswerCount(question, count) {
     const answers = Array.isArray(question.answers) ? question.answers : [];
     if (answers.length === count) return question;
@@ -568,39 +587,81 @@ export default function EditQuiz() {
                     ))}
                   </div>
                 </div>
-                <div>
-                  <label className="block text-slate-600 font-medium mb-2 text-sm">
+                <div className="relative">
+                  <label className="block text-slate-600 dark:text-slate-400 font-medium mb-2 text-sm">
                     Category
                   </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-white/70 border border-slate-200/80 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-0 focus:shadow-[0_0_16px_-6px_rgba(148,163,184,0.6)]"
+                  <button
+                    type="button"
+                    aria-haspopup="true"
+                    onClick={() => {
+                      const dropdown = document.getElementById('category-dropdown-edit');
+                      dropdown.classList.toggle('hidden');
+                    }}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-100 text-left focus:outline-none focus:ring-0 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between"
                   >
+                    <span>{categories.find(c => c.value === category)?.label || category}</span>
+                    <svg className="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div id="category-dropdown-edit" className="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200/80 dark:border-slate-700/60 shadow-lg z-50 max-h-64 overflow-y-auto">
                     {categories.map((item) => (
-                      <option key={item.value} value={item.value} className="text-slate-800">
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => {
+                          setCategory(item.value);
+                          document.getElementById('category-dropdown-edit').classList.add('hidden');
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 first:rounded-t-xl last:rounded-b-xl ${category === item.value
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                          : 'text-slate-700 dark:text-slate-300'
+                          }`}
+                      >
                         {item.label}
-                      </option>
+                      </button>
                     ))}
-                  </select>
-                  <p className="text-xs text-slate-500 mt-2">Used for category chips and filters.</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-slate-600 font-medium mb-2 text-sm">
+                <div className="relative">
+                  <label className="block text-slate-600 dark:text-slate-400 font-medium mb-2 text-sm">
                     Answers per question
                   </label>
-                  <select
-                    value={answersPerQuestion}
-                    onChange={(e) => handleAnswersPerQuestionChange(e.target.value)}
-                    className="w-full bg-white/70 border border-slate-200/80 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-0 focus:shadow-[0_0_16px_-6px_rgba(148,163,184,0.6)]"
+                  <button
+                    type="button"
+                    aria-haspopup="true"
+                    onClick={() => {
+                      const dropdown = document.getElementById('answers-dropdown-edit');
+                      dropdown.classList.toggle('hidden');
+                    }}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-100 text-left focus:outline-none focus:ring-0 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-600 flex items-center justify-between"
                   >
+                    <span>{answersPerQuestion} answers</span>
+                    <svg className="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div id="answers-dropdown-edit" className="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-950 rounded-xl border border-slate-200/80 dark:border-slate-700/60 shadow-lg z-50 max-h-64 overflow-y-auto">
                     {ANSWER_COUNT_OPTIONS.map((count) => (
-                      <option key={count} value={count} className="text-slate-800">
+                      <button
+                        key={count}
+                        type="button"
+                        onClick={() => {
+                          handleAnswersPerQuestionChange(count);
+                          document.getElementById('answers-dropdown-edit').classList.add('hidden');
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 first:rounded-t-xl last:rounded-b-xl ${answersPerQuestion === count
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+                          : 'text-slate-700 dark:text-slate-300'
+                          }`}
+                      >
                         {count} answers
-                      </option>
+                      </button>
+
+
                     ))}
-                  </select>
-                  <p className="text-xs text-slate-500 mt-2">Applies to every question.</p>
+                  </div>
                 </div>
                 <div className="lg:col-span-2">
                   <label className="block text-slate-600 font-medium mb-2 text-sm">
@@ -743,7 +804,7 @@ export default function EditQuiz() {
                         {q.answers.map((a, aIndex) => (
                           <div
                             key={a._id || `${qIndex}-${aIndex}`}
-                            className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${a.is_correct
+                            className={`flex items-center gap-3 p-3 rounded-xl border transition-all focus-within:shadow-[0_0_12px_-2px_rgba(100,116,139,0.25)] dark:focus-within:shadow-[0_0_16px_-2px_rgba(255,255,255,0.15)] ${a.is_correct
                               ? "bg-emerald-100/70 border-emerald-300/70 dark:bg-emerald-900/40 dark:border-emerald-800/60"
                               : "bg-white/60 border-slate-200/80 dark:bg-slate-800/40 dark:border-slate-800/60 hover:border-slate-300/80 dark:hover:border-slate-700/80"
                               }`}
@@ -771,7 +832,7 @@ export default function EditQuiz() {
                                 onChange={(e) => handleAnswerChange(qIndex, aIndex, e.target.value)}
                                 required
                                 id={`answer-${qIndex}-${aIndex}`}
-                                className="w-full bg-transparent border-none text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                                className="w-full bg-transparent border-none text-slate-800 placeholder:text-slate-400 focus:outline-none no-global-shadow"
                               />
                             </label>
                             {a.is_correct && (
