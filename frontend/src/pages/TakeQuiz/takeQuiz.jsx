@@ -724,7 +724,7 @@ function TakeQuizPage() {
                                         <span>Exit</span>
                                     </button>
                                     <button
-                                        className="w-full h-full rounded-2xl bg-slate-800 dark:bg-slate-900/85 dark:border dark:border-slate-800/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-slate-900 transition-colors flex items-center justify-center px-6 py-5 text-xl leading-tight"
+                                        className="w-full h-full rounded-2xl bg-slate-800 dark:bg-blue-950/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 transition-colors flex items-center justify-center px-6 py-5 text-xl leading-tight"
                                         onClick={startQuiz}
                                     >
                                         Take the quiz
@@ -956,7 +956,7 @@ function TakeQuizPage() {
                                 </button>
                                 {!isLastQuestion && (
                                     <button
-                                        className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 dark:bg-slate-900/95 dark:border dark:border-slate-600/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-slate-800/90 transition-colors disabled:opacity-50"
+                                        className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 dark:bg-blue-950/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 transition-colors disabled:opacity-50"
                                         onClick={goNext}
                                         disabled={currentSelections.length === 0}
                                         type="button"
@@ -966,7 +966,7 @@ function TakeQuizPage() {
                                 )}
                                 {isLastQuestion && (
                                     <button
-                                        className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 dark:bg-slate-900/95 dark:border dark:border-slate-600/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-slate-800/90 transition-colors disabled:opacity-50"
+                                        className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 dark:bg-blue-950/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 transition-colors disabled:opacity-50"
                                         onClick={submitQuiz}
                                         disabled={currentSelections.length === 0}
                                         type="button"
@@ -1005,8 +1005,8 @@ function TakeQuizPage() {
                             </div>
                             <button
                                 className={`absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${isFavourited
-                                    ? "border-amber-200/80 bg-amber-100/80 text-amber-700"
-                                    : "border-slate-200/80 bg-white/70 text-slate-700 hover:bg-white/90"
+                                    ? "border-amber-200/80 dark:border-amber-700/60 bg-amber-100/80 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-800/60"
+                                    : "border-slate-200/80 dark:border-slate-700/60 bg-white/70 dark:bg-slate-800/60 text-slate-700 dark:text-slate-400 hover:bg-white/90 dark:hover:bg-slate-700/80 hover:text-amber-500 dark:hover:text-amber-400"
                                     }`}
                                 type="button"
                                 onClick={handleToggleFavourite}
@@ -1029,22 +1029,21 @@ function TakeQuizPage() {
                             {difficultyKey !== "hard" && (
                                 <div className="mt-6 text-left">
                                     <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                                        <h3 className="text-lg font-semibold text-slate-800">Answer summary</h3>
-                                        <select
-                                            value={summaryFilter}
-                                            onChange={(event) => setSummaryFilter(event.target.value)}
-                                            className="rounded-full border border-slate-200/80 bg-white/60 px-3 pr-7 py-1 text-xs sm:text-sm font-semibold text-slate-600 focus:outline-none focus:ring-0 appearance-none"
-                                            style={{
-                                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgb(148,163,184)' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                                                backgroundRepeat: "no-repeat",
-                                                backgroundPosition: "right 0.6rem center",
-                                                backgroundSize: "0.9rem"
-                                            }}
-                                        >
-                                            <option value="all" className="text-black">All</option>
-                                            <option value="correct" className="text-black">Correct</option>
-                                            <option value="wrong" className="text-black">Wrong</option>
-                                        </select>
+                                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Answer summary</h3>
+                                        <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800/40 rounded-full">
+                                            {['all', 'correct', 'wrong'].map((option) => (
+                                                <button
+                                                    key={option}
+                                                    onClick={() => setSummaryFilter(option)}
+                                                    className={`sorting-button h-8 min-w-[70px] px-3 rounded-full text-xs font-semibold transition-all flex items-center justify-center ${summaryFilter === option
+                                                        ? "isActive bg-white dark:bg-slate-900 shadow-sm border border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-slate-100"
+                                                        : "bg-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                                                        }`}
+                                                >
+                                                    {option === 'all' ? 'All' : option === 'correct' ? 'Correct' : 'Incorrect'}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                     <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
                                         {filteredSummaryItems.length === 0 ? (
@@ -1084,7 +1083,7 @@ function TakeQuizPage() {
                                                                 const isSelected = item.selectedSet.has(answerId);
                                                                 const isCorrectAnswer = item.correctSet.has(answerId);
                                                                 const showMissing = difficultyKey === "easy" && isCorrectAnswer && !isSelected;
-                                                                let toneClasses = "border-slate-300/90 bg-white text-slate-800 shadow-sm";
+                                                                let toneClasses = "border-slate-300/90 dark:border-slate-700 bg-white dark:bg-slate-800/70 text-slate-800 dark:text-slate-300 shadow-sm";
                                                                 if (isSelected && isCorrectAnswer) {
                                                                     toneClasses = "border-emerald-700 bg-emerald-700 text-white shadow-lg";
                                                                 } else if (isSelected && !isCorrectAnswer) {
@@ -1123,7 +1122,7 @@ function TakeQuizPage() {
                                     Homepage
                                 </button>
                                 <button
-                                    className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors"
+                                    className="flex-1 min-w-[160px] px-6 py-3 rounded-xl bg-slate-800 dark:bg-blue-950/60 text-white font-semibold hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 transition-colors"
                                     onClick={retakeQuiz}
                                     type="button"
                                 >

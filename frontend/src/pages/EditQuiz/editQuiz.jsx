@@ -811,7 +811,7 @@ export default function EditQuiz() {
               <button
                 type="submit"
                 disabled={!hasChanges}
-                className={`flex-1 bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-slate-700 flex items-center justify-center gap-2 ${hasChanges
+                className={`flex-1 bg-slate-800 dark:bg-blue-950/60 text-white px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 flex items-center justify-center gap-2 ${hasChanges
                   ? ""
                   : "opacity-50 cursor-not-allowed"
                   }`}

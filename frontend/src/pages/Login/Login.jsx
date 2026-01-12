@@ -73,7 +73,7 @@ export function Login() {
                 id="submit"
                 type="submit"
                 value="Log in"
-                className="mt-2 w-full cursor-pointer rounded-xl bg-slate-800 text-white px-6 py-3 font-semibold transition-colors hover:bg-slate-700"
+                className="mt-2 w-full cursor-pointer rounded-xl bg-slate-800 dark:bg-blue-950/60 text-white px-6 py-3 font-semibold transition-colors hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30"
               />
             </form>
             {error && (

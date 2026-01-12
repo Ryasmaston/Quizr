@@ -66,6 +66,7 @@ export default function UserSearchBar({ excludeUsername }) {
   return (
     <div className="relative w-full max-w-md">
       <input
+        type="text"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onFocus={() => {

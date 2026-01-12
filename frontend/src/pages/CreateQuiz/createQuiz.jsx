@@ -628,7 +628,7 @@ export default function CreateQuiz() {
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-slate-700 flex items-center justify-center gap-2"
+                className="flex-1 bg-slate-800 dark:bg-blue-950/60 text-white px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
