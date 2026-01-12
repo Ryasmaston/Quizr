@@ -638,7 +638,7 @@ export default function EditQuiz() {
                         type="checkbox"
                         checked={allowMultipleCorrect}
                         onChange={(e) => handleAllowMultipleCorrectChange(e.target.checked)}
-                        className="mt-1 h-4 w-4 appearance-none rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-slate-800 dark:checked:bg-slate-200 checked:border-transparent transition-all cursor-pointer relative after:content-[''] after:absolute after:hidden checked:after:block after:left-[5px] after:top-[1px] after:w-[4px] after:h-[8px] after:border-white dark:after:border-slate-900 after:border-b-2 after:border-r-2 after:rotate-45"
+                        className="mt-1 h-4 w-4 appearance-none rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-slate-800 dark:checked:bg-slate-200 checked:border-transparent transition-all cursor-pointer relative after:content-[''] after:absolute after:hidden checked:after:block after:left-[5px] after:top-[2px] after:w-[4px] after:h-[8px] after:border-white dark:after:border-slate-900 after:border-b-2 after:border-r-2 after:rotate-45"
                       />
                       <span className="text-left text-sm text-slate-700">
                         Allow multiple correct answers
@@ -656,7 +656,7 @@ export default function EditQuiz() {
                         checked={requireAllCorrect}
                         onChange={(e) => setRequireAllCorrect(e.target.checked)}
                         disabled={!allowMultipleCorrect}
-                        className={`mt-1 h-4 w-4 appearance-none rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-slate-800 dark:checked:bg-slate-200 checked:border-transparent transition-all relative after:content-[''] after:absolute after:hidden checked:after:block after:left-[5px] after:top-[1px] after:w-[4px] after:h-[8px] after:border-white dark:after:border-slate-900 after:border-b-2 after:border-r-2 after:rotate-45 ${allowMultipleCorrect ? "cursor-pointer" : "cursor-default"
+                        className={`mt-1 h-4 w-4 appearance-none rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-slate-800 dark:checked:bg-slate-200 checked:border-transparent transition-all relative after:content-[''] after:absolute after:hidden checked:after:block after:left-[5px] after:top-[2px] after:w-[4px] after:h-[8px] after:border-white dark:after:border-slate-900 after:border-b-2 after:border-r-2 after:rotate-45 ${allowMultipleCorrect ? "cursor-pointer" : "cursor-default"
                           }`}
                       />
                       <span className="text-left text-sm text-slate-700">
@@ -677,7 +677,7 @@ export default function EditQuiz() {
                       type="checkbox"
                       checked={lockAnswers}
                       onChange={(e) => setLockAnswers(e.target.checked)}
-                      className="mt-1 h-4 w-4 appearance-none rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-slate-800 dark:checked:bg-slate-200 checked:border-transparent transition-all cursor-pointer relative after:content-[''] after:absolute after:hidden checked:after:block after:left-[5px] after:top-[1px] after:w-[4px] after:h-[8px] after:border-white dark:after:border-slate-900 after:border-b-2 after:border-r-2 after:rotate-45"
+                      className="mt-1 h-4 w-4 appearance-none rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-slate-800 dark:checked:bg-slate-200 checked:border-transparent transition-all cursor-pointer relative after:content-[''] after:absolute after:hidden checked:after:block after:left-[5px] after:top-[2px] after:w-[4px] after:h-[8px] after:border-white dark:after:border-slate-900 after:border-b-2 after:border-r-2 after:rotate-45"
                     />
                     <span className="text-left text-sm text-slate-700">
                       Lock answers after Next

@@ -29,70 +29,70 @@ export function Login() {
     }
   }
 
-return (
-  <>
-    <div
-      className="fixed inset-0"
-      style={{
-        backgroundColor: "var(--opal-bg-color)",
-        backgroundImage: "var(--opal-backdrop-image)"
-      }}
-    ></div>
-    <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute top-1/4 left-1/4 w-[28rem] h-[28rem] bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] bg-rose-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
-      <div className="absolute top-1/2 left-1/2 w-[30rem] h-[30rem] -translate-x-1/2 -translate-y-1/2 bg-sky-200/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
-    </div>
-    <div className="relative min-h-screen pt-16 sm:pt-20">
-      <main className="relative max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl sm:text-4xl font-semibold text-slate-800 mb-2 select-none">Welcome back</h1>
-          <p className="text-slate-600">Log in to continue</p>
-        </div>
-        <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-800">Log in</h2>
-          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-            <label htmlFor="email" className="block text-sm text-slate-600">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-300/70"
-            />
-            <label htmlFor="password" className="block text-sm text-slate-600">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-300/70"
-            />
-            <input
-              role="submit-button"
-              id="submit"
-              type="submit"
-              value="Log in"
-              className="mt-2 w-full cursor-pointer rounded-xl bg-slate-800 text-white px-6 py-3 font-semibold transition-colors hover:bg-slate-700"
-            />
-          </form>
-          {error && (
-            <p className="mt-4 rounded-xl border border-rose-200/80 bg-rose-100/80 px-4 py-3 text-sm text-rose-700">
-              {error}
+  return (
+    <>
+      <div
+        className="fixed inset-0"
+        style={{
+          backgroundColor: "var(--opal-bg-color)",
+          backgroundImage: "var(--opal-backdrop-image)"
+        }}
+      ></div>
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-[28rem] h-[28rem] bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] bg-rose-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-1/2 left-1/2 w-[30rem] h-[30rem] -translate-x-1/2 -translate-y-1/2 bg-sky-200/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+      </div>
+      <div className="relative min-h-screen pt-16 sm:pt-20">
+        <main className="relative max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+          <div className="mb-6 text-center">
+            <h1 className="text-3xl sm:text-4xl font-semibold text-slate-800 mb-2 select-none">Welcome back</h1>
+            <p className="text-slate-600">Log in to continue</p>
+          </div>
+          <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-800">Log in</h2>
+            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+              <label htmlFor="email" className="block text-sm text-slate-600">Email</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-300/70"
+              />
+              <label htmlFor="password" className="block text-sm text-slate-600">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-300/70"
+              />
+              <input
+                role="submit-button"
+                id="submit"
+                type="submit"
+                value="Log in"
+                className="mt-2 w-full cursor-pointer rounded-xl bg-slate-800 text-white px-6 py-3 font-semibold transition-colors hover:bg-slate-700"
+              />
+            </form>
+            {error && (
+              <p className="mt-4 rounded-xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-100/80 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-400">
+                {error}
+              </p>
+            )}
+            <p className="mt-4 text-sm text-slate-600">
+              Don&apos;t have an account?{" "}
+              <Link
+                to="/signup"
+                className="text-slate-800 underline underline-offset-4 hover:text-slate-600"
+              >
+                Sign up
+              </Link>
             </p>
-          )}
-          <p className="mt-4 text-sm text-slate-600">
-            Don&apos;t have an account?{" "}
-            <Link
-              to="/signup"
-              className="text-slate-800 underline underline-offset-4 hover:text-slate-600"
-            >
-              Sign up
-            </Link>
-          </p>
-        </div>
-      </main>
-    </div>
-  </>
-);
+          </div>
+        </main>
+      </div>
+    </>
+  );
 }

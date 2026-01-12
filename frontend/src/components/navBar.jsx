@@ -50,7 +50,7 @@ function NavBar({ accountStatus, accountUsername }) {
                   }}
                   className={({ isActive }) =>
                     `text-sm transition-all duration-200 h-11 px-4 min-w-[5.5rem] justify-center rounded-xl inline-flex items-center ${isActive
-                      ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-100"
+                      ? "text-slate-900 dark:text-slate-100 font-bold hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-800/40"
                       : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                     }`
                   }
@@ -67,7 +67,7 @@ function NavBar({ accountStatus, accountUsername }) {
                   state={{ returnTo: location.pathname }}
                   className={({ isActive }) =>
                     `text-sm transition-all duration-200 h-11 px-4 min-w-[7.5rem] justify-center rounded-xl inline-flex items-center ${isActive
-                      ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-100"
+                      ? "text-slate-900 dark:text-slate-100 font-bold hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-800/40"
                       : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                     }`
                   }
@@ -84,7 +84,7 @@ function NavBar({ accountStatus, accountUsername }) {
                     to="/friends"
                     className={({ isActive }) =>
                       `text-sm transition-all duration-200 h-11 px-4 min-w-[6.5rem] justify-center rounded-xl inline-flex items-center ${isActive
-                        ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-100"
+                        ? "text-slate-900 dark:text-slate-100 font-bold hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-800/40"
                         : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                       }`
                     }
@@ -102,7 +102,7 @@ function NavBar({ accountStatus, accountUsername }) {
                     to="/leaderboard"
                     className={({ isActive }) =>
                       `text-sm transition-all duration-200 h-11 px-4 min-w-[8.5rem] justify-center rounded-xl inline-flex items-center ${isActive
-                        ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-100"
+                        ? "text-slate-900 dark:text-slate-100 font-bold hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-800/40"
                         : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                       }`
                     }
@@ -175,7 +175,7 @@ function NavBar({ accountStatus, accountUsername }) {
                 to={`/users/${username}`}
                 className={({ isActive }) =>
                   `${profileSizeClass} transition-all duration-200 h-11 px-4 min-w-[6.5rem] justify-center rounded-xl inline-flex items-center ${isActive
-                    ? "text-slate-900 dark:text-slate-100 font-bold dark:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-100"
+                    ? "text-slate-900 dark:text-slate-100 font-bold hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-800/40"
                     : "text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 dark:hover:bg-slate-800/40"
                   }`
                 }

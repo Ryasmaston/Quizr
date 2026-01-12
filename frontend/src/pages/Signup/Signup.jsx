@@ -21,7 +21,7 @@ export function Signup() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) navigate("/")
-    })  
+    })
     return unsub
   }, [navigate])
 
@@ -35,10 +35,10 @@ export function Signup() {
       }
       const availabilityRes = await fetch(
         `${BACKEND_URL}/users/availability?username=${encodeURIComponent(username)}`);
-// two lines of code changed: await fetch replaced with apiFetch to follow README rule never call fetch() directly for our API
-    // const availabilityRes = await apiFetch(
-    // `/users/availability?username=${encodeURIComponent(username)}`
-    // );
+      // two lines of code changed: await fetch replaced with apiFetch to follow README rule never call fetch() directly for our API
+      // const availabilityRes = await apiFetch(
+      // `/users/availability?username=${encodeURIComponent(username)}`
+      // );
       const availabilityBody = await availabilityRes.json().catch(() => ({}));
       if (!availabilityRes.ok) {
         throw new Error(availabilityBody.message || "Unable to check username");
@@ -122,7 +122,7 @@ export function Signup() {
               />
             </form>
             {error && (
-              <p className="mt-4 rounded-xl border border-rose-200/80 bg-rose-100/80 px-4 py-3 text-sm text-rose-700">
+              <p className="mt-4 rounded-xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-100/80 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-400">
                 {error}
               </p>
             )}

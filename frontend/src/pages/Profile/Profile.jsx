@@ -680,7 +680,7 @@ export default function ProfilePage() {
                       return statsList.map((s, idx) => (
                         <div
                           key={s.label + s.value}
-                          className={`flex items-end justify-between py-1 px-1 text-sm ${idx < total - 2 ? 'border-b border-slate-200/60' : ''}`}
+                          className={`flex items-end justify-between py-1 px-1 text-sm ${idx < total - 2 ? 'border-b border-slate-200/80 dark:border-slate-800/90' : ''}`}
                         >
                           <div className="text-sm text-slate-500 flex-1 pr-1 text-left">{s.label}</div>
                           <div className="text-sm font-semibold text-slate-800 w-14 text-right">{s.value}</div>
@@ -758,18 +758,18 @@ export default function ProfilePage() {
                             setSortDirection("desc");
                           }
                         }}
-                        className={`w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isAccountLocked
+                        className={`sorting-button ${isActive ? 'isActive' : ''} w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isAccountLocked
                           ? "opacity-50 text-slate-400"
                           : isActive
-                            ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-600'
+                            ? 'bg-white dark:bg-slate-500 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-400'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                           }`}
                         style={{ WebkitTapHighlightColor: 'transparent' }}
                       >
                         {option === 'date' ? (isAsc ? 'Oldest' : 'Newest') : 'Stars'}
-                        {isActive && (
-                          <span className="inline-flex w-3 justify-center">
-                            {isAsc ? (
+                        <span className="inline-flex w-3 justify-center">
+                          {isActive ? (
+                            isAsc ? (
                               <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M10 5l4 6H6l4-6z" />
                               </svg>
@@ -777,9 +777,11 @@ export default function ProfilePage() {
                               <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M10 15l-4-6h8l-4 6z" />
                               </svg>
-                            )}
-                          </span>
-                        )}
+                            )
+                          ) : (
+                            <span className="h-3 w-3" />
+                          )}
+                        </span>
                       </button>
                     );
                   })}
@@ -1096,7 +1098,7 @@ export default function ProfilePage() {
                                 handleRemoveFavourite(quizId);
                               }}
                               disabled={isAccountLocked}
-                              className={`px-3 py-1.5 rounded-xl bg-rose-50/70 backdrop-blur text-rose-600 text-xs font-bold transition-all duration-100 ease-out ${isAccountLocked ? "opacity-50" : "hover:bg-rose-100/80 active:scale-95"}`}
+                              className={`px-3 py-1.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/40 backdrop-blur text-rose-600 dark:text-rose-400 text-xs font-bold transition-all duration-100 ease-out ${isAccountLocked ? "opacity-50" : "hover:bg-rose-100/80 dark:hover:bg-rose-900/50 active:scale-95"}`}
                             >
                               Remove
                             </button>
@@ -1246,18 +1248,18 @@ export default function ProfilePage() {
                               setTakenSortDirection("desc");
                             }
                           }}
-                          className={`w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isAccountLocked
+                          className={`sorting-button ${isActive ? 'isActive' : ''} w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isAccountLocked
                             ? "opacity-50 text-slate-400"
                             : isActive
-                              ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-600'
+                              ? 'bg-white dark:bg-slate-500 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-400'
                               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                             }`}
                           style={{ WebkitTapHighlightColor: 'transparent' }}
                         >
                           {option === 'highest_score' ? 'Score' : option === 'questions' ? 'Questions' : option === 'taken_on' ? 'Taken on' : option === 'category' ? 'Category' : option === 'difficulty' ? 'Difficulty' : option}
-                          {isActive && (
-                            <span className="inline-flex w-3 justify-center">
-                              {isAsc ? (
+                          <span className="inline-flex w-3 justify-center">
+                            {isActive ? (
+                              isAsc ? (
                                 <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M10 5l4 6H6l4-6z" />
                                 </svg>
@@ -1265,9 +1267,11 @@ export default function ProfilePage() {
                                 <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M10 15l-4-6h8l-4 6z" />
                                 </svg>
-                              )}
-                            </span>
-                          )}
+                              )
+                            ) : (
+                              <span className="h-3 w-3" />
+                            )}
+                          </span>
                         </button>
                       );
                     })}
@@ -1473,7 +1477,7 @@ export default function ProfilePage() {
                               {quiz.correct}/{quiz.totalQuestions} <span className="text-slate-400 font-medium ml-1">({percentage}%)</span>
                             </span>
                           </div>
-                          <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-100">
+                          <div className="h-2.5 w-full bg-slate-100 dark:bg-slate-900/60 rounded-full overflow-hidden border border-slate-100 dark:border-slate-800">
                             <div
                               className="h-full transition-all duration-500 ease-out rounded-r-full"
                               style={{

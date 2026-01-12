@@ -432,7 +432,7 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => setDeletionStep("choose")}
-                      className="px-6 py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 transition-colors"
+                      className="px-6 py-3 rounded-xl bg-rose-500 dark:bg-rose-900/70 text-white font-semibold hover:bg-rose-600 dark:hover:bg-rose-800/80 transition-colors"
                     >
                       Delete Account
                     </button>
