@@ -763,13 +763,14 @@ export default function ProfilePage() {
                       const quizzesTakenCount = takenQuizzes.length;
                       const quizzesCreatedCount = createdQuizzes.length;
                       // Column-major order: first column top->bottom, then second column
+                      const ownerLabel = isOwnProfile ? "My" : "Their";
                       const statsList = [
-                        { label: "Stars on my quizzes", value: favsReceived },
-                        { label: "My attempts", value: myTotalAttempts },
-                        { label: "Attempts on my quizzes", value: attemptsOnTheirQuizzes },
+                        { label: `Stars on ${ownerLabel.toLowerCase()} quizzes`, value: favsReceived },
+                        { label: `${ownerLabel} attempts`, value: myTotalAttempts },
+                        { label: `Attempts on ${ownerLabel.toLowerCase()} quizzes`, value: attemptsOnTheirQuizzes },
                         { label: "Quizzes taken", value: quizzesTakenCount },
                         { label: "Quizzes created", value: quizzesCreatedCount },
-                        { label: "My average score", value: `${myAvgScore}%` }
+                        { label: `${ownerLabel} average score`, value: `${myAvgScore}%` }
                       ];
                       const total = statsList.length;
                       return statsList.map((s, idx) => (
@@ -777,8 +778,8 @@ export default function ProfilePage() {
                           key={s.label + s.value}
                           className={`flex items-end justify-between py-1 px-1 text-sm ${idx < total - 2 ? 'border-b border-slate-200/80 dark:border-slate-800/90' : ''}`}
                         >
-                          <div className="text-sm text-slate-500 flex-1 pr-1 text-left">{s.label}</div>
-                          <div className="text-sm font-semibold text-slate-800 w-14 text-right">{s.value}</div>
+                          <div className="text-sm text-slate-500 flex-1 pr-0.5 text-left">{s.label}</div>
+                          <div className="text-sm font-semibold text-slate-800 w-12 text-right">{s.value}</div>
                         </div>
                       ));
                     })()}
