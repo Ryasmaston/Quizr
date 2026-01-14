@@ -7,11 +7,13 @@ import { apiFetch } from "../../services/api";
 import { getPendingRequests, sendFriendRequest, getFriends, removeRequest, acceptFriendRequest } from '../../services/friends';
 import { removeFavourite, toggleFavourite } from "../../services/favourites";
 import { QuizStats } from '../../components/quizStats'
+import { useUser } from "../../hooks/useUser";
 
 export default function ProfilePage() {
   const { username: routeUsername } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { favouriteIds, setFavouriteIds, refreshUser } = useUser();
   const [profile, setProfile] = useState(null);
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [takenQuizzes, setTakenQuizzes] = useState([]);
@@ -83,6 +85,7 @@ export default function ProfilePage() {
         setDeletionInfo(body.user?.user_data?.deletion || null);
         const favs = Array.isArray(body.user?.preferences?.favourites) ? body.user.preferences.favourites : [];
         setMyFavourites(favs);
+        setFavouriteIds(favs.map((item) => (typeof item === "string" ? item : item._id)));
       } catch (err) {
         setMyUserId(null);
         setMyUsername(null);
@@ -267,12 +270,14 @@ export default function ProfilePage() {
 
   async function handleRemoveFavourite(quizId) {
     const previous = myFavourites;
+    const previousIds = favouriteIds;
     setMyFavourites((prev) =>
       prev.filter((item) => {
         const itemId = typeof item === "string" ? item : item._id;
         return itemId !== quizId;
       })
     );
+    setFavouriteIds((prev) => prev.filter((id) => id !== quizId));
     setCreatedQuizzes((prev) =>
       prev.map((q) => {
         if (q._id === quizId) {
@@ -287,6 +292,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error("Could not remove favourite", err);
       setMyFavourites(previous);
+      setFavouriteIds(previousIds);
       setCreatedQuizzes((prev) =>
         prev.map((q) => {
           if (q._id === quizId) {
@@ -302,6 +308,7 @@ export default function ProfilePage() {
   async function handleToggleFavourite(quiz, isFavourited) {
     const quizId = quiz._id;
     const previous = myFavourites;
+    const previousIds = favouriteIds;
     setMyFavourites((prev) => {
       if (isFavourited) {
         return prev.filter((item) => {
@@ -310,6 +317,13 @@ export default function ProfilePage() {
         });
       }
       return [...prev, quiz];
+    });
+    setFavouriteIds((prev) => {
+      if (isFavourited) {
+        return prev.filter((id) => id !== quizId);
+      }
+      if (prev.includes(quizId)) return prev;
+      return [...prev, quizId];
     });
 
     setCreatedQuizzes((prev) =>
@@ -327,6 +341,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error("Could not toggle favourite", err);
       setMyFavourites(previous);
+      setFavouriteIds(previousIds);
       setCreatedQuizzes((prev) =>
         prev.map((q) => {
           if (q._id === quizId) {
@@ -367,6 +382,7 @@ export default function ProfilePage() {
           return itemId !== quizToDelete._id;
         })
       );
+      setFavouriteIds((prev) => prev.filter((id) => id !== quizToDelete._id));
       setShowDeleteConfirm(false);
       setQuizToDelete(null);
     } catch (err) {
@@ -382,6 +398,7 @@ export default function ProfilePage() {
       setAccountStatus(result.user?.status || "active");
       setDeletionInfo(result.user?.deletion || null);
       window.dispatchEvent(new CustomEvent("account-status-changed"));
+      await refreshUser();
     } catch (err) {
       setDeletionActionError(err.message || "Failed to cancel deletion");
     } finally {

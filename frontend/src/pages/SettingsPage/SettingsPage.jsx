@@ -4,9 +4,11 @@ import { onAuthStateChanged, updatePassword, updateEmail, EmailAuthProvider, rea
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { scheduleAccountDeletion } from "../../services/users";
+import { useUser } from "../../hooks/useUser";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const { refreshUser } = useUser();
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -114,6 +116,7 @@ export default function SettingsPage() {
       }
       navigate(`/users/${username}`)
       await loadProfile();
+      await refreshUser();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -217,6 +220,7 @@ export default function SettingsPage() {
     try {
       await scheduleAccountDeletion(mode);
       setDeletionMode(mode);
+      await refreshUser();
       navigate(`/users/${profile?.user_data?.username}`, { replace: true });
     } catch (err) {
       setDeletionError(err.message || "Failed to schedule deletion");
