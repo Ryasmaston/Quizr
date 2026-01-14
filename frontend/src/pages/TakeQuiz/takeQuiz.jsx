@@ -3,8 +3,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
-import { authReady } from "../../services/authState";
 import { toggleFavourite } from "../../services/favourites";
+import { useUser } from "../../hooks/useUser";
 
 function formatScorePercentage(value) {
     if (value == null) return "";
@@ -33,8 +33,7 @@ function TakeQuizPage() {
     //Storing the result returned after submitting the quiz
     const [result, setResult] = useState(null);
     const [lockedUntil, setLockedUntil] = useState(-1);
-    const [favouriteIds, setFavouriteIds] = useState([]);
-    const [currentUserId, setCurrentUserId] = useState(null);
+    const { favouriteIds, setFavouriteIds, currentUserId } = useUser();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [summaryFilter, setSummaryFilter] = useState("all");
     const [quizSortConfig, setQuizSortConfig] = useState({
@@ -64,29 +63,6 @@ function TakeQuizPage() {
         return () => unsub();
     }, [id, loadQuiz]);
 
-    useEffect(() => {
-        let mounted = true;
-        async function fetchUser() {
-            await authReady;
-            try {
-                const res = await apiFetch("/users/me");
-                const body = await res.json();
-                if (!mounted) return;
-                const favs = Array.isArray(body.user?.preferences?.favourites)
-                    ? body.user.preferences.favourites
-                    : Array.isArray(body.user?.favourites)
-                        ? body.user.favourites
-                        : [];
-                const ids = favs.map((q) => (typeof q === "string" ? q : q._id));
-                setFavouriteIds(ids);
-                setCurrentUserId(body.user?._id || null);
-            } catch (error) {
-                console.error("Failed to load user", error);
-            }
-        }
-        fetchUser();
-        return () => { mounted = false; };
-    }, []);
     const isQuizOwner = useMemo(() => {
         if (!quiz || !currentUserId) return false;
         const creatorId = typeof quiz.created_by === "string"

@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getQuizzes } from "../../services/quizzes";
 import { toggleFavourite } from "../../services/favourites";
-import { apiFetch } from "../../services/api";
-import { authReady } from "../../services/authState";
+import { useUser } from "../../hooks/useUser";
 
 export function Home() {
   const [loading, setLoading] = useState(true)
   const [quizzes, setQuizzes] = useState([])
-  const [favouriteIds, setFavouriteIds] = useState([]);
+  const { favouriteIds, setFavouriteIds } = useUser();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -45,25 +44,6 @@ export function Home() {
     };
     fetchQuizzes();
   }, [location.state?.refreshKey]);
-
-  useEffect(() => {
-    let mounted = true;
-    async function fetchUser() {
-      await authReady;
-      try {
-        const res = await apiFetch("/users/me");
-        const body = await res.json();
-        if (!mounted) return;
-        const favs = Array.isArray(body.user?.preferences?.favourites) ? body.user.preferences.favourites : [];
-        const ids = favs.map((q) => (typeof q === "string" ? q : q._id));
-        setFavouriteIds(ids);
-      } catch (error) {
-        console.error("Failed to load user", error);
-      }
-    }
-    fetchUser();
-    return () => { mounted = false; };
-  }, []);
 
   async function handleToggleFavourite(quizId, isFavourited) {
     const next = !isFavourited;
