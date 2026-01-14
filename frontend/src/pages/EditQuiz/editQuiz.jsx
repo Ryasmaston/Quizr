@@ -45,14 +45,18 @@ function shouldResetAttempts(originalQuiz, updatedData) {
     const originalCorrectIndices = originalAnswers
       .map((answer, index) => (answer?.is_correct ? index : null))
       .filter((index) => index !== null);
+    const updatedCorrectIndices = updatedAnswers
+      .map((answer, index) => (answer?.is_correct ? index : null))
+      .filter((index) => index !== null);
+    if (originalCorrectIndices.length !== updatedCorrectIndices.length) {
+      return true;
+    }
     if (originalCorrectIndices.length > 0) {
-      const remainingOriginalCorrect = originalCorrectIndices.filter(
-        (index) => index < updatedAnswers.length
+      const updatedSet = new Set(updatedCorrectIndices);
+      const hasMismatch = originalCorrectIndices.some(
+        (index) => !updatedSet.has(index)
       );
-      const hasOverlap = remainingOriginalCorrect.some(
-        (index) => Boolean(updatedAnswers[index]?.is_correct)
-      );
-      if (!hasOverlap) {
+      if (hasMismatch) {
         return true;
       }
     }

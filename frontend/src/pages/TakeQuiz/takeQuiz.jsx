@@ -641,8 +641,26 @@ function TakeQuizPage() {
                                         </span>
                                         <div className="text-left pl-1">
                                             <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-500">Pass threshold</div>
-                                            <div className="text-lg font-semibold text-slate-800 dark:text-slate-200">
-                                                {Math.round((quiz.req_to_pass / quiz.questions.length) * 100)}% to pass
+                                            <div className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                                <span>{Math.round((quiz.req_to_pass / quiz.questions.length) * 100)}%</span>
+                                                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                                    (
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2.5"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        className="h-3.5 w-3.5"
+                                                    >
+                                                        <path d="M9 2h10a2 2 0 0 1 2 2v10" />
+                                                        <rect x="3" y="7" width="12" height="14" rx="2" />
+                                                    </svg>
+                                                    <span className="text-slate-800 dark:text-slate-200">{quiz.req_to_pass}</span>
+                                                    )
+                                                </span>
+                                                <span>to pass</span>
                                             </div>
                                         </div>
                                     </div>
@@ -662,7 +680,7 @@ function TakeQuizPage() {
                                     <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 dark:bg-slate-900/40 dark:border-slate-800/80 px-4 py-3">
                                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/50">
                                             <svg className="h-5 w-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                         </span>
                                         <div className="text-left pl-1">
@@ -676,9 +694,9 @@ function TakeQuizPage() {
                                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/50">
                                             <svg className="h-5 w-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 {lockAnswers ? (
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 10V8a4 4 0 00-8 0v2m-1 0h10a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5a2 2 0 012-2z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 21h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                                 ) : (
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 10h10a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5a2 2 0 012-2z M17 10V8a4 4 0 00-8 0" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-10 14h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                                                 )}
                                             </svg>
                                         </span>
@@ -739,17 +757,13 @@ function TakeQuizPage() {
                                         <>
                                             {showDeleteConfirm && (
                                                 <div
-                                                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 shadow-xl"
-                                                    style={{
-                                                        backdropFilter: "blur(6px)",
-                                                        WebkitBackdropFilter: "blur(6px)"
-                                                    }}
+                                                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md"
                                                 >
-                                                    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 max-w-md w-full shadow-xl">
+                                                    <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800/50 p-6 max-w-md w-full shadow-2xl">
                                                         <div className="flex items-center gap-3 mb-4 text-left">
-                                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100">
+                                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30">
                                                                 <svg
-                                                                    className="h-6 w-6 text-rose-600"
+                                                                    className="h-6 w-6 text-rose-600 dark:text-rose-400"
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
                                                                     stroke="currentColor"
@@ -762,24 +776,24 @@ function TakeQuizPage() {
                                                                     />
                                                                 </svg>
                                                             </div>
-                                                            <div>
-                                                                <h3 className="text-lg font-semibold text-slate-800">Delete Quiz</h3>
-                                                                <p className="text-sm text-slate-500">This action cannot be undone</p>
+                                                            <div className="text-left">
+                                                                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Delete Quiz</h3>
+                                                                <p className="text-sm text-slate-500 dark:text-slate-400">This action cannot be undone</p>
                                                             </div>
                                                         </div>
-                                                        <p className="text-slate-600 mb-6">
+                                                        <p className="text-slate-600 dark:text-slate-300 mb-6 text-left">
                                                             Are you sure you want to delete &apos;{quiz.title}&apos;? All quiz data, attempts, and leaderboard entries will be permanently removed.
                                                         </p>
-                                                        <div className="flex gap-3">
+                                                        <div className="flex gap-3 text-sm sm:text-base">
                                                             <button
-                                                                className="flex-1 px-4 py-2.5 rounded-lg bg-rose-100 text-rose-700 font-semibold hover:bg-rose-200 transition-colors"
+                                                                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                                 type="button"
                                                                 onClick={handleDeleteQuiz}
                                                             >
                                                                 Delete Quiz
                                                             </button>
                                                             <button
-                                                                className="flex-1 px-4 py-2.5 rounded-lg bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors"
+                                                                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                                 type="button"
                                                                 onClick={() => setShowDeleteConfirm(false)}
                                                             >

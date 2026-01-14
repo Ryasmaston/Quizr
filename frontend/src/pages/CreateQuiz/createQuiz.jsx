@@ -33,6 +33,7 @@ export default function CreateQuiz() {
   const location = useLocation();
   const returnTo = location.state?.returnTo || "/";
   const ignoreBlockRef = useRef(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
   const opalBackdropStyle = {
     backgroundColor: "var(--opal-bg-color)",
     backgroundImage: "var(--opal-backdrop-image)"
@@ -116,6 +117,12 @@ export default function CreateQuiz() {
   const handleCancel = useCallback(() => {
     navigate(returnTo);
   }, [navigate, returnTo]);
+
+  useEffect(() => {
+    if (!pendingNavigation) return;
+    navigate(pendingNavigation);
+    setPendingNavigation(null);
+  }, [navigate, pendingNavigation]);
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -273,13 +280,8 @@ export default function CreateQuiz() {
         req_to_pass: safeReqToPass,
       });
       const quizId = data?.quiz?._id;
-      if (quizId) {
-        ignoreBlockRef.current = true;
-        navigate(`/quiz/${quizId}`);
-        return;
-      }
       ignoreBlockRef.current = true;
-      navigate("/");
+      setPendingNavigation(quizId ? `/quiz/${quizId}` : "/");
     } catch (err) {
       alert(err.message);
     }
