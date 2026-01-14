@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../services/firebase";
@@ -42,6 +43,10 @@ export default function ProfilePage() {
   const [sortDirection, setSortDirection] = useState("desc");
   const [takenSortBy, setTakenSortBy] = useState("highest_score");
   const [takenSortDirection, setTakenSortDirection] = useState("desc");
+  const [showRemoveFriendConfirm, setShowRemoveFriendConfirm] = useState(false);
+  const [removeFriendModalPos, setRemoveFriendModalPos] = useState({ top: 0, left: 0 });
+  const removeFriendButtonRef = useRef(null);
+  const removeFriendModalRef = useRef(null);
   const avatarGradients = [
     "from-rose-300 to-pink-400 dark:from-rose-500/80 dark:to-pink-600/80",
     "from-sky-300 to-blue-400 dark:from-sky-500/80 dark:to-blue-600/80",
@@ -70,6 +75,21 @@ export default function ProfilePage() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    if (!showRemoveFriendConfirm) return;
+    function handleClickOutside(event) {
+      if (
+        removeFriendButtonRef.current?.contains(event.target) ||
+        removeFriendModalRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setShowRemoveFriendConfirm(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showRemoveFriendConfirm]);
 
   useEffect(() => {
     let mounted = true;
@@ -280,6 +300,14 @@ export default function ProfilePage() {
       await loadFriendState();
     } catch (err) {
       alert("Could not remove: " + (err.message || err));
+    }
+  }
+
+  async function handleConfirmRemoveFriend() {
+    try {
+      await handleRemove();
+    } finally {
+      setShowRemoveFriendConfirm(false);
     }
   }
 
@@ -714,16 +742,43 @@ export default function ProfilePage() {
                           </a>
                         )
                       ) : friendsLoading ? (
-                        <button disabled className="px-6 py-2.5 rounded-xl bg-white/70 text-slate-600 font-semibold border border-slate-200/80">Loading...</button>
+                        <button disabled className="px-4 py-2 text-sm rounded-xl bg-white/70 text-slate-600 font-semibold border border-slate-200/80">Loading...</button>
                       ) : isFriend ? (
                         <div className="flex items-center gap-3">
-                          <span className="px-4 py-2 text-sm rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-200/50 dark:border-emerald-800/50 flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Friends
-                          </span>
-                          <button onClick={handleRemove} className="px-4 py-2 text-sm rounded-xl bg-rose-100 dark:bg-rose-900/40 hover:bg-rose-200 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 font-semibold transition-colors border border-rose-200/50 dark:border-rose-800/50">Remove</button>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              aria-label="Remove friend"
+                              ref={removeFriendButtonRef}
+                              onClick={() => {
+                                setShowRemoveFriendConfirm((prev) => {
+                                  const next = !prev;
+                                  if (next && removeFriendButtonRef.current) {
+                                    const rect = removeFriendButtonRef.current.getBoundingClientRect();
+                                    setRemoveFriendModalPos({
+                                      top: rect.bottom + 8,
+                                      left: rect.left
+                                    });
+                                  }
+                                  return next;
+                                });
+                              }}
+                              className="group w-[128px] px-4 py-2 text-sm rounded-xl bg-slate-100 text-slate-700 font-semibold border border-slate-200/80 shadow-sm transition-colors hover:bg-slate-200/70 dark:bg-blue-950/60 dark:text-white dark:border-blue-400/30 dark:hover:bg-blue-900/60 flex items-center justify-center"
+                            >
+                              <span className="flex items-center gap-2 transition-opacity group-hover:opacity-0">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Friends
+                              </span>
+                              <span className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Remove
+                              </span>
+                            </button>
+                          </div>
                         </div>
                       ) : pendingSent ? (
                         <div className="flex items-center gap-3">
@@ -747,6 +802,33 @@ export default function ProfilePage() {
                   )}
                 </div>
 
+                {showRemoveFriendConfirm && createPortal(
+                  <div
+                    ref={removeFriendModalRef}
+                    className="fixed z-[9999] w-[240px] rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-lg backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/90"
+                    style={{ top: removeFriendModalPos.top, left: removeFriendModalPos.left }}
+                  >
+                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">Remove friend?</div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleConfirmRemoveFriend}
+                        className="flex-1 px-4 py-2 text-sm rounded-xl bg-rose-100 dark:bg-rose-900/40 hover:bg-rose-200 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 font-semibold transition-colors border border-rose-200/50 dark:border-rose-800/50"
+                      >
+                        Remove
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowRemoveFriendConfirm(false)}
+                        className="flex-1 px-4 py-2 text-sm rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold transition-colors border border-slate-200/80 dark:border-slate-700"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+
                 <div className="w-full sm:w-[32rem] mt-4 sm:mt-0 sm:ml-6">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 p-4">
                     {(() => {
@@ -763,13 +845,14 @@ export default function ProfilePage() {
                       const quizzesTakenCount = takenQuizzes.length;
                       const quizzesCreatedCount = createdQuizzes.length;
                       // Column-major order: first column top->bottom, then second column
+                      const ownerLabel = isOwnProfile ? "My" : "Their";
                       const statsList = [
-                        { label: "Stars on my quizzes", value: favsReceived },
-                        { label: "My attempts", value: myTotalAttempts },
-                        { label: "Attempts on my quizzes", value: attemptsOnTheirQuizzes },
+                        { label: `Stars on ${ownerLabel.toLowerCase()} quizzes`, value: favsReceived },
+                        { label: `${ownerLabel} attempts`, value: myTotalAttempts },
+                        { label: `Attempts on ${ownerLabel.toLowerCase()} quizzes`, value: attemptsOnTheirQuizzes },
                         { label: "Quizzes taken", value: quizzesTakenCount },
                         { label: "Quizzes created", value: quizzesCreatedCount },
-                        { label: "My average score", value: `${myAvgScore}%` }
+                        { label: `${ownerLabel} average score`, value: `${myAvgScore}%` }
                       ];
                       const total = statsList.length;
                       return statsList.map((s, idx) => (
@@ -777,8 +860,8 @@ export default function ProfilePage() {
                           key={s.label + s.value}
                           className={`flex items-end justify-between py-1 px-1 text-sm ${idx < total - 2 ? 'border-b border-slate-200/80 dark:border-slate-800/90' : ''}`}
                         >
-                          <div className="text-sm text-slate-500 flex-1 pr-1 text-left">{s.label}</div>
-                          <div className="text-sm font-semibold text-slate-800 w-14 text-right">{s.value}</div>
+                          <div className="text-sm text-slate-500 flex-1 pr-0.5 text-left">{s.label}</div>
+                          <div className="text-sm font-semibold text-slate-800 w-12 text-right">{s.value}</div>
                         </div>
                       ));
                     })()}
@@ -837,7 +920,7 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
               <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Quizzes created</h2>
               <div className="flex flex-nowrap items-center justify-center sm:justify-end gap-3 w-full sm:w-auto">
-                <div className="relative w-fit max-w-[calc(100%-80px)] sm:max-w-none sm:w-auto min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800/60 bg-slate-100/80 dark:bg-slate-800/40 h-[40px]">
+                <div className="relative w-fit max-w-[calc(100%-80px)] sm:max-w-none sm:w-auto min-w-0 overflow-hidden rounded-full border border-slate-200/80 dark:border-slate-800/60 bg-slate-100/80 dark:bg-slate-800/40 h-[40px]">
                   <div className="flex items-center gap-1.5 p-1 h-full overflow-x-auto overflow-y-hidden no-scrollbar">
                     {['date', 'stars'].map((option) => {
                       const isActive = sortBy === option;
@@ -854,7 +937,7 @@ export default function ProfilePage() {
                               setSortDirection("desc");
                             }
                           }}
-                          className={`sorting-button ${isActive ? 'isActive' : ''} w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1.5 shrink-0 ${isAccountLocked
+                          className={`sorting-button ${isActive ? 'isActive' : ''} w-20 h-8 rounded-full text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1.5 shrink-0 ${isAccountLocked
                             ? "opacity-50 text-slate-400"
                             : isActive
                               ? 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-300 dark:border-slate-500'
@@ -881,7 +964,7 @@ export default function ProfilePage() {
                     })}
                   </div>
                 </div>
-                <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[40px] cursor-default shrink-0 ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
+                <div className={`px-4 py-2.5 rounded-full border flex items-center h-[40px] cursor-default shrink-0 ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
                   <span className={`font-semibold text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
                     {createdQuizzes.length} quiz{createdQuizzes.length !== 1 ? 'zes' : ''}
                   </span>
@@ -1151,7 +1234,7 @@ export default function ProfilePage() {
             <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                 <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Favourites</h2>
-                <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[38px] cursor-default ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
+                <div className={`px-4 py-2.5 rounded-full border flex items-center h-[38px] cursor-default ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
                   <span className={`font-semibold text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
                     {myFavourites.length} quiz{myFavourites.length !== 1 ? 'zes' : ''}
                   </span>
@@ -1361,7 +1444,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                   <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Quizzes Taken</h2>
                   <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:flex-none bg-slate-100/80 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 overflow-hidden group/taken-sort h-[40px]">
+                    <div className="relative flex-1 sm:flex-none bg-slate-100/80 dark:bg-slate-800/40 rounded-full border border-slate-200/80 dark:border-slate-800/60 overflow-hidden group/taken-sort h-[40px]">
                       <div className="flex items-center gap-1.5 p-1 h-full overflow-x-auto overflow-y-hidden no-scrollbar relative w-full">
                         {['highest_score', 'category', 'difficulty', 'questions', 'taken_on'].map((option) => {
                           const isActive = takenSortBy === option;
@@ -1392,7 +1475,7 @@ export default function ProfilePage() {
                                   setTakenSortDirection("desc");
                                 }
                               }}
-                              className={`sorting-button ${isActive ? 'isActive' : ''} ${widths[option]} py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1.5 shrink-0 ${isAccountLocked
+                              className={`sorting-button ${isActive ? 'isActive' : ''} ${widths[option]} h-8 rounded-full text-[10px] sm:text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1.5 shrink-0 ${isAccountLocked
                                 ? "opacity-50 text-slate-400"
                                 : isActive
                                   ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/80 dark:border-slate-500'
@@ -1422,7 +1505,7 @@ export default function ProfilePage() {
                       <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-slate-100/95 dark:from-slate-800/95 to-transparent pointer-events-none sm:hidden z-10" />
                       <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-slate-100/95 dark:from-slate-800/95 to-transparent pointer-events-none sm:hidden z-10" />
                     </div>
-                    <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[40px] cursor-default shrink-0 ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
+                    <div className={`px-4 py-2.5 rounded-full border flex items-center h-[40px] cursor-default shrink-0 ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
                       <span className={`font-semibold text-[10px] sm:text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
                         {takenQuizzes.length} {takenQuizzes.length === 1 ? 'quiz' : 'quizzes'}
                       </span>
