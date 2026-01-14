@@ -13,6 +13,7 @@ import {
   Trophy,
   User,
   LogOut,
+  Search,
   Sun,
   Moon,
 } from "lucide-react";
@@ -45,6 +46,16 @@ function NavBar({ accountStatus, accountUsername }) {
     { to: `/users/${username}`, icon: User, label: "Profile", mobileOnly: false, requiresAuth: true, isProfile: true },
   ];
 
+  const isQuizEditor = location.pathname === "/quizzes/create"
+    || (location.pathname.startsWith("/quiz/") && location.pathname.endsWith("/edit"));
+
+  const handleSearchClick = () => {
+    const searchInput = document.getElementById("mobile-search-input");
+    if (searchInput) {
+      searchInput.focus();
+    }
+  };
+
   if (isMobile) {
     return (
       <nav className="fixed bottom-0 left-0 z-50 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe">
@@ -71,21 +82,21 @@ function NavBar({ accountStatus, accountUsername }) {
             );
           })}
 
-          <button
-            onClick={toggleTheme}
-            className="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400"
-          >
-            {theme === "dark" ? <Sun size={24} /> : <Moon size={24} />}
-            <span className="text-[10px] mt-1 font-medium">Theme</span>
-          </button>
-
-          {user && (
+          {isQuizEditor ? (
             <button
-              onClick={() => signOut(auth)}
+              onClick={toggleTheme}
               className="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400"
             >
-              <LogOut size={24} />
-              <span className="text-[10px] mt-1 font-medium">Exit</span>
+              {theme === "dark" ? <Sun size={24} /> : <Moon size={24} />}
+              <span className="text-[10px] mt-1 font-medium">Theme</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleSearchClick}
+              className="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400"
+            >
+              <Search size={24} />
+              <span className="text-[10px] mt-1 font-medium">Search</span>
             </button>
           )}
         </div>

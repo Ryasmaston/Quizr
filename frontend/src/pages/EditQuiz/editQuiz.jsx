@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useLocation, useNavigate, useParams, unstable_useBlocker as useBlocker } from "react-router-dom";
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { getQuizById, updateQuiz } from "../../services/quizzes";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { LogOut } from "lucide-react";
 
 function normalizeText(value) {
   return value == null ? "" : String(value);
@@ -330,7 +331,8 @@ export default function EditQuiz() {
     if (blocker.state !== "blocked") return;
     const shouldLeave = window.confirm("You have unsaved changes. Discard them?");
     if (shouldLeave) {
-      blocker.proceed();
+      setIgnoreBlocker(true);
+      setTimeout(() => blocker.proceed(), 0);
     } else {
       blocker.reset();
     }
@@ -425,6 +427,20 @@ export default function EditQuiz() {
     const updated = questions.filter((_, i) => i !== qIndex);
     setQuestions(updated);
   }
+
+  const handleSignOut = async () => {
+    if (hasChanges) {
+      const confirmDiscard = window.confirm("You have unsaved changes. Discard them and sign out?");
+      if (!confirmDiscard) return;
+    }
+    setIgnoreBlocker(true);
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Sign out failed:", err);
+      setIgnoreBlocker(false);
+    }
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -532,8 +548,15 @@ export default function EditQuiz() {
         {/* Mobile Top Bar */}
         {questions.length > 0 && isMobile && (
           <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800/80 pt-[env(safe-area-inset-top)]">
-            <div className="px-4 py-2">
-              <div className="grid grid-cols-3 gap-2">
+            <div className="px-4 py-2 flex items-center gap-3">
+              <div className="grid grid-cols-3 gap-2 flex-1">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="bg-white/80 hover:bg-white dark:bg-slate-800/50 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 text-slate-700 px-3 py-2.5 rounded-lg text-xs font-semibold border border-slate-200/80 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  {hasChanges ? "Discard" : "Cancel"}
+                </button>
                 <button
                   type="button"
                   onClick={addQuestion}
@@ -543,13 +566,6 @@ export default function EditQuiz() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   Add
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="bg-white/80 hover:bg-white dark:bg-slate-800/50 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 text-slate-700 px-3 py-2.5 rounded-lg text-xs font-semibold border border-slate-200/80 transition-colors flex items-center justify-center gap-1.5"
-                >
-                  {hasChanges ? "Discard" : "Cancel"}
                 </button>
                 <button
                   type="button"
@@ -563,6 +579,13 @@ export default function EditQuiz() {
                   Save
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="h-10 w-10 shrink-0 inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 transition-colors"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
           </div>
         )}
@@ -907,6 +930,13 @@ export default function EditQuiz() {
                   <div className="flex flex-col sm:flex-row gap-4">
                     <button
                       type="button"
+                      onClick={handleCancel}
+                      className="flex-1 bg-white/70 hover:bg-white/90 dark:bg-slate-800/40 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 backdrop-blur-lg text-slate-700 px-6 py-3 rounded-xl font-semibold border border-slate-200/80 transition-colors flex items-center justify-center gap-2"
+                    >
+                      {hasChanges ? "Discard Changes" : "Cancel"}
+                    </button>
+                    <button
+                      type="button"
                       onClick={addQuestion}
                       className="flex-1 bg-white/70 hover:bg-white/90 dark:bg-slate-800/40 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 backdrop-blur-lg text-slate-700 px-6 py-3 rounded-xl font-semibold border border-slate-200/80 hover:border-slate-300/80 transition-colors flex items-center justify-center gap-2"
                     >
@@ -914,13 +944,6 @@ export default function EditQuiz() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                       Add Question
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleCancel}
-                      className="flex-1 bg-white/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 px-6 py-3 rounded-xl font-semibold hover:bg-white/90 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 transition-colors"
-                    >
-                      {hasChanges ? "Discard Changes" : "Cancel"}
                     </button>
                     <button
                       type="submit"

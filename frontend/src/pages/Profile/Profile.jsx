@@ -1404,8 +1404,8 @@ export default function ProfilePage() {
                       })}
                     </div>
                     {/* Fixed Shadows for Mobile Scroll */}
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-100/95 dark:from-slate-800/95 to-transparent pointer-events-none sm:hidden z-10" />
-                    <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-100/95 dark:from-slate-800/95 to-transparent pointer-events-none sm:hidden z-10" />
+                    <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-slate-100/95 dark:from-slate-800/95 to-transparent pointer-events-none sm:hidden z-10" />
+                    <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-slate-100/95 dark:from-slate-800/95 to-transparent pointer-events-none sm:hidden z-10" />
                   </div>
                   <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[42px] cursor-default shrink-0 ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
                     <span className={`font-semibold text-[10px] sm:text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>

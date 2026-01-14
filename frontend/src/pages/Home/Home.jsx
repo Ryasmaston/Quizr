@@ -416,8 +416,8 @@ export function Home() {
                   })}
                 </div>
                 {/* Fixed Shadows for Mobile Scroll */}
-                <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white/90 dark:from-slate-800/90 to-transparent pointer-events-none sm:hidden z-10" />
-                <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white/90 dark:from-slate-800/90 to-transparent pointer-events-none sm:hidden z-10" />
+                <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white/90 dark:from-slate-800/90 to-transparent pointer-events-none sm:hidden z-10" />
+                <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white/90 dark:from-slate-800/90 to-transparent pointer-events-none sm:hidden z-10" />
               </div>
             </div>
           )}
