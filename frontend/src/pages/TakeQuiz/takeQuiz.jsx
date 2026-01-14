@@ -72,7 +72,11 @@ function TakeQuizPage() {
                 const res = await apiFetch("/users/me");
                 const body = await res.json();
                 if (!mounted) return;
-                const favs = Array.isArray(body.user?.favourites) ? body.user.favourites : [];
+                const favs = Array.isArray(body.user?.preferences?.favourites)
+                    ? body.user.preferences.favourites
+                    : Array.isArray(body.user?.favourites)
+                        ? body.user.favourites
+                        : [];
                 const ids = favs.map((q) => (typeof q === "string" ? q : q._id));
                 setFavouriteIds(ids);
                 setCurrentUserId(body.user?._id || null);
