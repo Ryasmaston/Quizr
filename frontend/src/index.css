@@ -35,7 +35,7 @@ body {
   -webkit-overflow-scrolling: touch;
   margin: 0 auto;
   text-align: center;
-  padding-top: env(safe-area-inset-top);
+  padding-top: 0;
   padding-bottom: env(safe-area-inset-bottom);
 }
 

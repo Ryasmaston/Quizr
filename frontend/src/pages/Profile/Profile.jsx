@@ -1357,61 +1357,66 @@ export default function ProfilePage() {
             <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 sm:mb-8 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                 <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800">Quizzes Taken</h2>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 h-[38px]">
-                    {['highest_score', 'category', 'difficulty', 'questions', 'taken_on'].map((option) => {
-                      const isActive = takenSortBy === option;
-                      const isAsc = isActive && takenSortDirection === "asc";
-                      return (
-                        <button
-                          key={option}
-                          disabled={isAccountLocked}
-                          onClick={() => {
-                            if (isActive) {
-                              setTakenSortDirection(prev => prev === "desc" ? "asc" : "desc");
-                            } else {
-                              setTakenSortBy(option);
-                              setTakenSortDirection("desc");
-                            }
-                          }}
-                          className={`sorting-button ${isActive ? 'isActive' : ''} w-20 py-1.5 rounded-xl text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 ${isAccountLocked
-                            ? "opacity-50 text-slate-400"
-                            : isActive
-                              ? 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-300 dark:border-slate-500'
-                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                            }`}
-                          style={{ WebkitTapHighlightColor: 'transparent' }}
-                        >
-                          {option === 'highest_score' ? 'Score' : option === 'questions' ? 'Questions' : option === 'taken_on' ? 'Taken on' : option === 'category' ? 'Category' : option === 'difficulty' ? 'Difficulty' : option}
-                          <span className="inline-flex w-3 justify-center">
-                            {isActive ? (
-                              isAsc ? (
-                                <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M10 5l4 6H6l4-6z" />
-                                </svg>
+                <div className="flex items-center gap-3 w-full sm:w-auto overflow-hidden">
+                  <div className="relative flex-1 sm:flex-none bg-slate-100/80 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-800/60 overflow-hidden group/taken-sort">
+                    <div className="flex items-center gap-1.5 p-1 h-[42px] overflow-x-auto no-scrollbar relative w-full">
+                      {['highest_score', 'category', 'difficulty', 'questions', 'taken_on'].map((option) => {
+                        const isActive = takenSortBy === option;
+                        const isAsc = isActive && takenSortDirection === "asc";
+                        return (
+                          <button
+                            key={option}
+                            disabled={isAccountLocked}
+                            onClick={() => {
+                              if (isActive) {
+                                setTakenSortDirection(prev => prev === "desc" ? "asc" : "desc");
+                              } else {
+                                setTakenSortBy(option);
+                                setTakenSortDirection("desc");
+                              }
+                            }}
+                            className={`sorting-button ${isActive ? 'isActive' : ''} min-w-[80px] sm:w-20 py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold transition-all outline-none focus:outline-none focus:ring-0 active:scale-95 select-none flex items-center justify-center gap-1 shrink-0 ${isAccountLocked
+                              ? "opacity-50 text-slate-400"
+                              : isActive
+                                ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/80 dark:border-slate-500'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                              }`}
+                            style={{ WebkitTapHighlightColor: 'transparent' }}
+                          >
+                            {option === 'highest_score' ? 'Score' : option === 'questions' ? 'Questions' : option === 'taken_on' ? 'Taken on' : option === 'category' ? 'Category' : option === 'difficulty' ? 'Difficulty' : option}
+                            <span className="inline-flex w-3 justify-center">
+                              {isActive ? (
+                                isAsc ? (
+                                  <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 5l4 6H6l4-6z" />
+                                  </svg>
+                                ) : (
+                                  <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 15l-4-6h8l-4 6z" />
+                                  </svg>
+                                )
                               ) : (
-                                <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M10 15l-4-6h8l-4 6z" />
-                                </svg>
-                              )
-                            ) : (
-                              <span className="h-3 w-3" />
-                            )}
-                          </span>
-                        </button>
-                      );
-                    })}
+                                <span className="h-3 w-3" />
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Fixed Shadows for Mobile Scroll */}
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-100/95 dark:from-slate-800/95 to-transparent pointer-events-none sm:hidden z-10" />
+                    <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-100/95 dark:from-slate-800/95 to-transparent pointer-events-none sm:hidden z-10" />
                   </div>
-                  <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[38px] cursor-default ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
-                    <span className={`font-semibold text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
-                      {takenQuizzes.length} quiz{takenQuizzes.length !== 1 ? 'zes' : ''}
+                  <div className={`px-4 py-2.5 rounded-2xl border flex items-center h-[42px] cursor-default shrink-0 ${isAccountLocked ? 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-900/40 dark:border-slate-800/40' : 'bg-slate-100/80 border-slate-200/80 dark:bg-slate-800/50 dark:border-slate-700/50'}`}>
+                    <span className={`font-semibold text-[10px] sm:text-xs whitespace-nowrap leading-none ${isAccountLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
+                      {takenQuizzes.length} {takenQuizzes.length === 1 ? 'quiz' : 'quizzes'}
                     </span>
                   </div>
                 </div>
               </div>
 
               {takenQuizzes.length > 0 && (
-                <div className="grid grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
                   <div className="bg-white/50 dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-700/40 text-center shadow-sm">
                     <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Favorite Topic</div>
                     <div className="text-lg font-bold text-slate-800 dark:text-slate-100 capitalize">

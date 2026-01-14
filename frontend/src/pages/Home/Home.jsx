@@ -369,49 +369,55 @@ export function Home() {
               </div>
 
               {/* Sorting Bar */}
-              <div className="sorting-bar-container flex items-center gap-1.5 p-1 bg-white/70 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl border border-slate-200/80 dark:border-slate-800/60 h-[72px] w-full sm:w-auto overflow-x-auto no-scrollbar relative before:content-[''] before:absolute before:right-0 before:top-0 before:bottom-0 before:w-8 before:bg-gradient-to-l before:from-white/70 before:to-transparent before:pointer-events-none before:sm:hidden before:z-10">
-                {[
-                  { id: 'newest', label: 'Date', options: { desc: 'Newest', asc: 'Oldest' }, width: 'w-[120px]' },
-                  { id: 'stars', label: 'Stars', width: 'w-[100px]' },
-                  { id: 'questions', label: 'Questions', width: 'w-[140px]' },
-                  { id: 'difficulty', label: 'Difficulty', width: 'w-[130px]' }
-                ].map((option) => {
-                  const isActive = sortBy === option.id;
-                  const isAsc = isActive && sortDirection === "asc";
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => {
-                        if (isActive) {
-                          setSortDirection(prev => prev === "desc" ? "asc" : "desc");
-                        } else {
-                          setSortBy(option.id);
-                          setSortDirection("desc");
-                        }
-                      }}
-                      className={`sorting-button h-full ${option.width} px-4 rounded-xl text-sm font-semibold flex flex-col sm:flex-row items-center justify-center relative transition-[background-color,color,transform,shadow] duration-200 [outline:none] [box-shadow:none] [ring:none] [-webkit-tap-highlight-color:transparent] ${isActive ? 'bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50 isActive' : 'text-slate-900 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent hover:bg-slate-200/50 dark:hover:bg-transparent'}`}
-                    >
-                      <span className="truncate">
-                        {option.id === 'newest'
-                          ? (isActive ? option.options[sortDirection] : 'Date')
-                          : option.label}
-                      </span>
-                      {isActive && (
-                        <span className="mt-1 sm:mt-0 sm:absolute sm:right-2 flex items-center justify-center w-4">
-                          {isAsc ? (
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10 5l4 6H6l4-6z" />
-                            </svg>
-                          ) : (
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10 15l-4-6h8l-4 6z" />
-                            </svg>
-                          )}
+              {/* Sorting Bar Wrapper */}
+              <div className="relative w-full sm:w-auto h-[72px] group/sort-wrapper bg-white/70 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl border border-slate-200/80 dark:border-slate-800/60 overflow-hidden">
+                <div className="sorting-bar-container flex items-center gap-1.5 p-1 h-full w-full sm:w-auto overflow-x-auto no-scrollbar relative">
+                  {[
+                    { id: 'newest', label: 'Date', options: { desc: 'Newest', asc: 'Oldest' }, width: 'w-[120px]' },
+                    { id: 'stars', label: 'Stars', width: 'w-[100px]' },
+                    { id: 'questions', label: 'Questions', width: 'w-[140px]' },
+                    { id: 'difficulty', label: 'Difficulty', width: 'w-[130px]' }
+                  ].map((option) => {
+                    const isActive = sortBy === option.id;
+                    const isAsc = isActive && sortDirection === "asc";
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setSortDirection(prev => prev === "desc" ? "asc" : "desc");
+                          } else {
+                            setSortBy(option.id);
+                            setSortDirection("desc");
+                          }
+                        }}
+                        className={`sorting-button h-full ${option.width} px-4 rounded-xl text-sm font-semibold flex flex-col sm:flex-row items-center justify-center relative transition-[background-color,color,transform,shadow] duration-200 [outline:none] [box-shadow:none] [ring:none] [-webkit-tap-highlight-color:transparent] ${isActive ? 'bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50 isActive' : 'text-slate-900 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent hover:bg-slate-200/50 dark:hover:bg-transparent'}`}
+                      >
+                        <span className="truncate">
+                          {option.id === 'newest'
+                            ? (isActive ? option.options[sortDirection] : 'Date')
+                            : option.label}
                         </span>
-                      )}
-                    </button>
-                  );
-                })}
+                        {isActive && (
+                          <span className="mt-1 sm:mt-0 sm:absolute sm:right-2 flex items-center justify-center w-4">
+                            {isAsc ? (
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 5l4 6H6l4-6z" />
+                              </svg>
+                            ) : (
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 15l-4-6h8l-4 6z" />
+                              </svg>
+                            )}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Fixed Shadows for Mobile Scroll */}
+                <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white/90 dark:from-slate-800/90 to-transparent pointer-events-none sm:hidden z-10" />
+                <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white/90 dark:from-slate-800/90 to-transparent pointer-events-none sm:hidden z-10" />
               </div>
             </div>
           )}

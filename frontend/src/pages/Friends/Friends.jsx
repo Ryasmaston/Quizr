@@ -190,7 +190,7 @@ export default function FriendsPage() {
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3 min-w-0 text-left">
-                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg`}>
+                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg shrink-0`}>
                                   {other.user_data?.profile_pic ? (
                                     <img
                                       src={other.user_data.profile_pic}
@@ -266,7 +266,7 @@ export default function FriendsPage() {
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3 min-w-0 text-left">
-                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg`}>
+                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg shrink-0`}>
                                   {other.user_data?.profile_pic ? (
                                     <img
                                       src={other.user_data.profile_pic}
@@ -400,7 +400,7 @@ export default function FriendsPage() {
                         ) : (
                           <div className="flex items-center justify-between gap-3 w-full">
                             <div className="flex items-center gap-3 min-w-0 text-left">
-                              <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg`}>
+                              <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-[30%] overflow-hidden bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-semibold text-lg shrink-0`}>
                                 {other.user_data?.profile_pic ? (
                                   <img
                                     src={other.user_data.profile_pic}

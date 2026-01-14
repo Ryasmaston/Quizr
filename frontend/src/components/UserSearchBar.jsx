@@ -12,6 +12,7 @@ export default function UserSearchBar({ excludeUsername }) {
   const [users, setUsers] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef(null);
 
   // Ignore stale responses when typing quickly
   const requestIdRef = useRef(0);
@@ -59,6 +60,9 @@ export default function UserSearchBar({ excludeUsername }) {
   function selectUser(username) {
     setOpen(false);
     setQ("");
+    if (inputRef.current) {
+      inputRef.current.blur();
+    }
     // Matches existing navbar profile link format
     navigate(`/users/${username}`);
   }
@@ -66,6 +70,7 @@ export default function UserSearchBar({ excludeUsername }) {
   return (
     <div className="relative w-full max-w-md">
       <input
+        ref={inputRef}
         type="text"
         value={q}
         onChange={(e) => setQ(e.target.value)}
