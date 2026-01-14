@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const User = require("../models/user");
 const Quiz = require("../models/quiz");
 const { executeUserDeletion } = require("../services/userDeletion");
@@ -84,16 +85,44 @@ async function checkUsernameAvailability(req, res) {
 
 async function showUser(req, res) {
   try {
-    const user = await User.findOne({ authId: req.user.uid })
+    const userDoc = await User.findOne({ authId: req.user.uid })
       .select("user_data preferences")
       .populate({
         path: "preferences.favourites",
-        select: "title category created_by questions req_to_pass allow_multiple_correct require_all_correct lock_answers difficulty",
+        select: "title category created_by questions req_to_pass allow_multiple_correct require_all_correct lock_answers difficulty favourited_count",
         populate: { path: "created_by", select: "user_data.username authId" }
       })
 
-    if (!user) {
+    if (!userDoc) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = userDoc.toObject();
+    const favourites = Array.isArray(user.preferences?.favourites)
+      ? user.preferences.favourites
+      : [];
+    const favouriteIds = favourites
+      .map((fav) => (typeof fav === "string" ? fav : fav?._id))
+      .filter(Boolean);
+    const objectIds = favouriteIds
+      .map((id) => (typeof id === "string" ? new mongoose.Types.ObjectId(id) : id))
+      .filter(Boolean);
+    if (objectIds.length > 0) {
+      const counts = await User.aggregate([
+        { $match: { "preferences.favourites": { $in: objectIds } } },
+        { $unwind: "$preferences.favourites" },
+        { $match: { "preferences.favourites": { $in: objectIds } } },
+        { $group: { _id: "$preferences.favourites", count: { $sum: 1 } } }
+      ]);
+      const countMap = new Map(
+        counts.map((entry) => [String(entry._id), entry.count])
+      );
+      favourites.forEach((fav) => {
+        if (!fav || typeof fav !== "object") return;
+        const favId = fav._id ? String(fav._id) : null;
+        if (!favId) return;
+        fav.favourited_count = countMap.get(favId) || 0;
+      });
     }
 
     res.status(200).json({ user });

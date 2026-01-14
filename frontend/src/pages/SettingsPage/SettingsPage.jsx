@@ -4,9 +4,11 @@ import { onAuthStateChanged, updatePassword, updateEmail, EmailAuthProvider, rea
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { scheduleAccountDeletion } from "../../services/users";
+import { useUser } from "../../hooks/useUser";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const { refreshUser } = useUser();
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,9 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [deletionMode, setDeletionMode] = useState(null);
@@ -95,7 +99,7 @@ export default function SettingsPage() {
     if (isAccountLocked) return;
     setError(null);
     setMessage(null);
-    setSaving(true);
+    setProfileSaving(true);
 
     try {
       const res = await apiFetch(`/users/${profile._id}`, {
@@ -112,10 +116,11 @@ export default function SettingsPage() {
       }
       navigate(`/users/${username}`)
       await loadProfile();
+      await refreshUser();
     } catch (err) {
       setError(err.message);
     } finally {
-      setSaving(false);
+      setProfileSaving(false);
     }
   }
 
@@ -124,17 +129,17 @@ export default function SettingsPage() {
     if (isAccountLocked) return;
     setError(null);
     setMessage(null);
-    setSaving(true);
+    setEmailSaving(true);
 
     try {
       if (newEmail === loggedInUser.email) {
         setError("This is already your current email");
-        setSaving(false);
+        setEmailSaving(false);
         return;
       }
       if (!currentEmailPassword) {
         setError("Please enter your current password to change email");
-        setSaving(false);
+        setEmailSaving(false);
         return;
       }
       const credential = EmailAuthProvider.credential(
@@ -158,7 +163,7 @@ export default function SettingsPage() {
         setError(err.message || "Failed to update email");
       }
     } finally {
-      setSaving(false);
+      setEmailSaving(false);
     }
   }
 
@@ -183,7 +188,7 @@ export default function SettingsPage() {
       return;
     }
 
-    setSaving(true);
+    setPasswordSaving(true);
 
     try {
       const credential = EmailAuthProvider.credential(
@@ -205,7 +210,7 @@ export default function SettingsPage() {
         setError(err.message || "Failed to update password");
       }
     } finally {
-      setSaving(false);
+      setPasswordSaving(false);
     }
   }
 
@@ -215,6 +220,7 @@ export default function SettingsPage() {
     try {
       await scheduleAccountDeletion(mode);
       setDeletionMode(mode);
+      await refreshUser();
       navigate(`/users/${profile?.user_data?.username}`, { replace: true });
     } catch (err) {
       setDeletionError(err.message || "Failed to schedule deletion");
@@ -330,10 +336,10 @@ export default function SettingsPage() {
               )}
               <button
                 type="submit"
-                disabled={saving || isAccountLocked}
+                disabled={profileSaving || isAccountLocked}
                 className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
-                {saving ? "Saving..." : "Save Profile"}
+                {profileSaving ? "Saving..." : "Save Profile"}
               </button>
             </form>
           </div>
@@ -365,10 +371,10 @@ export default function SettingsPage() {
               </div>
               <button
                 type="submit"
-                disabled={saving || isAccountLocked || newEmail === loggedInUser?.email || !currentEmailPassword}
+                disabled={emailSaving || isAccountLocked || newEmail === loggedInUser?.email || !currentEmailPassword}
                 className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
-                {saving ? "Updating..." : "Update Email"}
+                {emailSaving ? "Updating..." : "Update Email"}
               </button>
             </form>
           </div>
@@ -413,10 +419,10 @@ export default function SettingsPage() {
               </div>
               <button
                 type="submit"
-                disabled={saving || isAccountLocked || !currentPassword || !newPassword || !confirmPassword}
+                disabled={passwordSaving || isAccountLocked || !currentPassword || !newPassword || !confirmPassword}
                 className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
-                {saving ? "Updating..." : "Change Password"}
+                {passwordSaving ? "Updating..." : "Change Password"}
               </button>
             </form>
           </div>

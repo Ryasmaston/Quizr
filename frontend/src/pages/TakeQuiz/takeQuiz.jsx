@@ -3,8 +3,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
-import { authReady } from "../../services/authState";
 import { toggleFavourite } from "../../services/favourites";
+import { useUser } from "../../hooks/useUser";
 
 function formatScorePercentage(value) {
     if (value == null) return "";
@@ -33,8 +33,7 @@ function TakeQuizPage() {
     //Storing the result returned after submitting the quiz
     const [result, setResult] = useState(null);
     const [lockedUntil, setLockedUntil] = useState(-1);
-    const [favouriteIds, setFavouriteIds] = useState([]);
-    const [currentUserId, setCurrentUserId] = useState(null);
+    const { favouriteIds, setFavouriteIds, currentUserId } = useUser();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [summaryFilter, setSummaryFilter] = useState("all");
     const [quizSortConfig, setQuizSortConfig] = useState({
@@ -64,25 +63,6 @@ function TakeQuizPage() {
         return () => unsub();
     }, [id, loadQuiz]);
 
-    useEffect(() => {
-        let mounted = true;
-        async function fetchUser() {
-            await authReady;
-            try {
-                const res = await apiFetch("/users/me");
-                const body = await res.json();
-                if (!mounted) return;
-                const favs = Array.isArray(body.user?.favourites) ? body.user.favourites : [];
-                const ids = favs.map((q) => (typeof q === "string" ? q : q._id));
-                setFavouriteIds(ids);
-                setCurrentUserId(body.user?._id || null);
-            } catch (error) {
-                console.error("Failed to load user", error);
-            }
-        }
-        fetchUser();
-        return () => { mounted = false; };
-    }, []);
     const isQuizOwner = useMemo(() => {
         if (!quiz || !currentUserId) return false;
         const creatorId = typeof quiz.created_by === "string"
@@ -519,7 +499,7 @@ function TakeQuizPage() {
                 <div className="absolute top-1/2 left-1/2 w-[30rem] h-[30rem] -translate-x-1/2 -translate-y-1/2 bg-sky-200/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
             </div>
             <div className="relative min-h-screen pt-16 sm:pt-20">
-                <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
+                <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 sm:py-12 min-h-full">
                     <div className="mb-6 sm:mb-8 text-center">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-800 mb-3 sm:mb-4 select-none">
                             {quiz.title}
@@ -624,8 +604,17 @@ function TakeQuizPage() {
                                 <div className="grid gap-4 sm:grid-cols-2 text-slate-700 text-sm sm:text-base">
                                     <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 dark:bg-slate-900/40 dark:border-slate-800/80 px-4 py-3">
                                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/50">
-                                            <svg className="h-5 w-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                className="h-5 w-5 text-slate-600 dark:text-slate-400"
+                                            >
+                                                <path d="M9 2h10a2 2 0 0 1 2 2v10" />
+                                                <rect x="3" y="7" width="12" height="14" rx="2" />
                                             </svg>
                                         </span>
                                         <div className="text-left pl-1">
@@ -652,8 +641,26 @@ function TakeQuizPage() {
                                         </span>
                                         <div className="text-left pl-1">
                                             <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-500">Pass threshold</div>
-                                            <div className="text-lg font-semibold text-slate-800 dark:text-slate-200">
-                                                {Math.round((quiz.req_to_pass / quiz.questions.length) * 100)}% to pass
+                                            <div className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                                <span>{Math.round((quiz.req_to_pass / quiz.questions.length) * 100)}%</span>
+                                                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                                    (
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2.5"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        className="h-3.5 w-3.5"
+                                                    >
+                                                        <path d="M9 2h10a2 2 0 0 1 2 2v10" />
+                                                        <rect x="3" y="7" width="12" height="14" rx="2" />
+                                                    </svg>
+                                                    <span className="text-slate-800 dark:text-slate-200">{quiz.req_to_pass}</span>
+                                                    )
+                                                </span>
+                                                <span>to pass</span>
                                             </div>
                                         </div>
                                     </div>
@@ -673,7 +680,7 @@ function TakeQuizPage() {
                                     <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/60 dark:bg-slate-900/40 dark:border-slate-800/80 px-4 py-3">
                                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/50">
                                             <svg className="h-5 w-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                         </span>
                                         <div className="text-left pl-1">
@@ -687,9 +694,9 @@ function TakeQuizPage() {
                                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/50">
                                             <svg className="h-5 w-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 {lockAnswers ? (
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 10V8a4 4 0 00-8 0v2m-1 0h10a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5a2 2 0 012-2z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 21h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                                 ) : (
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 10h10a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5a2 2 0 012-2z M17 10V8a4 4 0 00-8 0" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-10 14h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                                                 )}
                                             </svg>
                                         </span>
@@ -750,17 +757,13 @@ function TakeQuizPage() {
                                         <>
                                             {showDeleteConfirm && (
                                                 <div
-                                                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 shadow-xl"
-                                                    style={{
-                                                        backdropFilter: "blur(6px)",
-                                                        WebkitBackdropFilter: "blur(6px)"
-                                                    }}
+                                                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md"
                                                 >
-                                                    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 max-w-md w-full shadow-xl">
+                                                    <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800/50 p-6 max-w-md w-full shadow-2xl">
                                                         <div className="flex items-center gap-3 mb-4 text-left">
-                                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100">
+                                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30">
                                                                 <svg
-                                                                    className="h-6 w-6 text-rose-600"
+                                                                    className="h-6 w-6 text-rose-600 dark:text-rose-400"
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
                                                                     stroke="currentColor"
@@ -773,24 +776,24 @@ function TakeQuizPage() {
                                                                     />
                                                                 </svg>
                                                             </div>
-                                                            <div>
-                                                                <h3 className="text-lg font-semibold text-slate-800">Delete Quiz</h3>
-                                                                <p className="text-sm text-slate-500">This action cannot be undone</p>
+                                                            <div className="text-left">
+                                                                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Delete Quiz</h3>
+                                                                <p className="text-sm text-slate-500 dark:text-slate-400">This action cannot be undone</p>
                                                             </div>
                                                         </div>
-                                                        <p className="text-slate-600 mb-6">
+                                                        <p className="text-slate-600 dark:text-slate-300 mb-6 text-left">
                                                             Are you sure you want to delete &apos;{quiz.title}&apos;? All quiz data, attempts, and leaderboard entries will be permanently removed.
                                                         </p>
-                                                        <div className="flex gap-3">
+                                                        <div className="flex gap-3 text-sm sm:text-base">
                                                             <button
-                                                                className="flex-1 px-4 py-2.5 rounded-lg bg-rose-100 text-rose-700 font-semibold hover:bg-rose-200 transition-colors"
+                                                                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                                 type="button"
                                                                 onClick={handleDeleteQuiz}
                                                             >
                                                                 Delete Quiz
                                                             </button>
                                                             <button
-                                                                className="flex-1 px-4 py-2.5 rounded-lg bg-white/70 border border-slate-200/80 text-slate-700 font-semibold hover:bg-slate-100 transition-colors"
+                                                                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                                 type="button"
                                                                 onClick={() => setShowDeleteConfirm(false)}
                                                             >

@@ -181,7 +181,7 @@ export default function LeaderboardPage() {
         ></div>
       </div>
       <div className="relative min-h-screen pt-16 sm:pt-20">
-        <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
+        <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 sm:py-12 min-h-full">
           <div className="mb-9 sm:mb-12 text-center mt-0">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-800 mb-3 sm:mb-4 select-none">
               Leaderboard

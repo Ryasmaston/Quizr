@@ -35,7 +35,7 @@ body {
   -webkit-overflow-scrolling: touch;
   margin: 0 auto;
   text-align: center;
-  padding-top: env(safe-area-inset-top);
+  padding-top: 0;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -336,8 +336,10 @@ html.dark [class~="text-rose-700"] {
   border: 1px solid var(--scrollbar-track);
 }
 
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+@media (hover: hover) {
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
 }
 
 /* Keep browser autofill from forcing a white background */
@@ -417,11 +419,25 @@ button.sorting-button {
   /* slate-800 */
 }
 
-button.sorting-button:hover {
-  color: #1e293b !important;
-  /* slate-800 (same as default) */
-  background-color: #f3f4f6 !important;
-  /* gray-100 (neutral gray) */
+@media (hover: hover) {
+  button.sorting-button:hover {
+    color: #1e293b !important;
+    /* slate-800 (same as default) */
+    background-color: #f3f4f6 !important;
+    /* gray-100 (neutral gray) */
+  }
+
+  .dark button.sorting-button:hover {
+    color: #cbd5e1 !important;
+    /* slate-300 (lighter for visibility) */
+    background-color: rgba(51, 65, 85, 0.3) !important;
+    /* subtle hover background */
+  }
+}
+
+/* Mobile touch device adjustments - minimal */
+@media (hover: none) and (pointer: coarse) {
+  /* Let Tailwind's hoverOnlyWhenSupported handle most hover prevention */
 }
 
 button.sorting-button.isActive {
@@ -436,13 +452,6 @@ button.sorting-button.isActive {
   color: #94a3b8 !important;
   /* slate-400 */
   background-color: transparent !important;
-}
-
-.dark button.sorting-button:hover {
-  color: #cbd5e1 !important;
-  /* slate-300 (lighter for visibility) */
-  background-color: rgba(51, 65, 85, 0.3) !important;
-  /* subtle hover background */
 }
 
 .dark button.sorting-button.isActive {
@@ -493,8 +502,10 @@ a {
   text-decoration: inherit;
 }
 
-a:hover {
-  color: #535bf2;
+@media (hover: hover) {
+  a:hover {
+    color: #535bf2;
+  }
 }
 
 

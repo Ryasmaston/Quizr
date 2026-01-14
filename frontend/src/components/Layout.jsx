@@ -1,47 +1,43 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import NavBar from "./navBar";
+import { useEffect, useLayoutEffect, useState } from "react";
+import { useLocation, useNavigate, Outlet } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "../services/firebase";
 import { useAuth } from "../hooks/useAuth";
-import { Outlet } from "react-router-dom";
-import { apiFetch } from "../services/api";
+import { useTheme } from "../hooks/useTheme";
 import { useIsMobile } from "../hooks/useIsMobile";
+import { useUser } from "../hooks/useUser";
+import UserSearchBar from "./UserSearchBar";
+import NavBar from "./navBar";
+import { LogOut, Sun, Moon } from "lucide-react";
 
 function Layout() {
     const location = useLocation();
     const navigate = useNavigate();
     const user = useAuth();
     const isMobile = useIsMobile();
-    const [accountStatus, setAccountStatus] = useState(null);
-    const [accountUsername, setAccountUsername] = useState(null);
+    const { theme, toggleTheme } = useTheme();
+    const { accountStatus, accountUsername, refreshUser } = useUser();
     const [statusRefreshKey, setStatusRefreshKey] = useState(0);
 
     const hideNavbar = location.pathname === "/login" || location.pathname === "/signup";
+    const isQuizEditor = location.pathname === "/quizzes/create"
+        || (location.pathname.startsWith("/quiz/") && location.pathname.endsWith("/edit"));
+
+    useLayoutEffect(() => {
+        const root = document.getElementById("root");
+        if (root) {
+            root.scrollTop = 0;
+            root.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        }
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }, [location.key]);
 
     useEffect(() => {
-        let mounted = true;
-        async function loadStatus() {
-            if (!user) {
-                if (!mounted) return;
-                setAccountStatus(null);
-                setAccountUsername(null);
-                return;
-            }
-            try {
-                const res = await apiFetch("/me");
-                const body = await res.json();
-                if (!mounted) return;
-                // Status can be in different locations depending on the API response
-                setAccountStatus(body.user?.user_data?.status || body.user?.status || "active");
-                setAccountUsername(body.user?.user_data?.username || null);
-            } catch (error) {
-                if (!mounted) return;
-                setAccountStatus(null);
-                setAccountUsername(null);
-            }
-        }
-        loadStatus();
-        return () => { mounted = false };
-    }, [user, location.pathname, statusRefreshKey]);
+        if (!user) return;
+        refreshUser();
+    }, [user, location.pathname, statusRefreshKey, refreshUser]);
 
     useEffect(() => {
         function handleStatusChange() {
@@ -61,6 +57,31 @@ function Layout() {
 
     return (
         <div className={`flex flex-col min-h-screen ${isMobile ? 'pb-16' : 'pt-16'}`}>
+            {isMobile && !hideNavbar && !isQuizEditor && (
+                <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800/80 pt-[env(safe-area-inset-top)]">
+                    <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                            <UserSearchBar excludeUsername={accountUsername} />
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={toggleTheme}
+                                className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 transition-colors"
+                            >
+                                {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+                            </button>
+                            {user && (
+                                <button
+                                    onClick={() => signOut(auth)}
+                                    className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 transition-colors"
+                                >
+                                    <LogOut size={20} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
             {!hideNavbar && <NavBar accountStatus={accountStatus} accountUsername={accountUsername} />}
             <main className="flex-1"><Outlet /></main>
         </div>

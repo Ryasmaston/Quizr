@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useLocation, useNavigate, useParams, unstable_useBlocker as useBlocker } from "react-router-dom";
 import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { getQuizById, updateQuiz } from "../../services/quizzes";
+import { useIsMobile } from "../../hooks/useIsMobile";
+import { LogOut } from "lucide-react";
 
 function normalizeText(value) {
   return value == null ? "" : String(value);
@@ -45,14 +47,18 @@ function shouldResetAttempts(originalQuiz, updatedData) {
     const originalCorrectIndices = originalAnswers
       .map((answer, index) => (answer?.is_correct ? index : null))
       .filter((index) => index !== null);
+    const updatedCorrectIndices = updatedAnswers
+      .map((answer, index) => (answer?.is_correct ? index : null))
+      .filter((index) => index !== null);
+    if (originalCorrectIndices.length !== updatedCorrectIndices.length) {
+      return true;
+    }
     if (originalCorrectIndices.length > 0) {
-      const remainingOriginalCorrect = originalCorrectIndices.filter(
-        (index) => index < updatedAnswers.length
+      const updatedSet = new Set(updatedCorrectIndices);
+      const hasMismatch = originalCorrectIndices.some(
+        (index) => !updatedSet.has(index)
       );
-      const hasOverlap = remainingOriginalCorrect.some(
-        (index) => Boolean(updatedAnswers[index]?.is_correct)
-      );
-      if (!hasOverlap) {
+      if (hasMismatch) {
         return true;
       }
     }
@@ -62,6 +68,8 @@ function shouldResetAttempts(originalQuiz, updatedData) {
 }
 
 export default function EditQuiz() {
+  const isMobile = useIsMobile();
+  const keyboardHeight = useKeyboardHeight();
   const ANSWER_COUNT_OPTIONS = useMemo(() => [2, 3, 4, 5, 6], []);
   const DEFAULT_ANSWERS_PER_QUESTION = 4;
   const { id } = useParams();
@@ -324,7 +332,8 @@ export default function EditQuiz() {
     if (blocker.state !== "blocked") return;
     const shouldLeave = window.confirm("You have unsaved changes. Discard them?");
     if (shouldLeave) {
-      blocker.proceed();
+      setIgnoreBlocker(true);
+      setTimeout(() => blocker.proceed(), 0);
     } else {
       blocker.reset();
     }
@@ -419,6 +428,20 @@ export default function EditQuiz() {
     const updated = questions.filter((_, i) => i !== qIndex);
     setQuestions(updated);
   }
+
+  const handleSignOut = async () => {
+    if (hasChanges) {
+      const confirmDiscard = window.confirm("You have unsaved changes. Discard them and sign out?");
+      if (!confirmDiscard) return;
+    }
+    setIgnoreBlocker(true);
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Sign out failed:", err);
+      setIgnoreBlocker(false);
+    }
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -522,7 +545,51 @@ export default function EditQuiz() {
           style={{ animationDelay: "2s" }}
         ></div>
       </div>
-      <div className="relative min-h-screen pt-16 sm:pt-20">
+      <div className={`relative min-h-screen pt-16 sm:pt-20`}>
+        {/* Mobile Top Bar */}
+        {questions.length > 0 && isMobile && (
+          <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800/80 pt-[env(safe-area-inset-top)]">
+            <div className="px-4 py-2 flex items-center gap-3">
+              <div className="grid grid-cols-3 gap-2 flex-1">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="bg-white/80 hover:bg-white dark:bg-slate-800/50 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 text-slate-700 px-3 py-2.5 rounded-lg text-xs font-semibold border border-slate-200/80 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  {hasChanges ? "Discard" : "Cancel"}
+                </button>
+                <button
+                  type="button"
+                  onClick={addQuestion}
+                  className="bg-white/80 hover:bg-white dark:bg-slate-800/50 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 text-slate-700 px-3 py-2.5 rounded-lg text-xs font-semibold border border-slate-200/80 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add
+                </button>
+                <button
+                  type="button"
+                  disabled={!hasChanges}
+                  onClick={(e) => handleSubmit(e)}
+                  className={`bg-slate-800 dark:bg-blue-950/60 text-white px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 flex items-center justify-center gap-1.5 ${hasChanges ? "" : "opacity-50 cursor-not-allowed"}`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="h-10 w-10 shrink-0 inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 transition-colors"
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
+          </div>
+        )}
         <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 min-h-full">
           <div className="mb-9 sm:mb-12 text-center mt-0">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-800 mb-3 sm:mb-4 select-none">
@@ -750,7 +817,7 @@ export default function EditQuiz() {
                 </div>
               </div>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-6 pb-16 sm:pb-0">
               {questions.map((q, qIndex) => {
                 return (
                   <div
@@ -787,7 +854,7 @@ export default function EditQuiz() {
                             <button
                               type="button"
                               onClick={() => removeQuestion(qIndex)}
-                              className="h-[46px] w-[46px] rounded-xl border border-rose-200 dark:border-none bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-800/60 dark:hover:text-white transition-colors flex items-center justify-center"
+                              className="h-[46px] w-[46px] shrink-0 rounded-xl border border-rose-200 dark:border-none bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-800/60 dark:hover:text-white transition-colors flex items-center justify-center"
                               title="Remove question"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -846,43 +913,56 @@ export default function EditQuiz() {
                 );
               })}
             </div>
-            {resetWarning && (
-              <div className="rounded-2xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-100/80 dark:bg-rose-950/40 px-4 py-3 text-rose-700 dark:text-rose-400 text-sm">
+
+            {hasChanges && resetWarning && (
+              <div className="mt-3 rounded-2xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-100/80 dark:bg-rose-950/40 px-4 py-3 text-rose-700 dark:text-rose-400 text-sm sm:hidden">
                 Saving changes will reset all users&apos; attempts history for this quiz.
               </div>
             )}
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button
-                type="button"
-                onClick={addQuestion}
-                className="flex-1 bg-white/70 hover:bg-white/90 dark:bg-slate-800/40 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 backdrop-blur-lg text-slate-700 px-6 py-3 rounded-xl font-semibold border border-slate-200/80 hover:border-slate-300/80 transition-colors flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add Question
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="flex-1 bg-white/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 px-6 py-3 rounded-xl font-semibold hover:bg-white/90 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 transition-colors"
-              >
-                {hasChanges ? "Discard Changes" : "Cancel"}
-              </button>
-              <button
-                type="submit"
-                disabled={!hasChanges}
-                className={`flex-1 bg-slate-800 dark:bg-blue-950/60 text-white px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 flex items-center justify-center gap-2 ${hasChanges
-                  ? ""
-                  : "opacity-50 cursor-not-allowed"
-                  }`}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Save Changes
-              </button>
-            </div>
+
+            {questions.length > 0 && (
+              <div className="sticky bottom-6 z-20 pt-4 hidden sm:block">
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/70 backdrop-blur-lg shadow-lg px-4 py-4 sm:px-6">
+                  {resetWarning && (
+                    <div className="rounded-2xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-100/80 dark:bg-rose-950/40 px-4 py-3 text-rose-700 dark:text-rose-400 text-sm mb-4">
+                      Saving changes will reset all users&apos; attempts history for this quiz.
+                    </div>
+                  )}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      className="flex-1 bg-white/70 hover:bg-white/90 dark:bg-slate-800/40 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 backdrop-blur-lg text-slate-700 px-6 py-3 rounded-xl font-semibold border border-slate-200/80 transition-colors flex items-center justify-center gap-2"
+                    >
+                      {hasChanges ? "Discard Changes" : "Cancel"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={addQuestion}
+                      className="flex-1 bg-white/70 hover:bg-white/90 dark:bg-slate-800/40 dark:border-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100 backdrop-blur-lg text-slate-700 px-6 py-3 rounded-xl font-semibold border border-slate-200/80 hover:border-slate-300/80 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Question
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!hasChanges}
+                      className={`flex-1 bg-slate-800 dark:bg-blue-950/60 text-white px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-slate-700 dark:hover:bg-blue-900/60 dark:border dark:border-blue-400/30 flex items-center justify-center gap-2 ${hasChanges
+                        ? ""
+                        : "opacity-50 cursor-not-allowed"
+                        }`}
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         </main>
       </div>

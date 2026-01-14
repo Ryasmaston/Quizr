@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getQuizzes } from "../../services/quizzes";
 import { toggleFavourite } from "../../services/favourites";
-import { apiFetch } from "../../services/api";
-import { authReady } from "../../services/authState";
+import { useUser } from "../../hooks/useUser";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 export function Home() {
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true)
   const [quizzes, setQuizzes] = useState([])
-  const [favouriteIds, setFavouriteIds] = useState([]);
+  const { favouriteIds, setFavouriteIds } = useUser();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -46,29 +47,18 @@ export function Home() {
     fetchQuizzes();
   }, [location.state?.refreshKey]);
 
-  useEffect(() => {
-    let mounted = true;
-    async function fetchUser() {
-      await authReady;
-      try {
-        const res = await apiFetch("/users/me");
-        const body = await res.json();
-        if (!mounted) return;
-        const favs = Array.isArray(body.user?.preferences?.favourites) ? body.user.preferences.favourites : [];
-        const ids = favs.map((q) => (typeof q === "string" ? q : q._id));
-        setFavouriteIds(ids);
-      } catch (error) {
-        console.error("Failed to load user", error);
-      }
-    }
-    fetchUser();
-    return () => { mounted = false; };
-  }, []);
-
   async function handleToggleFavourite(quizId, isFavourited) {
     const next = !isFavourited;
     setFavouriteIds((prev) =>
       next ? [...prev, quizId] : prev.filter((id) => id !== quizId)
+    );
+    setQuizzes((prev) =>
+      prev.map((quiz) => {
+        if (quiz._id !== quizId) return quiz;
+        const currentCount = getFavouriteCount(quiz);
+        const updatedCount = next ? currentCount + 1 : Math.max(0, currentCount - 1);
+        return { ...quiz, favourited_count: updatedCount };
+      })
     );
     try {
       await toggleFavourite(quizId, isFavourited);
@@ -76,6 +66,14 @@ export function Home() {
       console.error("Failed to update favourite", error);
       setFavouriteIds((prev) =>
         next ? prev.filter((id) => id !== quizId) : [...prev, quizId]
+      );
+      setQuizzes((prev) =>
+        prev.map((quiz) => {
+          if (quiz._id !== quizId) return quiz;
+          const currentCount = getFavouriteCount(quiz);
+          const updatedCount = next ? Math.max(0, currentCount - 1) : currentCount + 1;
+          return { ...quiz, favourited_count: updatedCount };
+        })
       );
     }
   }
@@ -155,6 +153,12 @@ export function Home() {
 
   const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
 
+  const getFavouriteCount = (quiz) => Math.max(
+    0,
+    quiz.favourited_count ??
+    (Array.isArray(quiz.favourites) ? quiz.favourites.length : (quiz.favouritesCount ?? 0))
+  );
+
   const filteredQuizzes = (selectedCategory === "all"
     ? quizzes
     : selectedCategory === "favourites"
@@ -162,8 +166,9 @@ export function Home() {
       : quizzes.filter((quiz) => quiz.category === selectedCategory)
   ).sort((a, b) => {
     if (sortBy === "stars") {
-      const getStars = (q) => q.favourited_count ?? (Array.isArray(q.favourites) ? q.favourites.length : (q.favouritesCount ?? 0));
-      return sortDirection === "desc" ? getStars(b) - getStars(a) : getStars(a) - getStars(b);
+      return sortDirection === "desc"
+        ? getFavouriteCount(b) - getFavouriteCount(a)
+        : getFavouriteCount(a) - getFavouriteCount(b);
     }
     if (sortBy === "questions") {
       const getCount = (q) => q.questions?.length || 0;
@@ -213,6 +218,7 @@ export function Home() {
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
   const handleLogoMouseMove = (event) => {
+    if (isMobile) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
     const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
@@ -253,11 +259,11 @@ export function Home() {
         ></div>
       </div>
       <div className="relative min-h-screen">
-        <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-8 sm:pb-12">
-          <div className="mb-8 sm:mb-12 text-center mt-4 sm:mt-6">
+        <main className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-16 sm:pb-12">
+          <div className="mb-8 sm:mb-12 text-center mt-10 sm:mt-6">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-3 sm:mb-4 animate-fade-in px-4">
               <span
-                className="relative inline-block group select-none"
+                className={`relative inline-block ${!isMobile ? "group" : ""} select-none`}
                 onMouseMove={handleLogoMouseMove}
                 onMouseLeave={handleLogoMouseLeave}
                 style={{
@@ -309,17 +315,17 @@ export function Home() {
             <p className="text-slate-600 text-base sm:text-lg px-4">Challenge yourself and expand your knowledge</p>
           </div>
           {quizzes.length > 0 && (
-            <div className="mb-6 sm:mb-8 max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 [padding-left:calc(1rem+var(--removed-body-scroll-width,0px))] [padding-right:calc(1rem+var(--removed-body-scroll-width,0px))]">
-              <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 sm:gap-6 w-full">
+              <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-4 w-full sm:w-auto">
                 {/* Total Quizzes Card */}
-                <div className="total-quizzes-card bg-white/70 backdrop-blur-lg rounded-xl sm:rounded-2xl px-4 border border-slate-200/80 flex flex-col justify-center min-w-[160px] h-[72px] flex-1 sm:flex-none cursor-default focus:outline-none">
+                <div className="total-quizzes-card bg-white/70 backdrop-blur-lg rounded-xl sm:rounded-2xl px-4 border border-slate-200/80 flex flex-col justify-center min-w-[130px] h-[72px] flex-1 sm:flex-none sm:shrink-0 cursor-default focus:outline-none">
                   <div className="text-xl sm:text-2xl font-bold text-slate-900">{filteredQuizzes.length}</div>
                   <div className="text-slate-500 text-xs sm:text-sm whitespace-nowrap">{countLabel}</div>
                 </div>
 
                 {/* Category filter drop down */}
-                <div className="relative flex-1 sm:w-64">
-                    <button
+                <div className="relative flex-1 sm:flex-none sm:w-72 min-w-[170px]">
+                  <button
                     type="button"
                     aria-haspopup="true"
                     aria-expanded="false"
@@ -352,7 +358,7 @@ export function Home() {
                         className={`w-full text-left px-4 py-3 text-xs sm:text-sm font-semibold transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-600/50 first:rounded-t-2xl last:rounded-b-2xl ${selectedCategory === category
                           ? 'bg-slate-50/60 dark:bg-slate-600/60 text-slate-900 dark:text-white'
                           : 'text-slate-700 dark:text-slate-200'
-                        }`}
+                          }`}
                       >
                         {category === "all"
                           ? "All Categories"
@@ -366,49 +372,55 @@ export function Home() {
               </div>
 
               {/* Sorting Bar */}
-              <div className="sorting-bar-container flex items-center gap-1.5 p-1 bg-white/70 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl border border-slate-200/80 dark:border-slate-800/60 h-[72px] w-full sm:w-auto overflow-x-auto no-scrollbar relative before:content-[''] before:absolute before:right-0 before:top-0 before:bottom-0 before:w-8 before:bg-gradient-to-l before:from-white/70 before:to-transparent before:pointer-events-none before:sm:hidden before:z-10">
-                {[
-                  { id: 'newest', label: 'Date', options: { desc: 'Newest', asc: 'Oldest' }, width: 'w-[120px]' },
-                  { id: 'stars', label: 'Stars', width: 'w-[100px]' },
-                  { id: 'questions', label: 'Questions', width: 'w-[140px]' },
-                  { id: 'difficulty', label: 'Difficulty', width: 'w-[130px]' }
-                ].map((option) => {
-                  const isActive = sortBy === option.id;
-                  const isAsc = isActive && sortDirection === "asc";
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => {
-                        if (isActive) {
-                          setSortDirection(prev => prev === "desc" ? "asc" : "desc");
-                        } else {
-                          setSortBy(option.id);
-                          setSortDirection("desc");
-                        }
-                      }}
-                      className={`sorting-button h-full ${option.width} px-4 rounded-xl text-sm font-semibold flex flex-col sm:flex-row items-center justify-center relative transition-[background-color,color,transform,shadow] duration-200 [outline:none] [box-shadow:none] [ring:none] [-webkit-tap-highlight-color:transparent] ${isActive ? 'bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50 isActive' : 'text-slate-900 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent hover:bg-slate-200/50 dark:hover:bg-transparent'}`}
-                    >
-                      <span className="truncate">
-                        {option.id === 'newest'
-                          ? (isActive ? option.options[sortDirection] : 'Date')
-                          : option.label}
-                      </span>
-                      {isActive && (
-                        <span className="mt-1 sm:mt-0 sm:absolute sm:right-2 flex items-center justify-center w-4">
-                          {isAsc ? (
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10 5l4 6H6l4-6z" />
-                            </svg>
-                          ) : (
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10 15l-4-6h8l-4 6z" />
-                            </svg>
-                          )}
+              {/* Sorting Bar Wrapper */}
+              <div className="relative w-full sm:flex-1 h-[72px] group/sort-wrapper bg-white/70 dark:bg-slate-800/40 backdrop-blur-lg rounded-2xl border border-slate-200/80 dark:border-slate-800/60 overflow-hidden">
+                <div className="sorting-bar-container flex items-center gap-1.5 p-1 h-full w-full overflow-x-auto sm:overflow-x-visible overflow-y-hidden no-scrollbar relative">
+                  {[
+                    { id: 'newest', label: 'Date', options: { desc: 'Newest', asc: 'Oldest' }, width: 'w-[120px]' },
+                    { id: 'stars', label: 'Likes', width: 'w-[100px]' },
+                    { id: 'questions', label: 'Questions', width: 'w-[140px]' },
+                    { id: 'difficulty', label: 'Difficulty', width: 'w-[130px]' }
+                  ].map((option) => {
+                    const isActive = sortBy === option.id;
+                    const isAsc = isActive && sortDirection === "asc";
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setSortDirection(prev => prev === "desc" ? "asc" : "desc");
+                          } else {
+                            setSortBy(option.id);
+                            setSortDirection("desc");
+                          }
+                        }}
+                        className={`sorting-button h-full ${option.width} sm:flex-1 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shrink-0 sm:shrink transition-[background-color,color,transform,shadow] duration-200 [outline:none] [box-shadow:none] [ring:none] [-webkit-tap-highlight-color:transparent] ${isActive ? 'bg-white/90 dark:bg-slate-700/90 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50 isActive' : 'text-slate-900 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-transparent hover:bg-slate-200/50 dark:hover:bg-transparent'}`}
+                      >
+                        <span className="truncate leading-none">
+                          {option.id === 'newest'
+                            ? (isActive ? option.options[sortDirection] : 'Date')
+                            : option.label}
                         </span>
-                      )}
-                    </button>
-                  );
-                })}
+                        {isActive && (
+                          <span className="flex items-center justify-center shrink-0">
+                            {isAsc ? (
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 5l4 6H6l4-6z" />
+                              </svg>
+                            ) : (
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 15l-4-6h8l-4 6z" />
+                              </svg>
+                            )}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Fixed Shadows for Mobile Scroll */}
+                <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white/90 dark:from-slate-800/90 to-transparent pointer-events-none sm:hidden z-10" />
+                <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white/90 dark:from-slate-800/90 to-transparent pointer-events-none sm:hidden z-10" />
               </div>
             </div>
           )}
@@ -432,7 +444,7 @@ export function Home() {
             </div>
           )}
           {quizzes.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredQuizzes.map((quiz) => {
                 const gradient = categoryGradients[quiz.category] || categoryGradients.other;
                 const categoryLabel = quiz.category || "other";
@@ -440,6 +452,7 @@ export function Home() {
                 const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
                 const difficulty = difficultyChips[difficultyKey];
                 const isFavourited = favouriteIds.includes(quiz._id);
+                const favouriteCount = getFavouriteCount(quiz);
                 const authorUsername = quiz?.created_by?.user_data?.username;
                 const authorIsDeleted = quiz?.created_by?.authId === "deleted-user"
                   || authorUsername === "__deleted__"
@@ -460,7 +473,7 @@ export function Home() {
                     onTouchEnd={handleCardTouchEnd}
                   >
                     <div
-                      className="relative z-10 bg-white/70 dark:bg-slate-800/80backdrop-blur-lg rounded-2xl sm:rounded-3xl pt-4 px-5 pb-1.5 sm:pt-5 sm:px-6 sm:pb-2 border border-slate-200/80 hover:border-slate-300 transition-all transform group-hover:scale-[1.012] group-hover:[box-shadow:0_10px_26px_-18px_rgb(var(--shadow-color)/0.42),0_0_18px_-10px_rgb(var(--shadow-color)/0.32)] overflow-hidden h-[200px] flex flex-col"
+                      className="relative z-10 bg-white/70 dark:bg-slate-800/80backdrop-blur-lg rounded-2xl sm:rounded-3xl pt-4 px-4 pb-1.5 sm:pt-5 sm:px-6 sm:pb-2 border border-slate-200/80 hover:border-slate-300 transition-all transform group-hover:scale-[1.012] group-hover:[box-shadow:0_10px_26px_-18px_rgb(var(--shadow-color)/0.42),0_0_18px_-10px_rgb(var(--shadow-color)/0.32)] overflow-hidden h-[200px] flex flex-col"
                       style={{ "--shadow-color": gradient.hover.primary }}
                     >
                       <div
@@ -508,31 +521,36 @@ export function Home() {
                               <span>{difficulty.label}</span>
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            aria-label={isFavourited ? "Remove from favourites" : "Add to favourites"}
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              handleToggleFavourite(quiz._id, isFavourited);
-                            }}
-                            className={`inline-flex items-center justify-center rounded-full border border-slate-200/70 bg-white/80 p-2 backdrop-blur transition-all duration-150 ease-out group-hover:border-white/30 ${isFavourited
-                              ? "text-amber-500 hover:text-slate-700 dark:hover:text-white"
-                              : "text-slate-500 hover:text-amber-500 dark:hover:text-amber-500"
-                              }`}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              className="h-4 w-4"
-                              fill={isFavourited ? "currentColor" : "none"}
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                          <div className="inline-flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+                              {favouriteCount}
+                            </span>
+                            <button
+                              type="button"
+                              aria-label={isFavourited ? "Remove from favourites" : "Add to favourites"}
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                handleToggleFavourite(quiz._id, isFavourited);
+                              }}
+                              className={`inline-flex items-center justify-center rounded-full border border-slate-200/70 bg-white/80 p-2 backdrop-blur transition-all duration-150 ease-out group-hover:border-white/30 ${isFavourited
+                                ? "text-amber-500 hover:text-slate-700 dark:hover:text-white"
+                                : "text-slate-500 hover:text-amber-500 dark:hover:text-amber-500"
+                                }`}
                             >
-                              <path d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
-                            </svg>
-                          </button>
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="h-4 w-4"
+                                fill={isFavourited ? "currentColor" : "none"}
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                         <div className="flex-1 flex items-center -translate-y-2">
                           <h3 className="text-lg sm:text-xl font-bold text-slate-800 line-clamp-2 transition-all text-center w-full leading-tight">
@@ -543,7 +561,18 @@ export function Home() {
                           <div className="h-px w-full bg-slate-200/70 mb-2"></div>
                           <div className="flex items-center justify-between gap-2 py-0.5 px-4 sm:px-5 text-xs sm:text-sm text-slate-600 dark:group-hover:text-white/90">
                             <div className="flex items-center gap-1.5 leading-none text-slate-600">
-                              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-current text-[10px] font-semibold select-none">?</span>
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="h-3.5 w-3.5"
+                              >
+                                <path d="M9 2h10a2 2 0 0 1 2 2v10" />
+                                <rect x="3" y="7" width="12" height="14" rx="2" />
+                              </svg>
                               <span>{quiz?.questions?.length || 0} questions</span>
                             </div>
                             {canNavigateToAuthor ? (
