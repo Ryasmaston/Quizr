@@ -69,7 +69,6 @@ function shouldResetAttempts(originalQuiz, updatedData) {
 
 export default function EditQuiz() {
   const isMobile = useIsMobile();
-  const keyboardHeight = useKeyboardHeight();
   const ANSWER_COUNT_OPTIONS = useMemo(() => [2, 3, 4, 5, 6], []);
   const DEFAULT_ANSWERS_PER_QUESTION = 4;
   const { id } = useParams();
