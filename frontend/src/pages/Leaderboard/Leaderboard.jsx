@@ -80,15 +80,27 @@ export default function LeaderboardPage() {
     const sorted = [...rows];
     const { key, direction } = sortConfig;
     const order = direction === "asc" ? 1 : -1;
+    const getUsername = (row) => {
+      const name = row?.user_data?.username;
+      return typeof name === "string" ? name.trim() : "";
+    };
 
     sorted.sort((a, b) => {
+      const aName = getUsername(a);
+      const bName = getUsername(b);
       if (key === "username") {
-        return a.user_data.username.localeCompare(b.user_data.username) * order;
+        if (!aName && !bName) return 0;
+        if (!aName) return 1;
+        if (!bName) return -1;
+        return aName.localeCompare(bName) * order;
       }
       const aVal = Number.isFinite(a[key]) ? a[key] : 0;
       const bVal = Number.isFinite(b[key]) ? b[key] : 0;
       if (aVal !== bVal) return (aVal - bVal) * order;
-      return a.user_data.username.localeCompare(b.user_data.username);
+      if (!aName && !bName) return 0;
+      if (!aName) return 1;
+      if (!bName) return -1;
+      return aName.localeCompare(bName);
     });
 
     return sorted;
@@ -227,29 +239,44 @@ export default function LeaderboardPage() {
                             {sortConfig.direction === "desc" ? index + 1 : sortedRows.length - index}
                           </td>
                           <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left w-[220px] max-w-[220px]">
-                            <Link
-                              to={`/users/${entry.user_data?.username}`}
-                              className="flex items-center gap-3 min-w-0 cursor-pointer text-slate-800 hover:text-slate-800 hover:font-semibold"
-                            >
-                              <div
-                                className={`h-9 w-9 shrink-0 rounded-[30%] overflow-hidden bg-gradient-to-br ${getAvatarGradient(entry.user_id)} flex items-center justify-center text-white font-semibold text-sm shadow-sm`}
+                            {entry.user_data?.username ? (
+                              <Link
+                                to={`/users/${entry.user_data.username}`}
+                                className="flex items-center gap-3 min-w-0 cursor-pointer text-slate-800 hover:text-slate-800 hover:font-semibold"
                               >
-                                {entry.user_data?.profile_pic ? (
-                                  <img
-                                    src={entry.user_data.profile_pic}
-                                    alt={entry.user_data.username}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.target.style.display = 'none';
-                                      e.target.parentElement.innerHTML = `<span>${(entry.user_data?.username || "?").charAt(0).toUpperCase()}</span>`;
-                                    }}
-                                  />
-                                ) : (
-                                  <span>{(entry.user_data?.username || "?").charAt(0).toUpperCase()}</span>
-                                )}
+                                <div
+                                  className={`h-9 w-9 shrink-0 rounded-[30%] overflow-hidden bg-gradient-to-br ${getAvatarGradient(entry.user_id)} flex items-center justify-center text-white font-semibold text-sm shadow-sm`}
+                                >
+                                  {entry.user_data?.profile_pic ? (
+                                    <img
+                                      src={entry.user_data.profile_pic}
+                                      alt={entry.user_data.username}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        e.target.parentElement.innerHTML = `<span>${(entry.user_data?.username || "?").charAt(0).toUpperCase()}</span>`;
+                                      }}
+                                    />
+                                  ) : (
+                                    <span>{(entry.user_data?.username || "?").charAt(0).toUpperCase()}</span>
+                                  )}
+                                </div>
+                                <span className="truncate text-slate-800 dark:text-slate-200">
+                                  {entry.user_data?.username}
+                                </span>
+                              </Link>
+                            ) : (
+                              <div className="flex items-center gap-3 min-w-0 text-slate-700">
+                                <div
+                                  className={`h-9 w-9 shrink-0 rounded-[30%] overflow-hidden bg-gradient-to-br ${getAvatarGradient(entry.user_id)} flex items-center justify-center text-white font-semibold text-sm shadow-sm`}
+                                >
+                                  <span>?</span>
+                                </div>
+                                <span className="truncate text-slate-500">
+                                  {entry.user_id ? `Unknown user (${entry.user_id})` : "Unknown user"}
+                                </span>
                               </div>
-                              <span className="truncate text-slate-800 dark:text-slate-200">{entry.user_data?.username}</span>
-                            </Link>
+                            )}
                           </td>
                           <td className="px-3 sm:px-4 py-3 text-left text-slate-600 dark:text-slate-400">{entry.totalCorrect}</td>
                           <td className="px-3 sm:px-4 py-3 text-left">
