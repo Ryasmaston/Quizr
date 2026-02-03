@@ -169,7 +169,7 @@ async function searchUsers(req, res) {
       return res.status(200).json({ users: [] });
     }
 
-    const regex = new RegExp(escapeRegex(q), "i");
+    const regex = new RegExp("^" + escapeRegex(q), "i");
 
     const users = await User.find({
       "user_data.username": regex,
