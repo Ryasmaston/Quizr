@@ -20,7 +20,7 @@ export default function UserSearchBar({ excludeUsername }) {
   useEffect(() => {
     const query = q.trim();
 
-    if (query.length < 2) {
+    if (!query) {
       setUsers([]);
       setOpen(false);
       return;

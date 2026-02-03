@@ -165,7 +165,7 @@ async function updateThemePreference(req, res) {
 async function searchUsers(req, res) {
   try {
     const q = (req.query.q || "").trim();
-    if (q.length < 2) {
+    if (!q) {
       return res.status(200).json({ users: [] });
     }
 
