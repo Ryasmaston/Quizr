@@ -298,7 +298,7 @@ export default function CreateQuiz() {
         req_to_pass: safeReqToPass,
       });
       const quizId = data?.quiz?._id;
-      ignoreBlockRef.current = true;
+      setIgnoreBlocker(true)
       setPendingNavigation(quizId ? `/quiz/${quizId}` : "/");
     } catch (err) {
       alert(err.message);
