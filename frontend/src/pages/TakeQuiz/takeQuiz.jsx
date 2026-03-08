@@ -1020,14 +1020,30 @@ function TakeQuizPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l2.7 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9 6.5 20.4l1.1-6.3L3 9.6l6.3-.9L12 3Z" />
                                 </svg>
                             </button>
-                            <div className="w-20 h-20 bg-emerald-100 rounded-full mx-auto mb-4 flex items-center justify-center border border-emerald-200/80">
-                                <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-2">Quiz Complete</h2>
+                            {result.correctAnswers >= quiz.req_to_pass ? (
+                                <>
+                                    <div className="w-20 h-20 bg-emerald-100 rounded-full mx-auto mb-4 flex items-center justify-center border border-emerald-200/80">
+                                        <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-2">Quiz Passed</h2>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="w-20 h-20 bg-rose-100 rounded-full mx-auto mb-4 flex items-center justify-center border border-rose-200/80">
+                                        <svg className="w-10 h-10 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                    <h2 className="text-2xl sm:text-3xl font-semibold text-slate-800 mb-2">Quiz Failed</h2>
+                                </>
+                            )}
                             <p className="text-slate-600 text-lg">
-                                Correct answers {result.correctAnswers}, ({formatScorePercentage(result.scorePercentage)})
+                                {result.correctAnswers} correct {result.correctAnswers === 1 ? 'answer' : 'answers'} ({formatScorePercentage(result.scorePercentage)})
+                            </p>
+                            <p className="text-slate-500 text-sm mt-1">
+                                {quiz.req_to_pass} correct {quiz.req_to_pass === 1 ? 'answer' : 'answers'} ({Math.round((quiz.req_to_pass / quiz.questions.length) * 100)}%) required to pass
                             </p>
                             {difficultyKey !== "hard" && (
                                 <div className="mt-6 text-left">
