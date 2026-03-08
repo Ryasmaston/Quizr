@@ -1,5 +1,5 @@
 import { auth } from "./firebase"
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth"
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth"
 
 export async function login(email, password) {
   const { user } = await signInWithEmailAndPassword(auth, email, password)
@@ -10,6 +10,11 @@ export async function signup(email, password) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password)
   return await user.getIdToken()
 }
+
+export async function forgotPassword(email) {
+  await sendPasswordResetEmail(auth, email);
+}
+
 
 export async function logout() {
   const currentTheme = localStorage.getItem("theme");
