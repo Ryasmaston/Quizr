@@ -9,7 +9,7 @@ export function Home() {
   const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true)
   const [quizzes, setQuizzes] = useState([])
-  const { favouriteIds, setFavouriteIds } = useUser();
+  const { favouriteIds, setFavouriteIds, isLoading: isUserLoading } = useUser();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -34,6 +34,9 @@ export function Home() {
 
   useEffect(() => {
     const fetchQuizzes = async () => {
+      // Don't fetch until user context finishes initializing
+      if (isUserLoading) return;
+
       try {
         const data = await getQuizzes();
         setQuizzes(Array.isArray(data?.quizzes) ? data.quizzes : []);
@@ -45,7 +48,7 @@ export function Home() {
       }
     };
     fetchQuizzes();
-  }, [location.state?.refreshKey]);
+  }, [location.state?.refreshKey, isUserLoading]);
 
   async function handleToggleFavourite(quizId, isFavourited) {
     const next = !isFavourited;
@@ -231,7 +234,7 @@ export function Home() {
     event.currentTarget.style.setProperty("--logo-y", "50%");
   };
 
-  if (loading)
+  if (loading || isUserLoading)
     return (
       <div
         className="fixed inset-0 flex items-center justify-center"
@@ -239,7 +242,7 @@ export function Home() {
       >
         <div className="relative flex flex-col items-center">
           <div className="w-16 h-16 border-4 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
-          <p className="mt-4 text-slate-600 font-medium">Loading quizzes...</p>
+          <p className="mt-4 text-slate-600 font-medium">Loading...</p>
         </div>
       </div>
     );
