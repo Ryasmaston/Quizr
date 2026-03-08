@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../../services/authentication";
 import { apiFetch } from "../../services/api";
+import { useUser } from "../../hooks/useUser";
 
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 const NORMALIZED_BASE = RAW_BACKEND_URL.replace(/\/$/, "");
@@ -18,16 +19,24 @@ export function Signup() {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
 
+  const { refreshUser } = useUser();
+  const [isSigningUp, setIsSigningUp] = useState(false);
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) navigate("/")
-    })
-    return unsub
-  }, [navigate])
+      // Only auto-redirect if a signup is NOT currently in progress.
+      // If signing up, we handle navigation manually after the backend creates the DB document.
+      if (user && !isSigningUp) {
+        navigate("/");
+      }
+    });
+    return unsub;
+  }, [navigate, isSigningUp]);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError(null);
+    setIsSigningUp(true);
     try {
       if (!username.trim()) {
         setError("Username is required");
@@ -59,10 +68,12 @@ export function Signup() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.message || "Unable to create user");
       }
-      // onAuthStateChanged redirects on its own, but to be safe:
-      // navigate("/")
+      // The backend user is now created. Refresh the global context before redirecting.
+      await refreshUser();
+      navigate("/");
     } catch (err) {
       setError(err.message || "Signup failed");
+      setIsSigningUp(false);
     }
   }
 
