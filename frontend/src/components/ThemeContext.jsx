@@ -44,6 +44,12 @@ export const ThemeProvider = ({ children }) => {
             if (!mounted) return;
             setTheme(userTheme);
             localStorage.setItem("theme", userTheme);
+          } else {
+            // New or logged-in users without a saved preference should default to light
+            // instead of inheriting the previous user's local storage.
+            if (!mounted) return;
+            setTheme("light");
+            localStorage.setItem("theme", "light");
           }
         }
       } catch (error) {
@@ -52,7 +58,12 @@ export const ThemeProvider = ({ children }) => {
     };
 
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user) return;
+      // If the user logs out, clean up local storage and reset the theme immediately
+      if (!user) {
+        setTheme("light");
+        localStorage.removeItem("theme");
+        return;
+      }
       loadTheme();
     });
 
