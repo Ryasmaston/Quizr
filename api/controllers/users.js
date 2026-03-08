@@ -165,7 +165,7 @@ async function updateThemePreference(req, res) {
 async function searchUsers(req, res) {
   try {
     const q = (req.query.q || "").trim();
-    if (!q) {
+    if (!q || q.length < 2) {
       return res.status(200).json({ users: [] });
     }
 
@@ -266,14 +266,24 @@ async function scheduleDeletion(req, res) {
     const requestedAt = new Date();
     const scheduledFor = new Date(requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    user.user_data.status = "pending_deletion";
-    user.user_data.deletion = {
+    const deletionData = {
       requested_at: requestedAt,
       scheduled_for: scheduledFor,
       mode
     };
 
-    await user.save();
+    await User.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          "user_data.status": "pending_deletion",
+          "user_data.deletion": deletionData
+        }
+      }
+    );
+
+    user.user_data.status = "pending_deletion";
+    user.user_data.deletion = deletionData;
 
     res.status(200).json({
       message: "Deletion scheduled",

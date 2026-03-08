@@ -9,14 +9,21 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   }
 }
 
-if (!serviceAccount) {
-  serviceAccount = require("../secrets/firebase-service-account.json");
+if (!serviceAccount && process.env.NODE_ENV !== "test") {
+  try {
+    serviceAccount = require("../secrets/firebase-service-account.json");
+  } catch (err) {
+    console.warn("Firebase service account file not found in secrets/");
+    console.warn("Ensure FIREBASE_SERVICE_ACCOUNT_JSON is set, or the app might run with default credentials if available.");
+  }
 }
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+if (!admin.apps.length && process.env.NODE_ENV !== "test") {
+  const config = {};
+  if (serviceAccount) {
+    config.credential = admin.credential.cert(serviceAccount);
+  }
+  admin.initializeApp(config);
 }
 
 module.exports = admin;
