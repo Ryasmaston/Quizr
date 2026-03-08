@@ -208,19 +208,24 @@ describe("Authentication with Firebase", () => {
       expect(user.user_data.username).toEqual("brandnewuser");
     });
     test("prevents duplicate user creation with same authId", async () => {
-      await User.create({
-        authId: "new-firebase-uid-789",
-        user_data: {
-          username: "existinguser",
-          email: "newuser@test.com",
-        }
-      });
-      const response = await testApp
-        .post("/api/users")
-        .set("Authorization", "Bearer valid-token")
-        .send({ username: "anotheruser" });
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        await User.create({
+          authId: "new-firebase-uid-789",
+          user_data: {
+            username: "existinguser",
+            email: "newuser@test.com",
+          }
+        });
+        const response = await testApp
+          .post("/api/users")
+          .set("Authorization", "Bearer valid-token")
+          .send({ username: "anotheruser" });
 
-      expect(response.status).toEqual(400);
+        expect(response.status).toEqual(400);
+      } finally {
+        consoleSpy.mockRestore();
+      }
     });
   });
 

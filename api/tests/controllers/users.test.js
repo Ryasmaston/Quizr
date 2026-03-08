@@ -51,6 +51,14 @@ describe("/users", () => {
     });
 
     describe("when username is missing", () => {
+      let consoleErrorSpy;
+      beforeEach(() => {
+        consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      });
+      afterEach(() => {
+        consoleErrorSpy.mockRestore();
+      });
+
       test("response code is 400", async () => {
         const response = await request(app)
           .post("/api/users")
@@ -358,8 +366,7 @@ describe("/users", () => {
     test("does not add duplicate favourites", async () => {
       await request(app).post(`/api/users/me/favourites/${quiz._id}`);
       await request(app).post(`/api/users/me/favourites/${quiz._id}`);
-
-      const updatedUser = await User.findById(user._id);
+      const updatedUser = await User.findById(user._id);
       expect(updatedUser.preferences.favourites).toHaveLength(1);
     });
   });
@@ -392,6 +399,32 @@ describe("/users", () => {
       expect(response.body.message).toEqual("Quiz removed from favourites");
       const updatedUser = await User.findById(user._id);
       expect(updatedUser.preferences.favourites).not.toContainEqual(quiz._id);
+    });
+  });
+
+  describe("POST /api/users/me/deletion - scheduleDeletion", () => {
+    beforeEach(async () => {
+      const mongoose = require("mongoose");
+      await mongoose.connection.db.collection('users').insertOne({
+        authId: "test-auth-id",
+        user_data: {
+          username: "testuser",
+          email: "test@email.com",
+          status: "active"
+        }
+      });
+    });
+
+    test("scheduling deletion does not apply default theme preference", async () => {
+      const response = await request(app)
+        .post("/api/users/me/deletion")
+        .send({ mode: "delete_quizzes" });
+        
+      expect(response.statusCode).toBe(200);
+      
+      const mongoose = require("mongoose");
+      const rawUser = await mongoose.connection.db.collection('users').findOne({ authId: "test-auth-id" });
+      expect(rawUser.preferences).toBeUndefined();
     });
   });
 });
