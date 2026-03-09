@@ -6,6 +6,7 @@ import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { scheduleAccountDeletion } from "../../services/users";
 import { useUser } from "../../hooks/useUser";
+import { formatUsernameInput, trimTrailingSpace, toProfileUrl } from "../../utils/usernameValidation";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -15,8 +16,12 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
 
   const [username, setUsername] = useState("");
+  const [usernameWarning, setUsernameWarning] = useState(null);
   const [profilePic, setProfilePic] = useState("");
+  const [originalUsername, setOriginalUsername] = useState("");
+  const [originalProfilePic, setOriginalProfilePic] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [emailFieldWarning, setEmailFieldWarning] = useState(null);
   const [currentEmailPassword, setCurrentEmailPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -33,6 +38,8 @@ export default function SettingsPage() {
   const [deletionStep, setDeletionStep] = useState("intro");
   const [deletionSaving, setDeletionSaving] = useState(false);
   const [deletionError, setDeletionError] = useState(null);
+  const [deletionPassword, setDeletionPassword] = useState("");
+  const [deletionVerifying, setDeletionVerifying] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -52,8 +59,12 @@ export default function SettingsPage() {
       const res = await apiFetch("/me");
       const body = await res.json();
       setProfile(body.user);
-      setUsername(body.user.user_data.username);
-      setProfilePic(body.user.user_data.profile_pic || "");
+      const loadedUsername = body.user.user_data.username;
+      const loadedPic = body.user.user_data.profile_pic || "";
+      setUsername(loadedUsername);
+      setProfilePic(loadedPic);
+      setOriginalUsername(loadedUsername);
+      setOriginalProfilePic(loadedPic);
       setNewEmail(loggedInUser.email);
       setLoading(false);
     } catch (err) {
@@ -101,24 +112,30 @@ export default function SettingsPage() {
   async function handleUpdateProfile(e) {
     e.preventDefault();
     if (isAccountLocked) return;
-    setError(null);
-    setMessage(null);
+    setProfileError(null);
     setProfileSaving(true);
+
+    const trimmedUsername = username.trim();
 
     try {
       const res = await apiFetch(`/users/${profile._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username,
+          username: trimmedUsername,
           profile_pic: profilePic
         })
       });
 
+      if (res.status === 409) {
+        setUsernameWarning("Username already taken.");
+        return;
+      }
       if (!res.ok) {
         throw new Error("Failed to update profile");
       }
-      navigate(`/users/${username}`)
+      setUsername(trimmedUsername);
+      navigate(toProfileUrl(trimmedUsername));
       await loadProfile();
       await refreshUser();
     } catch (err) {
@@ -161,7 +178,7 @@ export default function SettingsPage() {
         setEmailError("Invalid email address");
       } else if (err.code === 'auth/email-already-in-use') {
         setEmailError("This email is already in use");
-      } else if (err.code === 'auth/wrong-password') {
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setEmailError("Current password is incorrect");
       } else {
         setEmailError(err.message || "Failed to update email");
@@ -206,8 +223,10 @@ export default function SettingsPage() {
       setConfirmPassword("");
       setCurrentPassword("");
     } catch (err) {
-      if (err.code === 'auth/wrong-password') {
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setPasswordError("Current password is incorrect");
+      } else if (err.code === 'auth/weak-password') {
+        setPasswordError("Password is too weak. Please use a stronger password.");
       } else if (err.code === 'auth/too-many-requests') {
         setPasswordError("Too many failed attempts. Please try again later.");
       } else {
@@ -225,7 +244,7 @@ export default function SettingsPage() {
       await scheduleAccountDeletion(mode);
       setDeletionMode(mode);
       await refreshUser();
-      navigate(`/users/${profile?.user_data?.username}`, { replace: true });
+      navigate(toProfileUrl(profile?.user_data?.username), { replace: true });
     } catch (err) {
       setDeletionError(err.message || "Failed to schedule deletion");
     } finally {
@@ -284,7 +303,7 @@ export default function SettingsPage() {
               <div className="mt-4">
                 <button
                   type="button"
-                  onClick={() => navigate(`/users/${profile?.user_data?.username}`)}
+                  onClick={() => navigate(toProfileUrl(profile?.user_data?.username))}
                   className="px-6 py-3 rounded-xl bg-white/70 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200/80 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800 transition-colors"
                 >
                   Go to My Profile
@@ -292,9 +311,7 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
-          {profileError && (
-            <p className="mb-4 text-sm text-rose-600">{profileError}</p>
-          )}
+
           <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 shadow-sm">
             <h2 className="text-2xl font-semibold text-slate-800 mb-6">Profile Information</h2>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -303,11 +320,33 @@ export default function SettingsPage() {
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    const input = e.target;
+                    const cursorPos = input.selectionStart;
+                    const raw = e.target.value;
+                    const { value, warning } = formatUsernameInput(raw);
+                    const charsRemoved = raw.length - value.length;
+                    const newCursor = Math.max(0, cursorPos - charsRemoved);
+                    setUsername(value);
+                    if (warning) setUsernameWarning(warning);
+                    else setUsernameWarning(null);
+                    requestAnimationFrame(() => {
+                      input.setSelectionRange(newCursor, newCursor);
+                    });
+                  }}
+                  onBlur={() => {
+                    const { value, warning } = trimTrailingSpace(username);
+                    setUsername(value);
+                    if (warning) setUsernameWarning(warning);
+                  }}
+                  onFocus={() => setUsernameWarning(null)}
                   disabled={isAccountLocked}
                   className="w-full px-4 py-3 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                   required
                 />
+                <p className={`text-xs mt-0.5 pl-0.5 min-h-[1.25rem] ${usernameWarning ? 'text-rose-500' : 'text-transparent'}`}>
+                  {usernameWarning || '\u00A0'}
+                </p>
               </div>
               <div>
                 <label className="block text-slate-600 mb-2">Profile Picture URL</label>
@@ -333,11 +372,12 @@ export default function SettingsPage() {
               )}
               <button
                 type="submit"
-                disabled={profileSaving || isAccountLocked}
+                disabled={profileSaving || isAccountLocked || (username.trim() === originalUsername && profilePic === originalProfilePic)}
                 className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
                 {profileSaving ? "Saving..." : "Save Profile"}
               </button>
+              {profileError && <p className="mt-2 text-sm text-rose-600">{profileError}</p>}
             </form>
           </div>
           <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/60 mb-6 shadow-sm">
@@ -348,11 +388,19 @@ export default function SettingsPage() {
                 <input
                   type="email"
                   value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
+                  onChange={(e) => { setNewEmail(e.target.value); setEmailFieldWarning(null); }}
+                  onBlur={() => {
+                    if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                      setEmailFieldWarning("Please enter a valid email address.");
+                    }
+                  }}
                   disabled={isAccountLocked}
                   className="w-full px-4 py-3 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                   required
                 />
+                <p className={`text-xs mt-0.5 pl-0.5 min-h-[1.25rem] ${emailFieldWarning ? 'text-rose-500' : 'text-transparent'}`}>
+                  {emailFieldWarning || '\u00A0'}
+                </p>
               </div>
               <div>
                 <label className="block text-slate-600 mb-2">Current Password (required for security)</label>
@@ -388,7 +436,7 @@ export default function SettingsPage() {
                   placeholder="Enter current password"
                   disabled={isAccountLocked}
                   required
-                  inputClassName="w-full px-4 py-3 pr-12 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
+                  inputClassName="w-full px-4 py-3 pr-20 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                 />
               </div>
               <div>
@@ -399,19 +447,20 @@ export default function SettingsPage() {
                   placeholder="Enter new password"
                   disabled={isAccountLocked}
                   minLength={12}
-                  inputClassName="w-full px-4 py-3 pr-12 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
+                  inputClassName="w-full px-4 py-3 pr-20 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                 />
-                <p className="text-xs text-slate-500 mt-1 pl-1">Must be at least 12 characters long.</p>
+                <p className="text-xs text-slate-500 mt-0.5 pl-0.5 min-h-[1.25rem]">Must be at least 12 characters long.</p>
               </div>
               <div>
                 <label className="block text-slate-600 mb-2">Confirm Password</label>
                 <PasswordInput
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  onPaste={(e) => e.preventDefault()}
                   placeholder="Confirm new password"
                   disabled={isAccountLocked}
                   minLength={12}
-                  inputClassName="w-full px-4 py-3 pr-12 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
+                  inputClassName="w-full px-4 py-3 pr-20 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                 />
               </div>
               <button
@@ -436,7 +485,7 @@ export default function SettingsPage() {
                   <div className="flex justify-center">
                     <button
                       type="button"
-                      onClick={() => setDeletionStep("choose")}
+                      onClick={() => { setDeletionStep("confirmPassword"); setDeletionError(null); setDeletionPassword(""); }}
                       className="px-6 py-3 rounded-xl bg-rose-500 dark:bg-rose-900/70 text-white font-semibold hover:bg-rose-600 dark:hover:bg-rose-800/80 transition-colors"
                     >
                       Delete Account
@@ -444,10 +493,60 @@ export default function SettingsPage() {
                   </div>
                 </>
               )}
-              {deletionError && (
-                <div className="mb-4 bg-rose-100/80 border border-rose-200/80 rounded-2xl p-4 backdrop-blur">
-                  <p className="text-rose-700">{deletionError}</p>
+              {deletionStep === "confirmPassword" && (
+                <div className="space-y-4">
+                  <p className="text-slate-600">Please enter your current password to confirm.</p>
+                  <div>
+                    <PasswordInput
+                      value={deletionPassword}
+                      onChange={(e) => setDeletionPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      inputClassName="w-full px-4 py-3 pr-20 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50"
+                    />
+                    <p className={`text-xs mt-0.5 pl-0.5 min-h-[1.25rem] ${deletionError ? 'text-rose-500' : 'text-transparent'}`}>
+                      {deletionError || '\u00A0'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                    <button
+                      type="button"
+                      onClick={() => { setDeletionStep("intro"); setDeletionPassword(""); setDeletionError(null); }}
+                      disabled={deletionVerifying}
+                      className="px-6 py-3 rounded-xl bg-white/70 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200/80 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!deletionPassword || deletionVerifying}
+                      onClick={async () => {
+                        setDeletionError(null);
+                        setDeletionVerifying(true);
+                        try {
+                          const credential = EmailAuthProvider.credential(loggedInUser.email, deletionPassword);
+                          await reauthenticateWithCredential(loggedInUser, credential);
+                          setDeletionStep("choose");
+                        } catch (err) {
+                          if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                            setDeletionError("Incorrect password.");
+                          } else if (err.code === 'auth/too-many-requests') {
+                            setDeletionError("Too many failed attempts. Please try again later.");
+                          } else {
+                            setDeletionError(err.message || "Verification failed.");
+                          }
+                        } finally {
+                          setDeletionVerifying(false);
+                        }
+                      }}
+                      className="px-6 py-3 rounded-xl bg-rose-500 dark:bg-rose-900/70 text-white font-semibold hover:bg-rose-600 dark:hover:bg-rose-800/80 transition-colors disabled:opacity-50"
+                    >
+                      {deletionVerifying ? "Verifying..." : "Continue"}
+                    </button>
+                  </div>
                 </div>
+              )}
+              {deletionError && deletionStep !== "confirmPassword" && (
+                <p className="mt-2 text-sm text-rose-600">{deletionError}</p>
               )}
               {deletionStep === "choose" && (
                 <div className="space-y-4">

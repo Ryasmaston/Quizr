@@ -1,5 +1,5 @@
 const dotenv = require("dotenv");
-dotenv.config({ path: "./.env.test" });
+dotenv.config({ path: "./.env.test", override: true });
 
 /** @type {import('jest').Config} */
 const config = {

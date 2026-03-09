@@ -41,6 +41,5 @@ export async function logout() {
     }
   }
   
-  localStorage.removeItem("theme");
   await auth.signOut();
 }

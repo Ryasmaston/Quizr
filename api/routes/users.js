@@ -6,6 +6,7 @@ const router = express.Router();
 const UsersController = require("../controllers/users");
 
 router.get("/availability", UsersController.checkUsernameAvailability);
+router.get("/resolve", UsersController.resolveUsername);
 router.post("/", requireAuth, UsersController.createUser);
 router.get("/me", requireAuth, UsersController.showUser);
 router.post("/me/deletion", requireAuth, UsersController.scheduleDeletion);

@@ -4,6 +4,7 @@ import { getQuizzes } from "../../services/quizzes";
 import { toggleFavourite } from "../../services/favourites";
 import { useUser } from "../../hooks/useUser";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { toProfileUrl } from "../../utils/usernameValidation";
 
 export function Home() {
   const isMobile = useIsMobile();
@@ -458,8 +459,7 @@ export function Home() {
                 const favouriteCount = getFavouriteCount(quiz);
                 const authorUsername = quiz?.created_by?.user_data?.username;
                 const authorIsDeleted = quiz?.created_by?.authId === "deleted-user"
-                  || authorUsername === "__deleted__"
-                  || authorUsername === "Deleted user";
+                  || authorUsername === "__deleted__";
                 const authorName = authorIsDeleted
                   ? "deleted user"
                   : authorUsername || "Unknown";
@@ -584,7 +584,7 @@ export function Home() {
                                 onClick={(event) => {
                                   event.preventDefault();
                                   event.stopPropagation();
-                                  navigate(`/users/${authorName}`);
+                                  navigate(toProfileUrl(authorName));
                                 }}
                                 className="rounded-lg px-3 py-1.5 transition-colors dark:group-hover:text-white hover:[background-color:rgb(var(--shadow-color)/0.2)]"
                               >

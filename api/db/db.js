@@ -10,6 +10,11 @@ async function connectToDatabase() {
     throw new Error("No connection string provided");
   }
 
+  // ABSOLUTE SAFEGUARD: Never allow tests to connect to the production database
+  if (process.env.NODE_ENV === "test" && mongoDbUrl.includes("project_creative")) {
+    throw new Error("CRITICAL: Attempted to run tests against the production database ('project_creative'). Aborting immediately.");
+  }
+
   await mongoose.connect(mongoDbUrl);
 
   if (process.env.NODE_ENV !== "test") {

@@ -5,16 +5,37 @@ const { executeUserDeletion } = require("../services/userDeletion");
 
 const PLACEHOLDER_AUTH_ID = "deleted-user";
 
+// Only allows alphanumeric, single spaces (not leading/trailing), dashes, and dots
+const VALID_USERNAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9 .\-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/;
+const CONSECUTIVE_SPACES = /  /;
+const RESERVED_USERNAMES = ["__deleted__"];
+
 // function added to escape user input to build a RegExp for partial matching
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function createUser(req, res) {
-  const username = req.body.username;
+  const username = req.body.username?.trim();
   const authId = req.user.uid;
   const email = req.user.email;
+
+  if (!username) {
+    return res.status(400).json({ message: "Username is required" });
+  }
+  if (RESERVED_USERNAMES.includes(username)) {
+    return res.status(400).json({ message: "This username is not allowed" });
+  }
+  if (!VALID_USERNAME_REGEX.test(username) || CONSECUTIVE_SPACES.test(username)) {
+    return res.status(400).json({ message: "Username contains invalid characters" });
+  }
+
   try {
+    const exists = await User.exists({ "user_data.username": username });
+    if (exists) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
+
     const user = new User({
       authId,
       user_data: { username, email }
@@ -29,6 +50,9 @@ async function createUser(req, res) {
       }
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
     console.error(error);
     res.status(400).json({
       message: "Error creating user",
@@ -40,14 +64,36 @@ async function createUser(req, res) {
 async function updateUser(req, res) {
   try {
     const { username, profile_pic } = req.body;
+    const trimmedUsername = username?.trim();
+
+    if (!trimmedUsername) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+    if (RESERVED_USERNAMES.includes(trimmedUsername)) {
+      return res.status(400).json({ message: "This username is not allowed" });
+    }
+    if (!VALID_USERNAME_REGEX.test(trimmedUsername) || CONSECUTIVE_SPACES.test(trimmedUsername)) {
+      return res.status(400).json({ message: "Username contains invalid characters" });
+    }
+
     const currentUser = await User.findOne({ authId: req.user.uid });
     if (!currentUser || currentUser._id.toString() !== req.params.userId) {
       return res.status(403).json({ message: "Unauthorized" });
     }
+
+    // Check uniqueness (exclude current user)
+    const taken = await User.exists({
+      "user_data.username": trimmedUsername,
+      _id: { $ne: currentUser._id }
+    });
+    if (taken) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.userId,
       {
-        "user_data.username": username,
+        "user_data.username": trimmedUsername,
         "user_data.profile_pic": profile_pic
       },
       { new: true }
@@ -57,8 +103,29 @@ async function updateUser(req, res) {
     }
     res.status(200).json({ user });
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
     console.error(err);
     res.status(500).json({ message: "Unable to update profile", error: err.message });
+  }
+}
+
+async function resolveUsername(req, res) {
+  const { username } = req.query;
+  if (!username || username !== username.trim()) {
+    return res.status(404).json({ message: "Not found" });
+  }
+  try {
+    const user = await User.findOne({ "user_data.username": username, authId: { $ne: PLACEHOLDER_AUTH_ID } })
+      .select("user_data.email");
+    if (!user) {
+      return res.status(404).json({ message: "Not found" });
+    }
+    return res.status(200).json({ email: user.user_data.email });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error resolving username" });
   }
 }
 
@@ -67,8 +134,11 @@ async function checkUsernameAvailability(req, res) {
   if (!username) {
     return res.status(400).json({ message: "Username is required" });
   }
-  if (username === "__deleted__") {
+  if (RESERVED_USERNAMES.includes(username)) {
     return res.status(200).json({ available: false });
+  }
+  if (!VALID_USERNAME_REGEX.test(username) || CONSECUTIVE_SPACES.test(username)) {
+    return res.status(200).json({ available: false, message: "Invalid format" });
   }
 
   try {
@@ -214,7 +284,8 @@ async function getUserById(req, res) {
 
 async function getUserIdByUsername(req, res) {
   try {
-    const { username } = req.params;
+    // URLs use underscores in place of spaces
+    const username = req.params.username.replace(/_/g, ' ');
     const user = await User.findOne({
       "user_data.username": username,
       authId: { $ne: PLACEHOLDER_AUTH_ID }
@@ -388,6 +459,7 @@ async function removeFavourite(req, res) {
 const UsersController = {
   createUser: createUser,
   checkUsernameAvailability: checkUsernameAvailability,
+  resolveUsername: resolveUsername,
   updateUser: updateUser,
   showUser: showUser,
   updateThemePreference: updateThemePreference,
