@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase"
 import { getFriends, getPendingRequests, acceptFriendRequest, removeRequest } from "../../services/friends";
 import { apiFetch } from "../../services/api"
+import { toProfileUrl } from "../../utils/usernameValidation"
 
 export default function FriendsPage() {
   // const [user, setUser] = useState(null);
@@ -185,7 +186,7 @@ export default function FriendsPage() {
                         return (
                           <Link
                             key={r._id}
-                            to={`/users/${other.user_data?.username}`}
+                            to={toProfileUrl(other.user_data?.username)}
                             className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80 dark:hover:border-slate-700 block"
                           >
                             <div className="flex items-center justify-between gap-3">
@@ -261,7 +262,7 @@ export default function FriendsPage() {
                         return (
                           <Link
                             key={r._id}
-                            to={`/users/${other.user_data?.username}`}
+                            to={toProfileUrl(other.user_data?.username)}
                             className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80 dark:hover:border-slate-700 block"
                           >
                             <div className="flex items-center justify-between gap-3">
@@ -357,7 +358,7 @@ export default function FriendsPage() {
                     return (
                       <Link
                         key={f._id}
-                        to={`/users/${other.user_data?.username}`}
+                        to={toProfileUrl(other.user_data?.username)}
                         className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:scale-[1.01] hover:shadow-[0_0_16px_-6px_rgba(148,163,184,0.4)] hover:border-slate-300/80 dark:hover:border-slate-700 block"
                       >
                         {confirmRemoveId === f._id ? (

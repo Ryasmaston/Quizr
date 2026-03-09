@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useUser } from "../hooks/useUser";
+import { toProfileUrl } from "../utils/usernameValidation";
 import UserSearchBar from "./UserSearchBar";
 import NavBar from "./navBar";
 import { LogOut, Sun, Moon } from "lucide-react";
@@ -49,7 +50,7 @@ function Layout() {
 
     useEffect(() => {
         if (accountStatus !== "pending_deletion" || !accountUsername) return;
-        const profilePath = `/users/${accountUsername}`;
+        const profilePath = toProfileUrl(accountUsername);
         if (location.pathname !== profilePath) {
             navigate(profilePath, { replace: true });
         }

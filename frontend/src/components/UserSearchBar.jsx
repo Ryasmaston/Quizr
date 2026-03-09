@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toProfileUrl } from "../utils/usernameValidation";
 import { apiFetch } from "../services/api";
 
 export default function UserSearchBar({ excludeUsername }) {
@@ -74,7 +75,7 @@ export default function UserSearchBar({ excludeUsername }) {
     if (inputRef.current) {
       inputRef.current.blur();
     }
-    navigate(`/users/${username}`);
+    navigate(toProfileUrl(username));
   }
 
   return (

@@ -38,7 +38,7 @@ export async function apiFetch(path, options = {}) {
             body = null;
         }
         if (body?.username) {
-            window.location.href = `/users/${body.username}`;
+            window.location.href = `/users/${body.username.replace(/ /g, '_')}`;
         }
         throw new Error(body?.message || "Account pending deletion");
     }

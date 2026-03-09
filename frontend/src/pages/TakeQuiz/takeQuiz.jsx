@@ -5,6 +5,7 @@ import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { toggleFavourite } from "../../services/favourites";
 import { useUser } from "../../hooks/useUser";
+import { toProfileUrl } from "../../utils/usernameValidation";
 
 function formatScorePercentage(value) {
     if (value == null) return "";
@@ -72,8 +73,7 @@ function TakeQuizPage() {
     }, [quiz, currentUserId]);
     const authorUsername = quiz?.created_by?.user_data?.username;
     const authorIsDeleted = quiz?.created_by?.authId === "deleted-user"
-        || authorUsername === "__deleted__"
-        || authorUsername === "Deleted user";
+        || authorUsername === "__deleted__";
     const authorName = authorIsDeleted
         ? "deleted user"
         : authorUsername || "Unknown";
@@ -543,7 +543,7 @@ function TakeQuizPage() {
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                navigate(`/users/${authorName}`);
+                                                navigate(toProfileUrl(authorName));
                                             }}
                                             className="self-start sm:self-auto rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-white/70 dark:text-slate-300 dark:hover:bg-white/5"
                                         >

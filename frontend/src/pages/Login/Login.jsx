@@ -9,6 +9,7 @@ export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [emailWarning, setEmailWarning] = useState(null);
   const navigate = useNavigate();
 
   const [isForgotMode, setIsForgotMode] = useState(false);
@@ -80,9 +81,8 @@ export function Login() {
           <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
             {isForgotMode ? (
               <>
-                <h2 className="text-lg font-semibold text-slate-800">Forgot password</h2>
                 {forgotSent ? (
-                  <div className="mt-5">
+                  <div className="mt-1">
                     <p className="rounded-xl border border-emerald-200/80 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-700">
                       If an account with that email exists, a reset link has been sent. Check your inbox.
                     </p>
@@ -124,23 +124,30 @@ export function Login() {
               </>
             ) : (
               <>
-                <h2 className="text-lg font-semibold text-slate-800">Log in</h2>
-                <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-3">
                   <label htmlFor="email" className="block text-sm text-slate-600">Email</label>
                   <input
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-300/70"
+                    onChange={(e) => { setEmail(e.target.value); setEmailWarning(null); }}
+                    onBlur={() => {
+                      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        setEmailWarning("Please enter a valid email address.");
+                      }
+                    }}
+                    className="mt-1 w-full rounded-xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-300/70"
                   />
+                  <p className={`text-xs mt-0.5 pl-0.5 min-h-[1.25rem] ${emailWarning ? 'text-rose-500' : 'text-transparent'}`}>
+                    {emailWarning || '\u00A0'}
+                  </p>
                   <label htmlFor="password" className="block text-sm text-slate-600">Password</label>
                   <PasswordInput
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
-                  <div className="flex justify-end -mt-2">
+                  <div className="flex justify-center -mt-2">
                     <button
                       type="button"
                       onClick={() => { setIsForgotMode(true); setError(null); }}
