@@ -6,6 +6,7 @@ import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { scheduleAccountDeletion } from "../../services/users";
 import { useUser } from "../../hooks/useUser";
+import { formatUsernameInput, trimTrailingSpace } from "../../utils/usernameValidation";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -15,8 +16,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
 
   const [username, setUsername] = useState("");
+  const [usernameWarning, setUsernameWarning] = useState(null);
   const [profilePic, setProfilePic] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [emailFieldWarning, setEmailFieldWarning] = useState(null);
   const [currentEmailPassword, setCurrentEmailPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -101,24 +104,31 @@ export default function SettingsPage() {
   async function handleUpdateProfile(e) {
     e.preventDefault();
     if (isAccountLocked) return;
-    setError(null);
-    setMessage(null);
+    setProfileError(null);
     setProfileSaving(true);
+
+    const trimmedUsername = username.trim();
 
     try {
       const res = await apiFetch(`/users/${profile._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username,
+          username: trimmedUsername,
           profile_pic: profilePic
         })
       });
 
+      if (res.status === 409) {
+        const body = await res.json();
+        setProfileError(body.message || "Username already taken");
+        return;
+      }
       if (!res.ok) {
         throw new Error("Failed to update profile");
       }
-      navigate(`/users/${username}`)
+      setUsername(trimmedUsername);
+      navigate(toProfileUrl(trimmedUsername));
       await loadProfile();
       await refreshUser();
     } catch (err) {
@@ -161,7 +171,7 @@ export default function SettingsPage() {
         setEmailError("Invalid email address");
       } else if (err.code === 'auth/email-already-in-use') {
         setEmailError("This email is already in use");
-      } else if (err.code === 'auth/wrong-password') {
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setEmailError("Current password is incorrect");
       } else {
         setEmailError(err.message || "Failed to update email");
@@ -206,8 +216,10 @@ export default function SettingsPage() {
       setConfirmPassword("");
       setCurrentPassword("");
     } catch (err) {
-      if (err.code === 'auth/wrong-password') {
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setPasswordError("Current password is incorrect");
+      } else if (err.code === 'auth/weak-password') {
+        setPasswordError("Password is too weak. Please use a stronger password.");
       } else if (err.code === 'auth/too-many-requests') {
         setPasswordError("Too many failed attempts. Please try again later.");
       } else {
@@ -225,7 +237,7 @@ export default function SettingsPage() {
       await scheduleAccountDeletion(mode);
       setDeletionMode(mode);
       await refreshUser();
-      navigate(`/users/${profile?.user_data?.username}`, { replace: true });
+      navigate(toProfileUrl(profile?.user_data?.username), { replace: true });
     } catch (err) {
       setDeletionError(err.message || "Failed to schedule deletion");
     } finally {
@@ -284,7 +296,7 @@ export default function SettingsPage() {
               <div className="mt-4">
                 <button
                   type="button"
-                  onClick={() => navigate(`/users/${profile?.user_data?.username}`)}
+                  onClick={() => navigate(toProfileUrl(profile?.user_data?.username))}
                   className="px-6 py-3 rounded-xl bg-white/70 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200/80 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800 transition-colors"
                 >
                   Go to My Profile
@@ -303,11 +315,33 @@ export default function SettingsPage() {
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    const input = e.target;
+                    const cursorPos = input.selectionStart;
+                    const raw = e.target.value;
+                    const { value, warning } = formatUsernameInput(raw);
+                    const charsRemoved = raw.length - value.length;
+                    const newCursor = Math.max(0, cursorPos - charsRemoved);
+                    setUsername(value);
+                    if (warning) setUsernameWarning(warning);
+                    else setUsernameWarning(null);
+                    requestAnimationFrame(() => {
+                      input.setSelectionRange(newCursor, newCursor);
+                    });
+                  }}
+                  onBlur={() => {
+                    const { value, warning } = trimTrailingSpace(username);
+                    setUsername(value);
+                    if (warning) setUsernameWarning(warning);
+                  }}
+                  onFocus={() => setUsernameWarning(null)}
                   disabled={isAccountLocked}
                   className="w-full px-4 py-3 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                   required
                 />
+                <p className={`text-xs mt-0.5 pl-0.5 min-h-[1.25rem] ${usernameWarning ? 'text-rose-500' : 'text-transparent'}`}>
+                  {usernameWarning || '\u00A0'}
+                </p>
               </div>
               <div>
                 <label className="block text-slate-600 mb-2">Profile Picture URL</label>
@@ -348,11 +382,19 @@ export default function SettingsPage() {
                 <input
                   type="email"
                   value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
+                  onChange={(e) => { setNewEmail(e.target.value); setEmailFieldWarning(null); }}
+                  onBlur={() => {
+                    if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                      setEmailFieldWarning("Please enter a valid email address.");
+                    }
+                  }}
                   disabled={isAccountLocked}
                   className="w-full px-4 py-3 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                   required
                 />
+                <p className={`text-xs mt-0.5 pl-0.5 min-h-[1.25rem] ${emailFieldWarning ? 'text-rose-500' : 'text-transparent'}`}>
+                  {emailFieldWarning || '\u00A0'}
+                </p>
               </div>
               <div>
                 <label className="block text-slate-600 mb-2">Current Password (required for security)</label>
@@ -388,7 +430,7 @@ export default function SettingsPage() {
                   placeholder="Enter current password"
                   disabled={isAccountLocked}
                   required
-                  inputClassName="w-full px-4 py-3 pr-12 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
+                  inputClassName="w-full px-4 py-3 pr-20 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                 />
               </div>
               <div>
@@ -399,19 +441,20 @@ export default function SettingsPage() {
                   placeholder="Enter new password"
                   disabled={isAccountLocked}
                   minLength={12}
-                  inputClassName="w-full px-4 py-3 pr-12 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
+                  inputClassName="w-full px-4 py-3 pr-20 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                 />
-                <p className="text-xs text-slate-500 mt-1 pl-1">Must be at least 12 characters long.</p>
+                <p className="text-xs text-slate-500 mt-0.5 pl-0.5 min-h-[1.25rem]">Must be at least 12 characters long.</p>
               </div>
               <div>
                 <label className="block text-slate-600 mb-2">Confirm Password</label>
                 <PasswordInput
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  onPaste={(e) => e.preventDefault()}
                   placeholder="Confirm new password"
                   disabled={isAccountLocked}
                   minLength={12}
-                  inputClassName="w-full px-4 py-3 pr-12 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
+                  inputClassName="w-full px-4 py-3 pr-20 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50 disabled:opacity-50"
                 />
               </div>
               <button

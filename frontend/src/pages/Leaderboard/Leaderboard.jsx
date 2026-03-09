@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getLeaderboard } from "../../services/quizzes";
+import { toProfileUrl } from "../../utils/usernameValidation";
 
 const columns = [
   { key: "rank", label: "#", isNumeric: true },
@@ -241,7 +242,7 @@ export default function LeaderboardPage() {
                           <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left w-[220px] max-w-[220px]">
                             {entry.user_data?.username ? (
                               <Link
-                                to={`/users/${entry.user_data.username}`}
+                                to={toProfileUrl(entry.user_data.username)}
                                 className="flex items-center gap-3 min-w-0 cursor-pointer text-slate-800 hover:text-slate-800 hover:font-semibold"
                               >
                                 <div

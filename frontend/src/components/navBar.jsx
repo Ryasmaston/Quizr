@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { logout } from "../services/authentication";
+import { toProfileUrl } from "../utils/usernameValidation";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { useIsMobile } from "../hooks/useIsMobile";
@@ -42,7 +43,7 @@ function NavBar({ accountStatus, accountUsername }) {
     { to: "/quizzes/create", icon: PlusSquare, label: "Create", mobileOnly: false },
     { to: "/friends", icon: Users, label: "Friends", mobileOnly: false, requiresAuth: true },
     { to: "/leaderboard", icon: Trophy, label: "Rank", mobileOnly: false, requiresAuth: true },
-    { to: `/users/${username}`, icon: User, label: "Profile", mobileOnly: false, requiresAuth: true, isProfile: true },
+    { to: toProfileUrl(username || ''), icon: User, label: "Profile", mobileOnly: false, requiresAuth: true, isProfile: true },
   ];
 
   const isQuizEditor = location.pathname === "/quizzes/create"
@@ -184,7 +185,7 @@ function NavBar({ accountStatus, accountUsername }) {
             )}
             {user && username && (
               <NavLink
-                to={`/users/${username}`}
+                to={toProfileUrl(username)}
                 className={({ isActive }) =>
                   `text-sm transition-all duration-200 h-11 px-4 min-w-[6.5rem] justify-center rounded-xl inline-flex items-center ${isActive
                     ? "text-slate-900 dark:text-slate-100 font-bold hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-800/40"

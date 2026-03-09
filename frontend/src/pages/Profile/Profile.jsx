@@ -10,6 +10,7 @@ import { removeFavourite, toggleFavourite } from "../../services/favourites";
 import { QuizStats } from '../../components/quizStats'
 import { useUser } from "../../hooks/useUser";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { toProfileUrl } from "../../utils/usernameValidation";
 
 export default function ProfilePage() {
   const isMobile = useIsMobile();
@@ -188,7 +189,7 @@ export default function ProfilePage() {
       routeUsername &&
       routeUsername !== myUsername
     ) {
-      navigate(`/users/${myUsername}`);
+      navigate(toProfileUrl(myUsername));
     }
   }, [accountStatus, myUsername, routeUsername, navigate]);
 
@@ -1182,7 +1183,7 @@ export default function ProfilePage() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(`/quiz/${quiz._id}/edit`, {
-                                      state: { from: "profile", returnTo: `/users/${routeUsername}` }
+                                      state: { from: "profile", returnTo: toProfileUrl(routeUsername) }
                                     });
                                   }}
                                   className="w-full px-4 py-2.5 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-200 text-sm font-bold transition-all duration-100 ease-out hover:bg-slate-100/80 dark:hover:bg-slate-700/50 active:scale-95 flex items-center justify-center gap-2"
@@ -1262,8 +1263,7 @@ export default function ProfilePage() {
                     const creatorId = typeof quiz === "string" ? null : quiz.created_by?._id;
                     const isMyOwnQuiz = creatorId && myUserId && creatorId.toString() === myUserId.toString();
                     const creatorIsDeleted = creatorAuthId === "deleted-user"
-                      || creatorName === "__deleted__"
-                      || creatorName === "Deleted user";
+                      || creatorName === "__deleted__";
                     const difficultyKey = difficultyChips[quiz?.difficulty] ? quiz.difficulty : "medium";
                     const difficulty = difficultyChips[difficultyKey];
                     const questionCount = typeof quiz === "string" ? 0 : quiz?.questions?.length || 0;
@@ -1338,7 +1338,7 @@ export default function ProfilePage() {
                                   onClick={(event) => {
                                     event.preventDefault();
                                     event.stopPropagation();
-                                    navigate(`/users/${creatorName}`);
+                                    navigate(toProfileUrl(creatorName));
                                   }}
                                   className="rounded-full px-3 py-1.5 text-xs font-bold text-slate-600 dark:group-hover:text-white transition-all hover:bg-white/20 bg-white/70 border border-slate-200/80 active:scale-95"
                                 >
