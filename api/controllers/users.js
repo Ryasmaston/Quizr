@@ -50,6 +50,9 @@ async function createUser(req, res) {
       }
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
     console.error(error);
     res.status(400).json({
       message: "Error creating user",
@@ -100,6 +103,9 @@ async function updateUser(req, res) {
     }
     res.status(200).json({ user });
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
     console.error(err);
     res.status(500).json({ message: "Unable to update profile", error: err.message });
   }

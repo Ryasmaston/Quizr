@@ -6,7 +6,7 @@ import { auth } from "../../services/firebase";
 import { apiFetch } from "../../services/api";
 import { scheduleAccountDeletion } from "../../services/users";
 import { useUser } from "../../hooks/useUser";
-import { formatUsernameInput, trimTrailingSpace } from "../../utils/usernameValidation";
+import { formatUsernameInput, trimTrailingSpace, toProfileUrl } from "../../utils/usernameValidation";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -18,6 +18,8 @@ export default function SettingsPage() {
   const [username, setUsername] = useState("");
   const [usernameWarning, setUsernameWarning] = useState(null);
   const [profilePic, setProfilePic] = useState("");
+  const [originalUsername, setOriginalUsername] = useState("");
+  const [originalProfilePic, setOriginalProfilePic] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [emailFieldWarning, setEmailFieldWarning] = useState(null);
   const [currentEmailPassword, setCurrentEmailPassword] = useState("");
@@ -36,6 +38,8 @@ export default function SettingsPage() {
   const [deletionStep, setDeletionStep] = useState("intro");
   const [deletionSaving, setDeletionSaving] = useState(false);
   const [deletionError, setDeletionError] = useState(null);
+  const [deletionPassword, setDeletionPassword] = useState("");
+  const [deletionVerifying, setDeletionVerifying] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -55,8 +59,12 @@ export default function SettingsPage() {
       const res = await apiFetch("/me");
       const body = await res.json();
       setProfile(body.user);
-      setUsername(body.user.user_data.username);
-      setProfilePic(body.user.user_data.profile_pic || "");
+      const loadedUsername = body.user.user_data.username;
+      const loadedPic = body.user.user_data.profile_pic || "";
+      setUsername(loadedUsername);
+      setProfilePic(loadedPic);
+      setOriginalUsername(loadedUsername);
+      setOriginalProfilePic(loadedPic);
       setNewEmail(loggedInUser.email);
       setLoading(false);
     } catch (err) {
@@ -120,8 +128,7 @@ export default function SettingsPage() {
       });
 
       if (res.status === 409) {
-        const body = await res.json();
-        setProfileError(body.message || "Username already taken");
+        setUsernameWarning("Username already taken.");
         return;
       }
       if (!res.ok) {
@@ -304,9 +311,7 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
-          {profileError && (
-            <p className="mb-4 text-sm text-rose-600">{profileError}</p>
-          )}
+
           <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 mb-6 shadow-sm">
             <h2 className="text-2xl font-semibold text-slate-800 mb-6">Profile Information</h2>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -367,11 +372,12 @@ export default function SettingsPage() {
               )}
               <button
                 type="submit"
-                disabled={profileSaving || isAccountLocked}
+                disabled={profileSaving || isAccountLocked || (username.trim() === originalUsername && profilePic === originalProfilePic)}
                 className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
                 {profileSaving ? "Saving..." : "Save Profile"}
               </button>
+              {profileError && <p className="mt-2 text-sm text-rose-600">{profileError}</p>}
             </form>
           </div>
           <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800/60 mb-6 shadow-sm">
@@ -479,7 +485,7 @@ export default function SettingsPage() {
                   <div className="flex justify-center">
                     <button
                       type="button"
-                      onClick={() => setDeletionStep("choose")}
+                      onClick={() => { setDeletionStep("confirmPassword"); setDeletionError(null); setDeletionPassword(""); }}
                       className="px-6 py-3 rounded-xl bg-rose-500 dark:bg-rose-900/70 text-white font-semibold hover:bg-rose-600 dark:hover:bg-rose-800/80 transition-colors"
                     >
                       Delete Account
@@ -487,10 +493,60 @@ export default function SettingsPage() {
                   </div>
                 </>
               )}
-              {deletionError && (
-                <div className="mb-4 bg-rose-100/80 border border-rose-200/80 rounded-2xl p-4 backdrop-blur">
-                  <p className="text-rose-700">{deletionError}</p>
+              {deletionStep === "confirmPassword" && (
+                <div className="space-y-4">
+                  <p className="text-slate-600">Please enter your current password to confirm.</p>
+                  <div>
+                    <PasswordInput
+                      value={deletionPassword}
+                      onChange={(e) => setDeletionPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      inputClassName="w-full px-4 py-3 pr-20 bg-white/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/70 dark:focus:ring-slate-700/50"
+                    />
+                    <p className={`text-xs mt-0.5 pl-0.5 min-h-[1.25rem] ${deletionError ? 'text-rose-500' : 'text-transparent'}`}>
+                      {deletionError || '\u00A0'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                    <button
+                      type="button"
+                      onClick={() => { setDeletionStep("intro"); setDeletionPassword(""); setDeletionError(null); }}
+                      disabled={deletionVerifying}
+                      className="px-6 py-3 rounded-xl bg-white/70 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200/80 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!deletionPassword || deletionVerifying}
+                      onClick={async () => {
+                        setDeletionError(null);
+                        setDeletionVerifying(true);
+                        try {
+                          const credential = EmailAuthProvider.credential(loggedInUser.email, deletionPassword);
+                          await reauthenticateWithCredential(loggedInUser, credential);
+                          setDeletionStep("choose");
+                        } catch (err) {
+                          if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                            setDeletionError("Incorrect password.");
+                          } else if (err.code === 'auth/too-many-requests') {
+                            setDeletionError("Too many failed attempts. Please try again later.");
+                          } else {
+                            setDeletionError(err.message || "Verification failed.");
+                          }
+                        } finally {
+                          setDeletionVerifying(false);
+                        }
+                      }}
+                      className="px-6 py-3 rounded-xl bg-rose-500 dark:bg-rose-900/70 text-white font-semibold hover:bg-rose-600 dark:hover:bg-rose-800/80 transition-colors disabled:opacity-50"
+                    >
+                      {deletionVerifying ? "Verifying..." : "Continue"}
+                    </button>
+                  </div>
                 </div>
+              )}
+              {deletionError && deletionStep !== "confirmPassword" && (
+                <p className="mt-2 text-sm text-rose-600">{deletionError}</p>
               )}
               {deletionStep === "choose" && (
                 <div className="space-y-4">

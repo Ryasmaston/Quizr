@@ -22,6 +22,8 @@ export default function LeaderboardPage() {
     key: "totalCorrect",
     direction: "desc"
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const avatarGradients = [
     "from-rose-300 to-pink-400 dark:from-rose-500/80 dark:to-pink-600/80",
     "from-sky-300 to-blue-400 dark:from-sky-500/80 dark:to-blue-600/80",
@@ -109,7 +111,6 @@ export default function LeaderboardPage() {
 
   function handleSort(key) {
     setSortConfig((prev) => {
-      // clicking the rank column should just toggle order (asc/desc) without changing the sort key
       if (key === "rank") {
         return { key: prev.key, direction: prev.direction === "asc" ? "desc" : "asc" };
       }
@@ -119,6 +120,7 @@ export default function LeaderboardPage() {
       const defaultDirection = key === "username" ? "asc" : "desc";
       return { key, direction: defaultDirection };
     });
+    setCurrentPage(1);
   }
 
   function renderSortIcon(key) {
@@ -234,10 +236,14 @@ export default function LeaderboardPage() {
                         </td>
                       </tr>
                     ) : (
-                      sortedRows.map((entry, index) => (
+                      sortedRows
+                        .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                        .map((entry, index) => (
                         <tr key={entry.user_id}>
                           <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left">
-                            {sortConfig.direction === "desc" ? index + 1 : sortedRows.length - index}
+                            {sortConfig.direction === "desc"
+                              ? (currentPage - 1) * ITEMS_PER_PAGE + index + 1
+                              : sortedRows.length - ((currentPage - 1) * ITEMS_PER_PAGE + index)}
                           </td>
                           <td className="px-3 sm:px-4 py-3 font-medium text-slate-800 text-left w-[220px] max-w-[220px]">
                             {entry.user_data?.username ? (
@@ -280,15 +286,8 @@ export default function LeaderboardPage() {
                             )}
                           </td>
                           <td className="px-3 sm:px-4 py-3 text-left text-slate-600 dark:text-slate-400">{entry.totalCorrect}</td>
-                          <td className="px-3 sm:px-4 py-3 text-left">
-                            <span
-                              className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold ${entry.avgPercent >= 70
-                                ? "border-emerald-200/80 bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/60 dark:border-emerald-800/80 dark:!text-white"
-                                : "border-rose-200/80 bg-rose-100/80 text-rose-700 dark:bg-rose-900/60 dark:border-rose-800/80 dark:!text-white"
-                                }`}
-                            >
-                              {Math.round(entry.avgPercent)}%
-                            </span>
+                          <td className="px-3 sm:px-4 py-3 text-left text-slate-600 dark:text-slate-400">
+                            {Math.round(entry.avgPercent)}%
                           </td>
                           <td className="px-3 sm:px-4 py-3 text-left text-slate-600 dark:text-slate-400">{entry.attemptsCount}</td>
                           <td className="px-3 sm:px-4 py-3 text-left text-slate-600 dark:text-slate-400">{entry.quizzesTaken}</td>
@@ -302,6 +301,36 @@ export default function LeaderboardPage() {
               </div>
             </div>
           </div>
+          {/* Pagination */}
+          {sortedRows.length > ITEMS_PER_PAGE && (
+            <div className="mt-4 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl bg-white/70 backdrop-blur border border-slate-200/80 text-slate-700 hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center min-w-[36px] min-h-[36px]"
+                aria-label="Previous page"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <span className="text-sm text-slate-600 font-medium">
+                Page {currentPage} of {Math.ceil(sortedRows.length / ITEMS_PER_PAGE)}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(Math.ceil(sortedRows.length / ITEMS_PER_PAGE), p + 1))}
+                disabled={currentPage >= Math.ceil(sortedRows.length / ITEMS_PER_PAGE)}
+                className="p-2 rounded-xl bg-white/70 backdrop-blur border border-slate-200/80 text-slate-700 hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center min-w-[36px] min-h-[36px]"
+                aria-label="Next page"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          )}
         </main>
       </div>
     </>

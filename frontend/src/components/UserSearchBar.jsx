@@ -8,10 +8,11 @@ export default function UserSearchBar({ excludeUsername }) {
   const [q, setQ] = useState("");
   const [users, setUsers] = useState([]);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
   const inputRef = useRef(null);
 
   const requestIdRef = useRef(0);
+  const loadingTimerRef = useRef(null);
 
   const avatarGradients = [
     "from-rose-300 to-pink-400 dark:from-rose-500/80 dark:to-pink-600/80",
@@ -35,20 +36,32 @@ export default function UserSearchBar({ excludeUsername }) {
     if (!query) {
       setUsers([]);
       setOpen(false);
+      setShowLoading(false);
+      clearTimeout(loadingTimerRef.current);
       return;
     }
 
     const id = ++requestIdRef.current;
 
     const t = setTimeout(async () => {
+      // Start a 1-second timer — only show "Searching…" if the fetch takes longer
+      loadingTimerRef.current = setTimeout(() => {
+        if (requestIdRef.current === id) {
+          setShowLoading(true);
+          setOpen(true);
+        }
+      }, 1000);
+
       try {
-        setLoading(true);
         const res = await apiFetch(
           `/users/search?q=${encodeURIComponent(query)}`
         );
         const body = await res.json();
 
         if (requestIdRef.current !== id) return;
+
+        clearTimeout(loadingTimerRef.current);
+        setShowLoading(false);
 
         const list = Array.isArray(body.users) ? body.users : [];
         const filtered = excludeUsername
@@ -59,14 +72,19 @@ export default function UserSearchBar({ excludeUsername }) {
         setOpen(true);
       } catch (err) {
         console.error("User search failed", err);
-        setUsers([]);
-        setOpen(false);
-      } finally {
-        if (requestIdRef.current === id) setLoading(false);
+        if (requestIdRef.current === id) {
+          clearTimeout(loadingTimerRef.current);
+          setShowLoading(false);
+          setUsers([]);
+          setOpen(false);
+        }
       }
     }, 100);
 
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(loadingTimerRef.current);
+    };
   }, [q, excludeUsername]);
 
   function selectUser(username) {
@@ -104,13 +122,13 @@ export default function UserSearchBar({ excludeUsername }) {
 
       {open && (
         <div className="absolute mt-2 w-full rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-950/80 backdrop-blur-md shadow-lg overflow-hidden z-50">
-          {loading && (
-            <div className="px-4 py-2 text-sm text-slate-500 dark:text-slate-300">Searching…</div>
+          {showLoading && (
+            <div className="px-4 py-3 text-sm text-slate-500 dark:text-slate-300 flex items-center gap-3 h-[60px]">Searching…</div>
           )}
-          {!loading && users.length === 0 && (
-            <div className="px-4 py-2 text-sm text-slate-400 dark:text-slate-500">No users found</div>
+          {!showLoading && users.length === 0 && (
+            <div className="px-4 py-3 text-sm text-slate-400 dark:text-slate-500 flex items-center gap-3 h-[60px]">No users found</div>
           )}
-          {!loading &&
+          {!showLoading &&
             users.map((u) => (
               <button
                 key={u.id || u.username}
@@ -119,7 +137,7 @@ export default function UserSearchBar({ excludeUsername }) {
                 onClick={() => selectUser(u.username)}
                 className="w-full text-left px-4 py-3 text-sm text-slate-800 dark:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-900/60 flex items-center gap-3 transition-colors"
               >
-                <div className={`w-9 h-9 rounded-full overflow-hidden border-2 border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br ${getAvatarGradient(u.id || u._id)} flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-9 h-9 rounded-[30%] overflow-hidden bg-gradient-to-br ${getAvatarGradient(u.id || u._id)} flex items-center justify-center flex-shrink-0`}>
                   {u.profile_pic ? (
                     <img
                       src={u.profile_pic}

@@ -147,11 +147,11 @@ export function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
-                  <div className="flex justify-center -mt-2">
+                  <div className="flex justify-center -mt-1">
                     <button
                       type="button"
                       onClick={() => { setIsForgotMode(true); setError(null); }}
-                      className="text-xs text-slate-500 hover:text-slate-700 underline underline-offset-4"
+                      className="text-xs text-slate-500 hover:text-slate-700 underline underline-offset-4 pt-0.5 pb-2 px-2"
                     >
                       Forgot password?
                     </button>
@@ -173,7 +173,7 @@ export function Login() {
                   Don&apos;t have an account?{" "}
                   <Link
                     to="/signup"
-                    className="text-slate-800 underline underline-offset-4 hover:text-slate-600"
+                    className="text-slate-800 underline underline-offset-4 hover:text-slate-600 pt-0.5 pb-2 px-1"
                   >
                     Sign up
                   </Link>
