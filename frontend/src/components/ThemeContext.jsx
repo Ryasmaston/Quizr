@@ -4,6 +4,7 @@ import { auth } from "../services/firebase";
 import { authReady } from "../services/authState";
 import { onAuthStateChanged } from "firebase/auth";
 import { ThemeContext } from "../context/ThemeContext";
+import { isSigningUp } from "../services/signupGate";
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
@@ -35,7 +36,7 @@ export const ThemeProvider = ({ children }) => {
     const loadTheme = async () => {
       try {
         await authReady;
-        if (!auth.currentUser) return;
+        if (!auth.currentUser || isSigningUp()) return;
         const res = await apiFetch("/me");
         if (res.ok) {
           const body = await res.json();
@@ -51,6 +52,11 @@ export const ThemeProvider = ({ children }) => {
             setTheme("light");
             localStorage.setItem("theme", "light");
           }
+        } else {
+          // User not in DB yet (new signup) — default to light
+          if (!mounted) return;
+          setTheme("light");
+          localStorage.setItem("theme", "light");
         }
       } catch (error) {
         console.error("Failed to load theme preference:", error);

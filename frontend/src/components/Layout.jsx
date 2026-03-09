@@ -17,10 +17,11 @@ function Layout() {
     const user = useAuth();
     const isMobile = useIsMobile();
     const { theme, toggleTheme } = useTheme();
-    const { accountStatus, accountUsername, refreshUser } = useUser();
+    const { accountStatus, accountUsername, refreshUser, isLoading } = useUser();
     const [statusRefreshKey, setStatusRefreshKey] = useState(0);
 
     const hideNavbar = location.pathname === "/login" || location.pathname === "/signup";
+    const isAuthPage = hideNavbar;
     const isQuizEditor = location.pathname === "/quizzes/create"
         || (location.pathname.startsWith("/quiz/") && location.pathname.endsWith("/edit"));
 
@@ -38,7 +39,8 @@ function Layout() {
     useEffect(() => {
         if (!user) return;
         refreshUser();
-    }, [user, location.pathname, statusRefreshKey, refreshUser]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.pathname, statusRefreshKey]);
 
     useEffect(() => {
         function handleStatusChange() {

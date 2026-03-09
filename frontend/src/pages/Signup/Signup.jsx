@@ -9,6 +9,7 @@ import { useTheme } from "../../hooks/useTheme";
 import { PasswordInput } from "../../components/PasswordInput";
 import { formatUsernameInput, trimTrailingSpace } from "../../utils/usernameValidation";
 import { Sun, Moon } from "lucide-react";
+import { setSigningUp as setSignupGate } from "../../services/signupGate";
 
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 const NORMALIZED_BASE = RAW_BACKEND_URL.replace(/\/$/, "");
@@ -73,6 +74,7 @@ export function Signup() {
         return;
       }
 
+      setSignupGate(true);
       await signup(email, password);
       const res = await apiFetch("/users", {
         method: "POST",
@@ -83,6 +85,7 @@ export function Signup() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.message || "Unable to create user");
       }
+      setSignupGate(false);
       await refreshUser();
       navigate("/");
     } catch (err) {
@@ -91,6 +94,7 @@ export function Signup() {
       } else {
         setError(err.message || "Signup failed");
       }
+      setSignupGate(false);
       setIsSigningUp(false);
     }
   }
